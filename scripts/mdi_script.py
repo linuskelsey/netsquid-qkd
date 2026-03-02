@@ -4,7 +4,7 @@ MDI-QKD Simulation Runner
 Executes the MDI-QKD netsquid simulation and prints performance metrics.
 
 Usage:
-    python run_mdi.py [--runtimes N] [--photons N] [--fibre F] [--freq F] [--speed S]
+    python scripts/mdi_script.py [--runtimes N] [--photons N] [--fibre F] [--freq F] [--speed S]
 
 Defaults:
     runtimes    10
@@ -37,9 +37,12 @@ def qber(keyA, keyB):
 
 def print_run_summary(run_idx, keyA, keyB, keyRate):
     """Print per-run metrics."""
-    q = qber(keyA, keyB)
-    q_str = f"{q*100:.2f}%" if q is not None else "N/A"
-    print(f"  Run {run_idx+1:>3}: key_len={len(keyA):>5} | QBER={q_str:>7} | key_rate={keyRate:.4f}")
+    if keyA != "nan":
+        q = qber(keyA, keyB)
+        q_str = f"{q*100:.2f}%" if q is not None else "N/A"
+        print(f"  MDI run {run_idx+1:>3}:  key_len={len(keyA):>5} | QBER={q_str:>7} | key_rate={keyRate:.4f}")
+    else:
+        print(f"  MDI run {run_idx+1:>3}:  did not complete")
 
 
 def print_aggregate_summary(KeyListA, KeyListB, KeyRateList):
@@ -50,10 +53,10 @@ def print_aggregate_summary(KeyListA, KeyListB, KeyRateList):
 
     for i, (keyA, keyB) in enumerate(zip(KeyListA, KeyListB)):
         q = qber(keyA, keyB)
-        if q is not None:
+        if q is not None and keyA != "nan":
             qbers.append(q)
-        key_rates.append(KeyRateList[i])
-        key_lengths.append(min(len(keyA), len(keyB)))
+            key_rates.append(KeyRateList[i])
+            key_lengths.append(min(len(keyA), len(keyB)))
 
     avg_qber     = sum(qbers) / len(qbers) if qbers else float('nan')
     avg_kr       = sum(key_rates) / len(key_rates) if key_rates else float('nan')
@@ -63,7 +66,7 @@ def print_aggregate_summary(KeyListA, KeyListB, KeyRateList):
     print("=" * 65)
     print("  Aggregate Results")
     print("=" * 65)
-    print(f"  Runs completed  : {len(KeyListA)}")
+    print(f"  Runs completed  : {len(qbers)}")
     print(f"  Avg key length  : {avg_key_len:.1f}")
     print(f"  Avg QBER        : {avg_qber*100:.2f}%")
     print(f"  Avg key rate    : {avg_kr:.4f}")

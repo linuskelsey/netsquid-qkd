@@ -118,16 +118,17 @@ def run_mdi_sims(runtimes=10,
 
         if aliceProt.end_time is not None and bobProt.end_time is not None:
             endTime = max(aliceProt.end_time, bobProt.end_time)
+            keyA, keyB = aliceProt.key, bobProt.key
+
+            KeyListA.append(keyA)
+            KeyListB.append(keyB)
+
+            keyRate = len(keyA) * 10**9 / (endTime - startTime)
+            KeyRateList.append(keyRate)
         else:
-            print(f"WARNING: protocols did not complete in run {_+1}/{runtimes}, skipping")
+            KeyListA.append("nan")
+            KeyListB.append("nan")
+            KeyRateList.append("nan")
             continue
-
-        keyA, keyB = aliceProt.key, bobProt.key
-
-        KeyListA.append(keyA)
-        KeyListB.append(keyB)
-
-        keyRate = len(keyA) * 10**9 / (endTime - startTime)
-        KeyRateList.append(keyRate)
 
     return KeyListA, KeyListB, KeyRateList

@@ -1,3 +1,19 @@
+"""
+BB84 QKD Simulation Runner
+=========================
+Executes the BB84 netsquid simulation and prints performance metrics.
+
+Usage:
+    python scripts/bb84_script.py [--runtimes N] [--photons N] [--fibre F] [--freq F] [--speed S]
+
+Defaults:
+    runtimes    10
+    photons     1024
+    fibre       1       (km)
+    freq        1e7     (Hz)
+    speed       0.8     (fraction of c)
+"""
+
 import argparse
 import sys
 import os
@@ -24,7 +40,7 @@ def print_run_summary(run_idx, keyA, keyB, keyRate):
     """Print per-run metrics."""
     q = qber(keyA, keyB)
     q_str = f"{q*100:.2f}%" if q is not None else "N/A"
-    print(f"  Run {run_idx+1:>3}: key_len={len(keyA):>5} | QBER={q_str:>7} | key_rate={keyRate:.4f}")
+    print(f"  BB84 run {run_idx+1:>3}: key_len={len(keyA):>5} | QBER={q_str:>7} | key_rate={keyRate:.4f}")
 
 
 def print_aggregate_summary(KeyListA, KeyListB, KeyRateList):
