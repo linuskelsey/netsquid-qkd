@@ -1,4 +1,3 @@
-from difflib import SequenceMatcher
 import netsquid as ns
 
 from netsquid.nodes import Node
@@ -59,25 +58,25 @@ def run_mdi_sims(runtimes=10,
         CChann1 = ClassicalChannel("[A: -C-> :C]",
                                 delay=0,
                                 length=fibreLen,
-                                # models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed,stddev=0.05)}
+                                models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed,stddev=0.05)}
                                 )
         
         CChann2 = ClassicalChannel("[B: -C-> :C]",
                                 delay=0,
                                 length=fibreLen,
-                                # models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed,stddev=0.05)}
+                                models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed,stddev=0.05)}
                                 )
         
         CChann3 = ClassicalChannel("[C: -C-> :A]",
                                 delay=0,
                                 length=fibreLen,
-                                # models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed,stddev=0.05)}
+                                models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed,stddev=0.05)}
                                 )
         
         CChann4 = ClassicalChannel("[C: -C-> :B]",
                                 delay=0,
                                 length=fibreLen,
-                                # models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed,stddev=0.05)}
+                                models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed,stddev=0.05)}
                                 )
         
         alice.connect_to(charlie,

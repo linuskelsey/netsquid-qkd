@@ -119,4 +119,6 @@ class AliceProtocol(NodeProtocol):
         self.bob_bases = port.rx_input().items  # Receive and store
 
         # Now send ours and sift
+        print("[Alice] Sifting by basis")
         self.basis_reconciliation()
+        print("[Alice] Basis sifting complete")

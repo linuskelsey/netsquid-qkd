@@ -75,7 +75,9 @@ class BobProtocol(NodeProtocol):
         yield from self.receive_and_measure()
         
         # Basis exchange + sift
+        print("[Bob] Sifting by basis")
         yield from self.basis_reconciliation()
+        print("[Bob] Basis sifting complete")
 
         # set end time of simulation
         self.end_time = ns.sim_time(magnitude=ns.NANOSECOND)
