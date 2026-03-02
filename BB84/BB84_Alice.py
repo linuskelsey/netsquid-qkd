@@ -95,7 +95,7 @@ class AliceProtocol(NodeProtocol):
         self.mask = [i for i, b in enumerate(bob_bases) if b == self.basis_list[i]]
         
         # finalise key output by matching bases
-        # self.key = [bit for i, bit in enumerate(self.bit_list) if self.basis_list[i] == bob_bases[i]]
+        self.key = [bit for i, bit in enumerate(self.bit_list) if self.basis_list[i] == bob_bases[i]]
 
 
     def gen_qubits(self):
@@ -119,6 +119,4 @@ class AliceProtocol(NodeProtocol):
         self.bob_bases = port.rx_input().items  # Receive and store
 
         # Now send ours and sift
-        print("[Alice] Sifting by basis")
         self.basis_reconciliation()
-        print("[Alice] Basis sifting complete")

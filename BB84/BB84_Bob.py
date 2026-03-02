@@ -64,7 +64,7 @@ class BobProtocol(NodeProtocol):
         self.mask = [i for i, b in enumerate(alice_bases) if b == self.basis_list[i]]
         
         # finalise key output by matching bases
-        # self.key = [bit for i, bit in enumerate(self.meas_results) if self.basis_list[i] == alice_bases[i]]
+        self.key = [bit for i, bit in enumerate(self.meas_results) if self.basis_list[i] == alice_bases[i]]
 
 
     def run(self):
@@ -75,9 +75,7 @@ class BobProtocol(NodeProtocol):
         yield from self.receive_and_measure()
         
         # Basis exchange + sift
-        print("[Bob] Sifting by basis")
         yield from self.basis_reconciliation()
-        print("[Bob] Basis sifting complete")
 
         # set end time of simulation
         self.end_time = ns.sim_time(magnitude=ns.NANOSECOND)

@@ -85,5 +85,6 @@ def run_BB84_sims(runtimes=10,
         KeyListB.append(keyB)
 
         print(f"Key rate (secure bit count/s): {len(keyA) * 10**9 / (endTime - startTime)}")
+        print(sum([1 for a, b in zip(keyA, keyB) if a != b]))
 
     return KeyListA, KeyListB, KeyRateList
