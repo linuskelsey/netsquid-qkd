@@ -35,31 +35,24 @@ def qber(keyA, keyB):
     return errors / length
 
 
-def key_rate(keyA, keyB, photon_count):
-    """Compute sifted key rate as fraction of photon count."""
-    sifted = min(len(keyA), len(keyB))
-    return sifted / photon_count if photon_count > 0 else 0
-
-
-def print_run_summary(run_idx, keyA, keyB, photon_count):
+def print_run_summary(run_idx, keyA, keyB, keyRate):
     """Print per-run metrics."""
     q = qber(keyA, keyB)
-    kr = key_rate(keyA, keyB, photon_count)
     q_str = f"{q*100:.2f}%" if q is not None else "N/A"
-    print(f"  Run {run_idx+1:>3}: key_len={len(keyA):>5} | QBER={q_str:>7} | key_rate={kr:.4f}")
+    print(f"  Run {run_idx+1:>3}: key_len={len(keyA):>5} | QBER={q_str:>7} | key_rate={keyRate:.4f}")
 
 
-def print_aggregate_summary(KeyListA, KeyListB, photon_count):
+def print_aggregate_summary(KeyListA, KeyListB, KeyRateList):
     """Print aggregate metrics across all runs."""
     qbers       = []
     key_rates   = []
     key_lengths = []
 
-    for keyA, keyB in zip(KeyListA, KeyListB):
+    for i, (keyA, keyB) in enumerate(zip(KeyListA, KeyListB)):
         q = qber(keyA, keyB)
         if q is not None:
             qbers.append(q)
-        key_rates.append(key_rate(keyA, keyB, photon_count))
+        key_rates.append(KeyRateList[i])
         key_lengths.append(min(len(keyA), len(keyB)))
 
     avg_qber     = sum(qbers) / len(qbers) if qbers else float('nan')
@@ -67,14 +60,14 @@ def print_aggregate_summary(KeyListA, KeyListB, photon_count):
     avg_key_len  = sum(key_lengths) / len(key_lengths) if key_lengths else float('nan')
 
     print()
-    print("=" * 55)
+    print("=" * 65)
     print("  Aggregate Results")
-    print("=" * 55)
+    print("=" * 65)
     print(f"  Runs completed  : {len(KeyListA)}")
     print(f"  Avg key length  : {avg_key_len:.1f}")
     print(f"  Avg QBER        : {avg_qber*100:.2f}%")
     print(f"  Avg key rate    : {avg_kr:.4f}")
-    print("=" * 55)
+    print("=" * 65)
 
 
 def main():
@@ -87,15 +80,15 @@ def main():
     args = parser.parse_args()
 
     print()
-    print("=" * 55)
+    print("=" * 65)
     print("  MDI-QKD Simulation")
-    print("=" * 55)
+    print("=" * 65)
     print(f"  Runtimes   : {args.runtimes}")
     print(f"  Photons    : {args.photons}")
     print(f"  Fibre      : {args.fibre} km")
     print(f"  Frequency  : {args.freq:.2e} Hz")
     print(f"  Speed      : {args.speed}c")
-    print("=" * 55)
+    print("=" * 65)
     print()
 
     KeyListA, KeyListB, KeyRateList = run_mdi_sims(
@@ -107,11 +100,11 @@ def main():
     )
 
     print("\n  Per-run results:")
-    print("-" * 55)
+    print("-" * 65)
     for i, (keyA, keyB) in enumerate(zip(KeyListA, KeyListB)):
-        print_run_summary(i, keyA, keyB, args.photons)
+        print_run_summary(i, keyA, keyB, KeyRateList[i])
 
-    print_aggregate_summary(KeyListA, KeyListB, args.photons)
+    print_aggregate_summary(KeyListA, KeyListB, KeyRateList)
 
 
 if __name__ == "__main__":

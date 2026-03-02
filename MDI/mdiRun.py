@@ -127,6 +127,7 @@ def run_mdi_sims(runtimes=10,
         KeyListA.append(keyA)
         KeyListB.append(keyB)
 
-        print(f"Key rate (secure bit count/s): {len(keyA) * 10**9 / (endTime - startTime)}")
+        keyRate = len(keyA) * 10**9 / (endTime - startTime)
+        KeyRateList.append(keyRate)
 
     return KeyListA, KeyListB, KeyRateList
