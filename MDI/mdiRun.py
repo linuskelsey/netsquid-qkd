@@ -36,12 +36,12 @@ def run_mdi_sims(runtimes=10,
         ### quantum
         QChann1 = QuantumChannel("[A: -Q-> :C]",
                                 delay=qDelay,
-                                length=fibreLen,
+                                length=fibreLen / 2,
                                 models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed,stddev=0.05)})
         
         QChann2 = QuantumChannel("[B: -Q-> :C]",
                                 delay=qDelay,
-                                length=fibreLen,
+                                length=fibreLen / 2,
                                 models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed,stddev=0.05)})
         
         alice.connect_to(charlie,
@@ -57,25 +57,25 @@ def run_mdi_sims(runtimes=10,
         ### classical
         CChann1 = ClassicalChannel("[A: -C-> :C]",
                                 delay=0,
-                                length=fibreLen,
+                                length=fibreLen / 2,
                                 models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed,stddev=0.05)}
                                 )
         
         CChann2 = ClassicalChannel("[B: -C-> :C]",
                                 delay=0,
-                                length=fibreLen,
+                                length=fibreLen / 2,
                                 models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed,stddev=0.05)}
                                 )
         
         CChann3 = ClassicalChannel("[C: -C-> :A]",
                                 delay=0,
-                                length=fibreLen,
+                                length=fibreLen / 2,
                                 models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed,stddev=0.05)}
                                 )
         
         CChann4 = ClassicalChannel("[C: -C-> :B]",
                                 delay=0,
-                                length=fibreLen,
+                                length=fibreLen / 2,
                                 models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed,stddev=0.05)}
                                 )
         
