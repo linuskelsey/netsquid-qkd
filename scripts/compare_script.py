@@ -81,7 +81,7 @@ def comparative_stats(stats1, stats2):
     return
 
 
-def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8):
+def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lossLen=0.2, pLossInit=0):
     # Parameter setup ===========================================
     # print()
     # print("=" * 65)
@@ -101,7 +101,9 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8):
         fibreLen    = fibre,
         photonCount = photons,
         sourceFreq  = freq,
-        qSpeed      = speed
+        qSpeed      = speed,
+        lossLen     = lossLen,
+        pLossInit   = pLossInit
     )
 
     # MDI run ===================================================
@@ -110,7 +112,9 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8):
         fibreLen    = fibre,
         photonCount = photons,
         sourceFreq  = freq,
-        qSpeed      = speed
+        qSpeed      = speed,
+        lossLen     = lossLen,
+        pLossInit   = pLossInit
     )
 
     # Individual runs ===========================================
@@ -158,7 +162,7 @@ if __name__ == "__main__":
 
     plt.xlabel("Node separation in kilometres")
     plt.ylabel("Relative secure key rate")
-    plt.title("Relative performance: BB84 and MDI-QKD")
+    plt.title(f"Relative performance: BB84 and MDI-QKD,\nfibre loss 0.2 dB/km")
     plt.legend()
     plt.grid(True, alpha=0.3)
 

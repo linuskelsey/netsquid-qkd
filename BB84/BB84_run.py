@@ -7,7 +7,7 @@ from netsquid.components import QuantumChannel, ClassicalChannel
 import sys
 scriptpath = "lib/"
 sys.path.append(scriptpath)
-from lib.functions import HybridDelayModel
+from lib.functions import HybridDelayModel, make_loss_model
 
 from BB84_Alice import AliceProtocol
 from BB84_Bob import BobProtocol
@@ -19,7 +19,9 @@ def run_BB84_sims(runtimes=10,
                   qDelay=0,
                   qSpeed=0.8,
                   photonCount=1024,
-                  sourceFreq=1e7):
+                  sourceFreq=1e7,
+                  lossLen=0.2,
+                  pLossInit=0):
     
     KeyListA    = []
     KeyListB    = []
@@ -39,7 +41,10 @@ def run_BB84_sims(runtimes=10,
         QChann = QuantumChannel("[A: -Q-> :B]",
                                 delay=qDelay,
                                 length=fibreLen,
-                                models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed,stddev=0.05)})
+                                models={
+                                    "delay_model": HybridDelayModel(SoL_fraction=qSpeed,stddev=0.05),
+                                    "quantum_loss_model": make_loss_model(loss_len=lossLen, fibre_len=fibreLen, pLossInit=pLossInit)
+                                })
         
         alice.connect_to(bob,
                          QChann,
