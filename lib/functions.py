@@ -24,22 +24,6 @@ class HybridDelayModel(DelayModel):
         return delay
 
 
-def make_loss_model(loss_len, fibre_len, pLossInit=0):
-    """
-    Returns a NetSquid FibreLossModel with Beer-Lambert attenuation. Modelled as one-shot loss probability at start of transmission.
-    
-    Parameters:
-        loss_len    attenuation coefficient in dB/km
-        fibre_len   fibre length in km
-    """
-    T_fibre = 10 ** (-loss_len * fibre_len / 10)   # fibre transmittance
-    T_conn = 1 - pLossInit                         # connector transmittance, if non-trivial
-    T_tot = T_fibre * T_conn                       # combined transmittance
-    p_loss = 1 - T_tot                                 # per-photon loss probability
-
-    return FibreLossModel(p_loss_init=p_loss, p_loss_length=0)
-
-
 def rng_bin_lst(n):
     return np.random.choice([0,1], size=n).tolist()
 

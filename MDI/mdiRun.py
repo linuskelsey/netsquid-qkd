@@ -6,7 +6,7 @@ from netsquid.components import QuantumChannel, ClassicalChannel
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
-from lib.functions import HybridDelayModel, make_loss_model
+from lib.functions import HybridDelayModel
 
 from mdiEndUser import EndNodeProtocol
 from mdiRelayNode import RelayNodeProtocol
@@ -18,9 +18,7 @@ def run_mdi_sims(runtimes=10,
                  fibreLen=1,
                  qSpeed=0.8,
                  photonCount=1024,
-                 sourceFreq=1e7,
-                 lossLen=0.2,
-                 pLossInit=0):
+                 sourceFreq=1e7):
     
     KeyListA    = []
     KeyListB    = []
@@ -40,17 +38,15 @@ def run_mdi_sims(runtimes=10,
                                 delay=qDelay,
                                 length=fibreLen / 2,
                                 models={
-                                    "delay_model": HybridDelayModel(SoL_fraction=qSpeed,stddev=0.05),
-                                    "quantum_loss_model": make_loss_model(loss_len=lossLen, fibre_len=fibreLen / 2, pLossInit=pLossInit)
+                                    "delay_model": HybridDelayModel(SoL_fraction=qSpeed,stddev=0.05)
                                 })
         
         QChann2 = QuantumChannel("[B: -Q-> :C]",
                                 delay=qDelay,
                                 length=fibreLen / 2,
                                 models={
-                                    "delay_model": HybridDelayModel(SoL_fraction=qSpeed,stddev=0.05),
-                                    "quantum_loss_model": make_loss_model(loss_len=lossLen, fibre_len=fibreLen / 2, pLossInit=pLossInit)
-                                })        
+                                    "delay_model": HybridDelayModel(SoL_fraction=qSpeed,stddev=0.05)
+                                })
         alice.connect_to(charlie,
                          QChann1,
                          local_port_name=alice.ports["A.Q.Out"].name,
