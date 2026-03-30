@@ -18,7 +18,9 @@ def run_mdi_sims(runtimes=10,
                  fibreLen=1,
                  qSpeed=0.8,
                  photonCount=1024,
-                 sourceFreq=1e7):
+                 sourceFreq=1e7,
+                 lenLoss=0,
+                 initLoss=0):
     
     KeyListA    = []
     KeyListB    = []
@@ -104,9 +106,11 @@ def run_mdi_sims(runtimes=10,
         
         # protocols =============================================
         aliceProt = EndNodeProtocol(alice, 'alice', photonCount, sourceFreq, 
-                                    portNames=["A.Q.Out", "A.C.Out", "A.C.In"])
+                                    portNames=["A.Q.Out", "A.C.Out", "A.C.In"],
+                                    fibreLen=fibreLen, lenLoss=lenLoss, initLoss=initLoss)
         bobProt = EndNodeProtocol(bob, 'bob', photonCount, sourceFreq,
-                                  portNames=["B.Q.Out", "B.C.Out", "B.C.In"])
+                                  portNames=["B.Q.Out", "B.C.Out", "B.C.In"],
+                                  fibreLen=fibreLen, lenLoss=lenLoss, initLoss=initLoss)
         charlieProt = RelayNodeProtocol(charlie, 'charlie', photonCount,
                                         portNames=["C.Q.In.A", "C.Q.In.B", "C.C.In.A", "C.C.In.B", "C.C.Out.A", "C.C.Out.B"])
         

@@ -1,4 +1,5 @@
 import netsquid as ns
+import numpy as np
 
 from netsquid.protocols import NodeProtocol
 from netsquid.components import Clock

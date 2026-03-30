@@ -81,7 +81,7 @@ def comparative_stats(stats1, stats2):
     return
 
 
-def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8):
+def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, initLoss=0):
     # Parameter setup ===========================================
     # print()
     # print("=" * 65)
@@ -101,7 +101,9 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8):
         fibreLen    = fibre,
         photonCount = photons,
         sourceFreq  = freq,
-        qSpeed      = speed
+        qSpeed      = speed,
+        lenLoss     = lenLoss,
+        initLoss    = initLoss
     )
 
     # MDI run ===================================================
@@ -110,7 +112,9 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8):
         fibreLen    = fibre,
         photonCount = photons,
         sourceFreq  = freq,
-        qSpeed      = speed
+        qSpeed      = speed,
+        lenLoss     = lenLoss,
+        initLoss    = initLoss
     )
 
     # Individual runs ===========================================
@@ -138,7 +142,7 @@ if __name__ == "__main__":
     rates_mdi = []
 
     for d in Dx:
-        bb84, mdi = main(fibre=d)
+        bb84, mdi = main(fibre=d, lenLoss=0.1)
 
         lengths_bb84.append(bb84[1])
         qbers_bb84.append(bb84[2])
