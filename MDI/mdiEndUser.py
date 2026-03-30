@@ -34,7 +34,7 @@ class EndNodeProtocol(NodeProtocol):
         sourceEff       ====
         portNames       ====
     """
-    def __init__(self, node, name, photonCount, sourceFreq, sourceEff=1, portNames=["Q.Out", "C.Out", "C.In"]):
+    def __init__(self, node, name, photonCount, sourceFreq, sourceEff=1, portNames=["Q.Out", "C.Out", "C.In"], fibreLen=0, lenLoss=0, initLoss=0):
         super().__init__()
         # distinguish node on which the protocol runs
         self.node = node
@@ -63,6 +63,15 @@ class EndNodeProtocol(NodeProtocol):
         self.flipper = False
         # end time for timing data
         self.end_time = None
+        # loss probability for fibre transmission
+        self.fibre_len = fibreLen
+        self.len_loss = lenLoss
+        self.init_loss = initLoss
+
+        T_fibre = 10 ** (-self.len_loss * self.fibre_len / 10)
+        T_conn  = 1 - self.init_loss
+        T_total = T_fibre * T_conn
+        self.p_loss = 1 - T_total
 
 
     def store_source_output(self, qubit):
@@ -83,12 +92,25 @@ class EndNodeProtocol(NodeProtocol):
     def encode_and_send(self):
         """
         Encode basis and bit and send batch on quantum port
+
+        Using Beer-Lambert law for optical fibre attenuation.
         """
+        tagged = []
         for i, q in enumerate(self.q_list):
             basis, bit = self.basis_list[i], self.bit_list[i]
             if bit: ns.qubits.operate(q, ns.X)
             if basis: ns.qubits.operate(q, ns.H)
-        self.node.ports[self.port_qo_name].tx_output(self.q_list)
+
+            # probabilistic loss before transmission
+            if np.random.random() < self.p_loss:
+                continue
+            tagged.append((i,q))
+
+        indices = [t[0] for t in tagged]
+        qubits  = [t[1] for t in tagged]
+
+        self.node.ports[self.port_qo_name].tx_output(qubits)
+        self.node.ports[self.port_co_name].tx_output(indices)
 
 
     def gen_qubits(self):

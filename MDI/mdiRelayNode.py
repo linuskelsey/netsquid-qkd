@@ -39,33 +39,43 @@ class RelayNodeProtocol(NodeProtocol):
 
         Simplified for current modelling with no synchronisation or memory constraints.
         """
-        # receive from 1
+        # receive qubits
         port = self.node.ports[self.port_q0_i_name]
         yield self.await_port_input(port)
         q_list0 = port.rx_input().items
-        # receive from 2
+
         port = self.node.ports[self.port_q1_i_name]
         yield self.await_port_input(port)
         q_list1 = port.rx_input().items
 
-        for q0, q1 in zip(q_list0, q_list1):
-            # BSM
-            ns.qubits.operate([q0,q1], ns.CNOT)
-            ns.qubits.operate(q0, ns.H)
+        # receive indices
+        port_c0 = self.node.ports[self.port_c0_i_name]
+        yield self.await_port_input(port_c0)
+        idx0 = port_c0.rx_input().items
 
+        port_c1 = self.node.ports[self.port_c1_i_name]
+        yield self.await_port_input(port_c1)
+        idx1 = port_c1.rx_input().items
+
+        # list of common received indices
+        q_dict0 = dict(zip(idx0, q_list0))
+        q_dict1 = dict(zip(idx1, q_list1))
+
+        common = set(q_dict0.keys()) & set(q_dict1.keys())
+
+        for i in sorted(common):
+            q0, q1 = q_dict0[i], q_dict1[i]
+            ns.qubits.operate([q0, q1], ns.CNOT)
+            ns.qubits.operate(q0, ns.H)
             a, _ = ns.qubits.measure(q0)
             b, _ = ns.qubits.measure(q1)
 
-            # psi minus
             if a == 1 and b == 1:
-                self.meas.append(-1)
-            # psi plus
+                self.meas.append((i, -1))
             elif a == 0 and b == 1:
-                self.meas.append(1)
-            # otherwise (modelling the BS/PBS setup of Lo et al. 2012)
+                self.meas.append((i, 1))
             else:
-                self.meas.append(0)
-    
+                self.meas.append((i, 0))
 
     def basis_matching(self):
         """

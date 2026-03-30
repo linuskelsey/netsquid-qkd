@@ -81,7 +81,7 @@ def comparative_stats(stats1, stats2):
     return
 
 
-def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lossLen=0.2, pLossInit=0):
+def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8):
     # Parameter setup ===========================================
     # print()
     # print("=" * 65)
@@ -101,9 +101,7 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lossLen=0.2,
         fibreLen    = fibre,
         photonCount = photons,
         sourceFreq  = freq,
-        qSpeed      = speed,
-        lossLen     = lossLen,
-        pLossInit   = pLossInit
+        qSpeed      = speed
     )
 
     # MDI run ===================================================
@@ -112,9 +110,7 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lossLen=0.2,
         fibreLen    = fibre,
         photonCount = photons,
         sourceFreq  = freq,
-        qSpeed      = speed,
-        lossLen     = lossLen,
-        pLossInit   = pLossInit
+        qSpeed      = speed
     )
 
     # Individual runs ===========================================
