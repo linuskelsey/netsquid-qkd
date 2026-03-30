@@ -1,4 +1,5 @@
 import netsquid as ns
+import numpy as np
 
 from netsquid.protocols import NodeProtocol
 from netsquid.components import QSource
@@ -12,13 +13,14 @@ from lib.functions import rng_bin_lst
 
 
 class BobProtocol(NodeProtocol):
-    def __init__(self, node, photonCount, portNames=["B.Q.In","B.C.In","B.C.Out"]):
+    def __init__(self, node, photonCount, portNames=["B.Q.In","B.C.In","B.C.Out","B.C.In.tags"]):
         super().__init__()
         self.node         = node
         self.photon_count = photonCount
         self.port_qi_name = portNames[0]
         self.port_ci_name = portNames[1]
         self.port_co_name = portNames[2]
+        self.port_ci_tags_name = portNames[3]
         self.basis_list   = rng_bin_lst(photonCount)
 
         self.meas_results = []
@@ -37,16 +39,21 @@ class BobProtocol(NodeProtocol):
         port = self.node.ports[self.port_qi_name]
         yield self.await_port_input(port)
         qubit_batch = port.rx_input().items
+
+        # receive arrival indices from Alice
+        port_c = self.node.ports[self.port_ci_tags_name]
+        yield self.await_port_input(port_c)
+        self.arrived_indices = port_c.rx_input().items
         
         # measure and store
-        for i, q in enumerate(qubit_batch):
+        for i, q in zip(self.arrived_indices, qubit_batch):
             basis = self.basis_list[i]
             if basis: ns.qubits.operate(q,ns.H)  # if: X basis, then: rotate
             meas = ns.qubits.measure(q)[0]       # Z basis measurement
-            self.meas_results.append(meas)       # outcome bit
-            self.bits.append((basis, meas))
+            self.meas_results.append((i, meas))  # outcome bit with index
+            self.bits.append((i, basis, meas))
         
-        self.key = self.meas_results
+        self.key = [m for _, m in self.meas_results]
 
 
     def basis_reconciliation(self):
@@ -64,7 +71,7 @@ class BobProtocol(NodeProtocol):
         self.mask = [i for i, b in enumerate(alice_bases) if b == self.basis_list[i]]
         
         # finalise key output by matching bases
-        self.key = [bit for i, bit in enumerate(self.meas_results) if self.basis_list[i] == alice_bases[i]]
+        self.key = [meas for i, meas in self.meas_results if self.basis_list[i] == alice_bases[i]]
 
 
     def run(self):

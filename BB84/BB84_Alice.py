@@ -33,13 +33,14 @@ class AliceProtocol(NodeProtocol):
     """
 
 
-    def __init__(self, node, photonCount, sourceFreq, sourceEff=1, portNames=["A.Q.Out","A,C.Out","A.C.In"]):
+    def __init__(self, node, photonCount, sourceFreq, sourceEff=1, portNames=["A.Q.Out","A,C.Out","A.C.In","A.C.Out.tags"], fibreLen=0, lenLoss=0, initLoss=0):
         super().__init__()
         self.node         = node
         self.photon_count = photonCount
         self.port_qo_name = portNames[0]
         self.port_co_name = portNames[1]
         self.port_ci_name = portNames[2]
+        self.port_co_tags_name = portNames[3]
         self.basis_list   = rng_bin_lst(photonCount)
         self.bit_list     = rng_bin_lst(photonCount)
 
@@ -55,6 +56,16 @@ class AliceProtocol(NodeProtocol):
         self.source_freq  = sourceFreq
 
         self.bits = []
+
+        # loss characterisation
+        self.fibre_len = fibreLen
+        self.len_loss = lenLoss
+        self.init_loss = initLoss
+
+        T_fibre = 10 ** (-self.len_loss * self.fibre_len / 10)
+        T_conn  = 1 - self.init_loss
+        T_total = T_fibre * T_conn
+        self.p_loss = 1 - T_total
 
 
     def store_source_output(self, qubit):
@@ -76,12 +87,23 @@ class AliceProtocol(NodeProtocol):
         """
         Encode basis and bit and send batch on quantum port
         """
+        tagged = []
         for i, q in enumerate(self.source_Qlist):
             basis, bit = self.basis_list[i], self.bit_list[i]
             self.bits.append((basis, bit))
             if bit: ns.qubits.operate(q, ns.X)
             if basis: ns.qubits.operate(q, ns.H)
-        self.node.ports[self.port_qo_name].tx_output(self.source_Qlist)
+            if np.random.random() < self.p_loss:
+                continue
+            tagged.append((i, q))
+
+        indices = [t[0] for t in tagged]
+        qubits  = [t[1] for t in tagged]
+
+        self.node.ports[self.port_qo_name].tx_output(qubits)
+        self.node.ports[self.port_co_tags_name].tx_output(indices)
+        
+        self.arrived_indices = indices
 
 
     def basis_reconciliation(self):
@@ -95,7 +117,7 @@ class AliceProtocol(NodeProtocol):
         self.mask = [i for i, b in enumerate(bob_bases) if b == self.basis_list[i]]
         
         # finalise key output by matching bases
-        self.key = [bit for i, bit in enumerate(self.bit_list) if self.basis_list[i] == bob_bases[i]]
+        self.key = [self.bit_list[i] for i in self.arrived_indices if self.basis_list[i] == bob_bases[i]]
 
 
     def gen_qubits(self):

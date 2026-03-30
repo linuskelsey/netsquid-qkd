@@ -19,7 +19,9 @@ def run_BB84_sims(runtimes=10,
                   qDelay=0,
                   qSpeed=0.8,
                   photonCount=1024,
-                  sourceFreq=1e7):
+                  sourceFreq=1e7,
+                  lenLoss=0,
+                  initLoss=0):
     
     KeyListA    = []
     KeyListB    = []
@@ -32,8 +34,8 @@ def run_BB84_sims(runtimes=10,
         ns.sim_reset()
 
         # nodes =================================================
-        alice = Node("Alice", port_names=["A.Q.Out", "A.C.Out", "A.C.In"])
-        bob   = Node("Bob", port_names=["B.Q.In", "B.C.In", "B.C.Out"])
+        alice = Node("Alice", port_names=["A.Q.Out", "A.C.Out", "A.C.In", "A.C.Out.tags"])
+        bob   = Node("Bob", port_names=["B.Q.In", "B.C.In", "B.C.Out", "B.C.In.tags"])
 
         # channels ==============================================
         QChann = QuantumChannel("[A: -Q-> :B]",
@@ -68,9 +70,19 @@ def run_BB84_sims(runtimes=10,
                        CChann2,
                        local_port_name=bob.ports["B.C.Out"].name,
                        remote_port_name=alice.ports["A.C.In"].name)
+
+        CChann3 = ClassicalChannel("[A: -C:tags-> :B]",
+                                   delay=0,
+                                   length=fibreLen,
+                                   models={'delay_model': HybridDelayModel(SoL_fraction=qSpeed, stddev=0.05)})
         
+        alice.connect_to(bob,
+                         CChann3,
+                         local_port_name=alice.ports["A.C.Out.tags"].name,
+                         remote_port_name=bob.ports["B.C.In.tags"].name)
+
         # protocols =============================================
-        aliceProt = AliceProtocol(alice, photonCount, sourceFreq, portNames=list(alice.ports.keys()))
+        aliceProt = AliceProtocol(alice, photonCount, sourceFreq, portNames=list(alice.ports.keys()), lenLoss=lenLoss, initLoss=initLoss)
         bobProt = BobProtocol(bob, photonCount, portNames=list(bob.ports.keys()))
 
         bobProt.start()
@@ -79,14 +91,18 @@ def run_BB84_sims(runtimes=10,
         startTime = ns.util.simtools.sim_time(magnitude=ns.NANOSECOND)
         stats = ns.sim_run()
 
-        endTime = bobProt.end_time
+        if bobProt.end_time is not None:
+            endTime = bobProt.end_time
+            keyA, keyB = aliceProt.key, bobProt.key
 
-        keyA, keyB = aliceProt.key, bobProt.key
+            KeyListA.append(keyA)
+            KeyListB.append(keyB)
 
-        KeyListA.append(keyA)
-        KeyListB.append(keyB)
-
-        keyRate = len(keyA) * 10**9 / (endTime - startTime)
-        KeyRateList.append(keyRate)
+            keyRate = len(keyA) * 10**9 / (endTime - startTime)
+            KeyRateList.append(keyRate)
+        else:
+            KeyListA.append("nan")
+            KeyListB.append("nan")
+            KeyRateList.append("nan")
 
     return KeyListA, KeyListB, KeyRateList
