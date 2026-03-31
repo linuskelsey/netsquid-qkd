@@ -20,7 +20,8 @@ def run_mdi_sims(runtimes=10,
                  photonCount=1024,
                  sourceFreq=1e7,
                  lenLoss=0,
-                 initLoss=0):
+                 initLoss=0,
+                 detectorEff=1):
     
     KeyListA    = []
     KeyListB    = []
@@ -132,7 +133,8 @@ def run_mdi_sims(runtimes=10,
                                   portNames=["B.Q.Out", "B.C.Out", "B.C.In", "B.C.Out.basis"],
                                   fibreLen=fibreLen/2, lenLoss=lenLoss, initLoss=initLoss)
         charlieProt = RelayNodeProtocol(charlie, 'charlie', photonCount,
-                                        portNames=["C.Q.In.A", "C.Q.In.B", "C.C.In.A", "C.C.In.B", "C.C.Out.A", "C.C.Out.B", "C.C.In.A.basis", "C.C.In.B.basis"])
+                                        portNames=["C.Q.In.A", "C.Q.In.B", "C.C.In.A", "C.C.In.B", "C.C.Out.A", "C.C.Out.B", "C.C.In.A.basis", "C.C.In.B.basis"],
+                                        detectorEff=detectorEff)
         
         bobProt.flipper = True
 

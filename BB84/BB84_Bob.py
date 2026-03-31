@@ -13,7 +13,7 @@ from lib.functions import rng_bin_lst
 
 
 class BobProtocol(NodeProtocol):
-    def __init__(self, node, photonCount, portNames=["B.Q.In","B.C.In","B.C.Out","B.C.In.tags"]):
+    def __init__(self, node, photonCount, portNames=["B.Q.In","B.C.In","B.C.Out","B.C.In.tags"], detectorEff=1):
         super().__init__()
         self.node         = node
         self.photon_count = photonCount
@@ -21,8 +21,10 @@ class BobProtocol(NodeProtocol):
         self.port_ci_name = portNames[1]
         self.port_co_name = portNames[2]
         self.port_ci_tags_name = portNames[3]
-        self.basis_list   = rng_bin_lst(photonCount)
 
+        self.detector_eff = detectorEff
+
+        self.basis_list   = rng_bin_lst(photonCount)
         self.meas_results = []
         self.mask         = []
         self.key          = []
@@ -47,6 +49,9 @@ class BobProtocol(NodeProtocol):
         
         # measure and store
         for i, q in zip(self.arrived_indices, qubit_batch):
+            #detector efficiency
+            if np.random.random() > self.detector_eff:
+                continue
             basis = self.basis_list[i]
             if basis: ns.qubits.operate(q,ns.H)  # if: X basis, then: rotate
             meas = ns.qubits.measure(q)[0]       # Z basis measurement

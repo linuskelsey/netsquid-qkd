@@ -1,4 +1,5 @@
 import netsquid as ns
+import numpy as np
 
 from netsquid.components.qsource import SourceStatus
 from netsquid.protocols import NodeProtocol
@@ -15,7 +16,7 @@ class RelayNodeProtocol(NodeProtocol):
     Parameters:
         
     """
-    def __init__(self, node, name, photonCount, portNames=["Q0.In", "Q1.In", "C0.In", "C1.In", "C0.Out", "C1.Out", "C0.In.basis", "C1.In.basis"]):
+    def __init__(self, node, name, photonCount, portNames=["Q0.In", "Q1.In", "C0.In", "C1.In", "C0.Out", "C1.Out", "C0.In.basis", "C1.In.basis"], detectorEff=1):
         super().__init__()
         
         # distinguish node on which the protocol runs
@@ -34,6 +35,9 @@ class RelayNodeProtocol(NodeProtocol):
         self.port_c1_o_name = portNames[5]
         self.port_c0_i_basis_name = portNames[6]
         self.port_c1_i_basis_name = portNames[7]
+
+        # detector efficiency
+        self.detector_eff = detectorEff
 
         # measurement list
         self.meas = []
@@ -81,6 +85,14 @@ class RelayNodeProtocol(NodeProtocol):
         common = set(q_dict0.keys()) & set(q_dict1.keys())
 
         for i in sorted(common):
+            # detector efficiencies - both fire independently
+            if np.random.random() > self.detector_eff:
+                self.meas.append((i, 0))
+                continue 
+            if np.random.random() > self.detector_eff:
+                self.meas.append((i, 0))
+                continue
+
             q0, q1 = q_dict0[i], q_dict1[i]
             ns.qubits.operate([q0, q1], ns.CNOT)
             ns.qubits.operate(q0, ns.H)

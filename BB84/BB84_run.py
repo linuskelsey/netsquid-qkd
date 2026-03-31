@@ -21,7 +21,8 @@ def run_BB84_sims(runtimes=10,
                   photonCount=1024,
                   sourceFreq=1e7,
                   lenLoss=0,
-                  initLoss=0):
+                  initLoss=0,
+                  detectorEff=1):
     
     KeyListA    = []
     KeyListB    = []
@@ -83,7 +84,7 @@ def run_BB84_sims(runtimes=10,
 
         # protocols =============================================
         aliceProt = AliceProtocol(alice, photonCount, sourceFreq, portNames=list(alice.ports.keys()), fibreLen=fibreLen, lenLoss=lenLoss, initLoss=initLoss)
-        bobProt = BobProtocol(bob, photonCount, portNames=list(bob.ports.keys()))
+        bobProt = BobProtocol(bob, photonCount, portNames=list(bob.ports.keys()), detectorEff=detectorEff)
 
         bobProt.start()
         aliceProt.start()
