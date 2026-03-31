@@ -82,7 +82,7 @@ def run_BB84_sims(runtimes=10,
                          remote_port_name=bob.ports["B.C.In.tags"].name)
 
         # protocols =============================================
-        aliceProt = AliceProtocol(alice, photonCount, sourceFreq, portNames=list(alice.ports.keys()), lenLoss=lenLoss, initLoss=initLoss)
+        aliceProt = AliceProtocol(alice, photonCount, sourceFreq, portNames=list(alice.ports.keys()), fibreLen=fibreLen, lenLoss=lenLoss, initLoss=initLoss)
         bobProt = BobProtocol(bob, photonCount, portNames=list(bob.ports.keys()))
 
         bobProt.start()
