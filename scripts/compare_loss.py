@@ -1,4 +1,3 @@
-
 """
 QKD Simulation Comparison
 ============================
@@ -82,7 +81,7 @@ def comparative_stats(stats1, stats2):
     return
 
 
-def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, initLoss=0):
+def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, initLoss=0, detEff=1):
     # Parameter setup ===========================================
     # print()
     # print("=" * 65)
@@ -104,7 +103,8 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, i
         sourceFreq  = freq,
         qSpeed      = speed,
         lenLoss     = lenLoss,
-        initLoss    = initLoss
+        initLoss    = initLoss,
+        detectorEff = detEff
     )
 
     # MDI run ===================================================
@@ -115,7 +115,8 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, i
         sourceFreq  = freq,
         qSpeed      = speed,
         lenLoss     = lenLoss,
-        initLoss    = initLoss
+        initLoss    = initLoss,
+        detectorEff = detEff
     )
 
     # Individual runs ===========================================
@@ -133,7 +134,7 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, i
     return bb84_stats, mdi_stats
 
 if __name__ == "__main__":
-    Lx = [0,0.01,0.02,0.05,0.075,0.1,0.15,0.2,0.3]
+    Lx = [0,0.01,0.02,0.05,0.075,0.1,0.125,0.15,0.175,0.2,0.25,0.3]
 
     lengths_bb84 = []
     lengths_mdi = []
@@ -143,7 +144,7 @@ if __name__ == "__main__":
     rates_mdi = []
 
     for l in Lx:
-        bb84, mdi = main(fibre=50, lenLoss=l)
+        bb84, mdi = main(runtimes=100, fibre=50, lenLoss=l, detEff=0.9)
 
         lengths_bb84.append(bb84[1])
         qbers_bb84.append(bb84[2])

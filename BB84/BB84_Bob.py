@@ -66,7 +66,7 @@ class BobProtocol(NodeProtocol):
         Receive basis choices from Alice, send Bob's and sift common bits into self.key
         """
         # send to Alice
-        self.node.ports[self.port_co_name].tx_output(self.basis_list)
+        self.node.ports[self.port_co_name].tx_output([self.basis_list, [i for i, _ in self.meas_results]])
 
         # identify classical in port and await Alice's basis list
         port = self.node.ports[self.port_ci_name]

@@ -115,10 +115,8 @@ class AliceProtocol(NodeProtocol):
         self.node.ports[self.port_co_name].tx_output(self.basis_list)
         bob_bases = self.bob_bases
 
-        self.mask = [i for i, b in enumerate(bob_bases) if b == self.basis_list[i]]
-        
         # finalise key output by matching bases
-        self.key = [self.bit_list[i] for i in self.arrived_indices if self.basis_list[i] == bob_bases[i]]
+        self.key = [self.bit_list[i] for i in self.bob_detected if self.basis_list[i] == self.bob_bases[i]]
 
 
     def gen_qubits(self):
@@ -139,7 +137,9 @@ class AliceProtocol(NodeProtocol):
         port = self.node.ports[self.port_ci_name]
         yield self.await_port_input(port)
 
-        self.bob_bases = port.rx_input().items  # Receive and store
+        received = port.rx_input().items
+        self.bob_bases = received[0]
+        self.bob_detected = received[1]
 
         # Now send ours and sift
         self.basis_reconciliation()

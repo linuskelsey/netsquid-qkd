@@ -134,7 +134,7 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, i
     return bb84_stats, mdi_stats
 
 if __name__ == "__main__":
-    Dx = [1,5,10,20,30,40,50,60,70,80,90,100]
+    Ex = [1,0.99,0.95,0.9,0.8,0.7,0.6,0.5]
 
     lengths_bb84 = []
     lengths_mdi = []
@@ -143,8 +143,8 @@ if __name__ == "__main__":
     rates_bb84 = []
     rates_mdi = []
 
-    for d in Dx:
-        bb84, mdi = main(runtimes=100, fibre=d, lenLoss=0.2, detEff=0.9)
+    for e in Ex:
+        bb84, mdi = main(runtimes=100, fibre=50, lenLoss=0.2, detEff=e)
 
         lengths_bb84.append(bb84[1])
         qbers_bb84.append(bb84[2])
@@ -159,14 +159,15 @@ if __name__ == "__main__":
     rates_mdi  = [r / base for r in rates_mdi]
 
     plt.figure()
-    plt.plot(Dx, rates_bb84, 'o-', label="BB84")
-    plt.plot(Dx, rates_mdi, 's-', label="MDI")
+    plt.plot(Ex, rates_bb84, 'o-', label="BB84")
+    plt.plot(Ex, rates_mdi, 's-', label="MDI")
 
-    plt.xlabel("Node separation in km")
+    plt.xlabel("Detector efficiency ratio")
     plt.ylabel("Relative secure key rate")
     plt.yscale("log")
-    plt.title(f"Relative performance: BB84 and MDI-QKD;\n0.9 detector efficiency; 0.2dB/km fibre loss")
+    plt.title(f"Relative performance: BB84 and MDI-QKD;\n50 km fibre between Alice and Bob; 0.2dB/km fibre loss")
     plt.legend()
     plt.grid(True, alpha=0.3)
+    plt.gca().invert_xaxis()
 
     plt.show()
