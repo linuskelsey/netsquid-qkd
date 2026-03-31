@@ -15,20 +15,26 @@ class RelayNodeProtocol(NodeProtocol):
     Parameters:
         
     """
-    def __init__(self, node, name, photonCount, portNames=["Q0.In", "Q1.In", "C0.In", "C1.In", "C0.Out", "C1.Out"]):
+    def __init__(self, node, name, photonCount, portNames=["Q0.In", "Q1.In", "C0.In", "C1.In", "C0.Out", "C1.Out", "C0.In.basis", "C1.In.basis"]):
         super().__init__()
+        
         # distinguish node on which the protocol runs
         self.node = node
         self.name = name.title()
+        
         # number of photons to expect
         self.photon_count = photonCount
-        # ports, 0/1 denotes side, i/o denotes in/out
+        
+        # ports, 0/1 denotes side, i/o denotes in/out. basis ports handle matching.
         self.port_q0_i_name = portNames[0]
         self.port_q1_i_name = portNames[1]
         self.port_c0_i_name = portNames[2]
         self.port_c1_i_name = portNames[3]
         self.port_c0_o_name = portNames[4]
         self.port_c1_o_name = portNames[5]
+        self.port_c0_i_basis_name = portNames[6]
+        self.port_c1_i_basis_name = portNames[7]
+
         # measurement list
         self.meas = []
 
@@ -39,23 +45,34 @@ class RelayNodeProtocol(NodeProtocol):
 
         Simplified for current modelling with no synchronisation or memory constraints.
         """
-        # receive qubits
-        port = self.node.ports[self.port_q0_i_name]
-        yield self.await_port_input(port)
-        q_list0 = port.rx_input().items
 
-        port = self.node.ports[self.port_q1_i_name]
-        yield self.await_port_input(port)
-        q_list1 = port.rx_input().items
+        port_q0   = self.node.ports[self.port_q0_i_name]
+        port_q1   = self.node.ports[self.port_q1_i_name]
+        port_c0   = self.node.ports[self.port_c0_i_name]
+        port_c1   = self.node.ports[self.port_c1_i_name]
 
-        # receive indices
-        port_c0 = self.node.ports[self.port_c0_i_name]
-        yield self.await_port_input(port_c0)
-        idx0 = port_c0.rx_input().items
+        received = {}
 
-        port_c1 = self.node.ports[self.port_c1_i_name]
-        yield self.await_port_input(port_c1)
-        idx1 = port_c1.rx_input().items
+        # Keep looping until all four messages have arrived
+        while len(received) < 4:
+            yield (
+                self.await_port_input(port_q0) |
+                self.await_port_input(port_q1) |
+                self.await_port_input(port_c0) |
+                self.await_port_input(port_c1)
+            )
+            # Drain whichever ports fired
+            for key, port in [("q0", port_q0), ("q1", port_q1),
+                            ("idx0", port_c0), ("idx1", port_c1)]:
+                if key not in received:
+                    msg = port.rx_input()
+                    if msg is not None and msg.items:
+                        received[key] = msg.items
+
+        q_list0 = received["q0"]
+        q_list1 = received["q1"]
+        idx0    = received["idx0"]
+        idx1    = received["idx1"]
 
         # list of common received indices
         q_dict0 = dict(zip(idx0, q_list0))
@@ -81,22 +98,25 @@ class RelayNodeProtocol(NodeProtocol):
         """
         Receive basis lists from EndNodes and communicate back those bits to discard
         """
-        # receive from 1
-        port = self.node.ports[self.port_c0_i_name]
-        yield self.await_port_input(port)
-        basis_list0 = port.rx_input().items
-        # receive from 2
-        port = self.node.ports[self.port_c1_i_name]
-        yield self.await_port_input(port)
-        basis_list1 = port.rx_input().items
-        
-        discard=[]
-        for i, b in enumerate(basis_list0):
-            if b != basis_list1[i]:
-                discard.append(i)
+        port0 = self.node.ports[self.port_c0_i_basis_name]
+        port1 = self.node.ports[self.port_c1_i_basis_name]
 
-        self.node.ports[self.port_c0_o_name].tx_output(discard if len(discard) > 0 else [-1])
-        self.node.ports[self.port_c1_o_name].tx_output(discard if len(discard) > 0 else [-1])
+        received = {}
+        while len(received) < 2:
+            yield self.await_port_input(port0) | self.await_port_input(port1)
+            for key, port in [("b0", port0), ("b1", port1)]:
+                if key not in received:
+                    msg = port.rx_input()
+                    if msg is not None and msg.items:
+                        received[key] = msg.items
+
+        basis_list0 = received["b0"]
+        basis_list1 = received["b1"]
+
+        discard = [i for i, b in enumerate(basis_list0) if b != basis_list1[i]]
+        out = discard if discard else [-1]
+        self.node.ports[self.port_c0_o_name].tx_output(out)
+        self.node.ports[self.port_c1_o_name].tx_output(out)
 
 
     def run(self):

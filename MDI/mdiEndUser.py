@@ -35,40 +35,51 @@ class EndNodeProtocol(NodeProtocol):
         sourceEff       ====
         portNames       ====
     """
-    def __init__(self, node, name, photonCount, sourceFreq, sourceEff=1, portNames=["Q.Out", "C.Out", "C.In"], fibreLen=0, lenLoss=0, initLoss=0):
+    def __init__(self, node, name, photonCount, sourceFreq, sourceEff=1, portNames=["Q.Out", "C.Out", "C.In", "C.Out.basis"], fibreLen=0, lenLoss=0, initLoss=0):
         super().__init__()
+        
         # distinguish node on which the protocol runs
         self.node = node
         self.name = name.title()
-        # number of photons to be transmitted to relay
-        self.photon_count = photonCount
-        # Quantum out port to relay; Classical in/out port from/to relay - no A <-> B comms required
+        
+        # number of photons to be transmitted to relay - divide by 2 to normalise rates to BB84 scale (2 sources in MDI)
+        self.photon_count = int(photonCount / 2)
+        
+        # Quantum out port to relay; Classical in/out port from/to relay - no A <-> B comms required. basis port handles matching.
         self.port_qo_name = portNames[0]
         self.port_co_name = portNames[1]
         self.port_ci_name = portNames[2]
+        self.port_co_basis_name = portNames[3]
+        
         # basis and bit list for transmission
         self.basis_list = rng_bin_lst(self.photon_count)
         self.bit_list = rng_bin_lst(self.photon_count)
+        
         # key
         self.key = self.bit_list.copy()
+        
         # source and handling for source
         self.q_source = SinglePhotonSource(f"[{self.name[0]}: SPS]", sourceFreq, efficiency=sourceEff, status=SourceStatus.EXTERNAL)
         self.q_source.ports["qout0"].bind_output_handler(self.store_source_output)
         self.source_freq = sourceFreq
         self.source_eff = sourceEff
+        
         # qubit list for batched released
         self.q_list = []
+        
         # mask for bit flips and discards
         self.mask = []
+        
         # boolean to flip bits or not
         self.flipper = False
+        
         # end time for timing data
         self.end_time = None
+        
         # loss probability for fibre transmission
         self.fibre_len = fibreLen
         self.len_loss = lenLoss
         self.init_loss = initLoss
-
         T_fibre = 10 ** (-self.len_loss * self.fibre_len / 10)
         T_conn  = 1 - self.init_loss
         T_total = T_fibre * T_conn
@@ -137,11 +148,14 @@ class EndNodeProtocol(NodeProtocol):
         yield self.await_port_input(port)
         # collect measurements results
         self.meas = port.rx_input().items
+        
+        #mark all as discarded, then keep measured
+        for i in range(len(self.key)):
+            self.key[i] = 'x'
 
-        # discard non-measurements
-        for i, m in enumerate(self.meas):
-            if m == 0:
-                self.key[i] = "x"
+        for photon_idx, m in self.meas:
+            if m != 0:
+                self.key[photon_idx] = self.bit_list[photon_idx]
 
 
     def discard_basis_mismatch(self):
@@ -159,16 +173,16 @@ class EndNodeProtocol(NodeProtocol):
 
 
     def flip(self):
-        for i, m in enumerate(self.meas):
-            if not isinstance(self.key[i], int):
+        for photon_idx, m in self.meas:
+            if not isinstance(self.key[photon_idx], int):
                 continue
             if m == 0:
                 continue
-            if self.basis_list[i] == 0:  # Z-basis: always disagree before flip, so always flip
-                self.key[i] = (self.key[i] + 1) % 2
+            if self.basis_list[photon_idx] == 0:  # Z-basis: always disagree before flip, so always flip
+                self.key[photon_idx] = (self.key[photon_idx] + 1) % 2
             else:  # X-basis: need to determine correct condition
                 if m == -1:  # try this first
-                    self.key[i] = (self.key[i] + 1) % 2
+                    self.key[photon_idx] = (self.key[photon_idx] + 1) % 2
 
 
     def discard(self):
@@ -194,7 +208,7 @@ class EndNodeProtocol(NodeProtocol):
         yield from self.discard_non_measurements()
 
         # send bases to Charlie
-        self.node.ports[self.port_co_name].tx_output(self.basis_list)
+        self.node.ports[self.port_co_basis_name].tx_output(self.basis_list)
 
         # receive basis matching and sift
         yield from self.discard_basis_mismatch()

@@ -30,9 +30,9 @@ def run_mdi_sims(runtimes=10,
         ns.sim_reset()
 
         # nodes =================================================
-        alice   = Node("Alice", port_names=["A.Q.Out", "A.C.Out", "A.C.In"])
-        bob     = Node("Bob", port_names=["B.Q.Out", "B.C.Out", "B.C.In"])
-        charlie = Node("Charlie", port_names=["C.Q.In.A", "C.Q.In.B", "C.C.In.A", "C.C.In.B", "C.C.Out.A", "C.C.Out.B"])
+        alice   = Node("Alice", port_names=["A.Q.Out", "A.C.Out", "A.C.In", "A.C.Out.basis"])
+        bob     = Node("Bob", port_names=["B.Q.Out", "B.C.Out", "B.C.In", "B.C.Out.basis"])
+        charlie = Node("Charlie", port_names=["C.Q.In.A", "C.Q.In.B", "C.C.In.A", "C.C.In.B", "C.C.Out.A", "C.C.Out.B", "C.C.In.A.basis", "C.C.In.B.basis"])
 
         # channels ==============================================
         ### quantum
@@ -103,16 +103,36 @@ def run_mdi_sims(runtimes=10,
                          CChann4,
                          local_port_name=charlie.ports["C.C.Out.B"].name,
                          remote_port_name=bob.ports["B.C.In"].name)
+
+        CChann5 = ClassicalChannel("[A: -C.basis-> :C]",
+                                   delay=0,
+                                   length=fibreLen/2,
+                                   models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed,stddev=0.05)})
         
+        CChann6 = ClassicalChannel("[B: -C.basis-> :C]",
+                                   delay=0,
+                                   length=fibreLen/2,
+                                   models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed,stddev=0.05)})
+
+        alice.connect_to(charlie,
+                         CChann5,
+                         local_port_name=alice.ports["A.C.Out.basis"].name,
+                         remote_port_name=charlie.ports["C.C.In.A.basis"].name)
+        
+        bob.connect_to(charlie,
+                        CChann6,
+                        local_port_name=bob.ports["B.C.Out.basis"].name,
+                        remote_port_name=charlie.ports["C.C.In.B.basis"].name)
+
         # protocols =============================================
         aliceProt = EndNodeProtocol(alice, 'alice', photonCount, sourceFreq, 
-                                    portNames=["A.Q.Out", "A.C.Out", "A.C.In"],
-                                    fibreLen=fibreLen, lenLoss=lenLoss, initLoss=initLoss)
+                                    portNames=["A.Q.Out", "A.C.Out", "A.C.In", "A.C.Out.basis"],
+                                    fibreLen=fibreLen/2, lenLoss=lenLoss, initLoss=initLoss)
         bobProt = EndNodeProtocol(bob, 'bob', photonCount, sourceFreq,
-                                  portNames=["B.Q.Out", "B.C.Out", "B.C.In"],
-                                  fibreLen=fibreLen, lenLoss=lenLoss, initLoss=initLoss)
+                                  portNames=["B.Q.Out", "B.C.Out", "B.C.In", "B.C.Out.basis"],
+                                  fibreLen=fibreLen/2, lenLoss=lenLoss, initLoss=initLoss)
         charlieProt = RelayNodeProtocol(charlie, 'charlie', photonCount,
-                                        portNames=["C.Q.In.A", "C.Q.In.B", "C.C.In.A", "C.C.In.B", "C.C.Out.A", "C.C.Out.B"])
+                                        portNames=["C.Q.In.A", "C.Q.In.B", "C.C.In.A", "C.C.In.B", "C.C.Out.A", "C.C.Out.B", "C.C.In.A.basis", "C.C.In.B.basis"])
         
         bobProt.flipper = True
 
@@ -121,7 +141,7 @@ def run_mdi_sims(runtimes=10,
         bobProt.start()
 
         startTime = ns.util.simtools.sim_time(magnitude=ns.NANOSECOND)
-        stats = ns.sim_run(end_time=ns.SECOND)
+        stats = ns.sim_run(end_time=ns.SECOND * 100)
 
         if aliceProt.end_time is not None and bobProt.end_time is not None:
             endTime = max(aliceProt.end_time, bobProt.end_time)
