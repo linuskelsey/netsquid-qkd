@@ -20,7 +20,7 @@ class HybridDelayModel(DelayModel):
         # The 'rng' property contains a random number generator
         # We can use that to generate a random speed
         speed = self.properties["rng"].normal(avg_speed, avg_speed * stddev)
-        delay = 1e9 * kwargs["length"] / speed  # in nanoseconds
+        delay = 1e9 * kwargs["length"] * 1000 / speed  # in nanoseconds
         return delay
 
 

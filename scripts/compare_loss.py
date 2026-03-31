@@ -1,3 +1,4 @@
+
 """
 QKD Simulation Comparison
 ============================
@@ -132,7 +133,7 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, i
     return bb84_stats, mdi_stats
 
 if __name__ == "__main__":
-    Dx = [1,10,25,50,100]
+    Lx = [0,0.01,0.02,0.05,0.075,0.1,0.15,0.2,0.3]
 
     lengths_bb84 = []
     lengths_mdi = []
@@ -141,8 +142,8 @@ if __name__ == "__main__":
     rates_bb84 = []
     rates_mdi = []
 
-    for d in Dx:
-        bb84, mdi = main(fibre=d, lenLoss=0.1)
+    for l in Lx:
+        bb84, mdi = main(fibre=50, lenLoss=l)
 
         lengths_bb84.append(bb84[1])
         qbers_bb84.append(bb84[2])
@@ -154,19 +155,17 @@ if __name__ == "__main__":
 
     base = rates_bb84[0]
     rates_bb84 = [r / base for r in rates_bb84]
-    rates_mdi = [r / base for r in rates_mdi]
+    rates_mdi  = [r / base for r in rates_mdi]
 
     plt.figure()
-    plt.plot(Dx, rates_bb84, 'o-', label="BB84")
-    plt.plot(Dx, rates_mdi, 's-', label="MDI")
+    plt.plot(Lx, rates_bb84, 'o-', label="BB84")
+    plt.plot(Lx, rates_mdi, 's-', label="MDI")
 
-    plt.xlabel("Node separation in kilometres")
+    plt.xlabel("Fibre loss in dB / km")
     plt.ylabel("Relative secure key rate")
-    plt.title(f"Relative performance: BB84 and MDI-QKD,\nfibre loss 0.2 dB/km")
+    plt.yscale("log")
+    plt.title(f"Relative performance: BB84 and MDI-QKD;\n50 km fibre between Alice and Bob")
     plt.legend()
     plt.grid(True, alpha=0.3)
 
-    ax = plt.gca()
-    ax.set_ylim([0,1.1])
-    
     plt.show()
