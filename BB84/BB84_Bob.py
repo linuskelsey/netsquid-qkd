@@ -13,7 +13,7 @@ from lib.functions import rng_bin_lst
 
 
 class BobProtocol(NodeProtocol):
-    def __init__(self, node, photonCount, portNames=["B.Q.In","B.C.In","B.C.Out","B.C.In.tags"], detectorEff=1):
+    def __init__(self, node, photonCount, portNames=["B.Q.In","B.C.In","B.C.Out","B.C.In.tags"], detectorEff=1, darkCount=0, sourceFreq=1e7):
         super().__init__()
         self.node         = node
         self.photon_count = photonCount
@@ -32,6 +32,10 @@ class BobProtocol(NodeProtocol):
 
         self.bits = []
 
+        self.dark_count  = darkCount
+        self.source_freq = sourceFreq
+        self.dark_rate   = self.dark_count / (self.dark_count + self.source_freq)
+
 
     def receive_and_measure(self):
         """
@@ -49,12 +53,21 @@ class BobProtocol(NodeProtocol):
         
         # measure and store
         for i, q in zip(self.arrived_indices, qubit_batch):
-            #detector efficiency
-            if np.random.random() > self.detector_eff:
+            real = np.random.random() < self.detector_eff
+            dark = np.random.random() < self.dark_rate
+
+            if not (real or dark):
                 continue
+
             basis = self.basis_list[i]
             if basis: ns.qubits.operate(q,ns.H)  # if: X basis, then: rotate
-            meas = ns.qubits.measure(q)[0]       # Z basis measurement
+            
+            if dark and not real:
+                # spurious click - random outcome
+                meas = np.random.randint(0,2)
+            else:
+                meas = ns.qubits.measure(q)[0]       # Z basis measurement
+            
             self.meas_results.append((i, meas))  # outcome bit with index
             self.bits.append((i, basis, meas))
         

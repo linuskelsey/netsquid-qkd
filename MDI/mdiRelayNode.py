@@ -16,7 +16,7 @@ class RelayNodeProtocol(NodeProtocol):
     Parameters:
         
     """
-    def __init__(self, node, name, photonCount, portNames=["Q0.In", "Q1.In", "C0.In", "C1.In", "C0.Out", "C1.Out", "C0.In.basis", "C1.In.basis"], detectorEff=1):
+    def __init__(self, node, name, photonCount, portNames=["Q0.In", "Q1.In", "C0.In", "C1.In", "C0.Out", "C1.Out", "C0.In.basis", "C1.In.basis"], detectorEff=1, darkCount=0, sourceFreq=1e7):
         super().__init__()
         
         # distinguish node on which the protocol runs
@@ -38,6 +38,10 @@ class RelayNodeProtocol(NodeProtocol):
 
         # detector efficiency
         self.detector_eff = detectorEff
+        # dark counts
+        self.dark_count   = darkCount
+        self.source_freq  = sourceFreq
+        self.dark_rate    = self.dark_count / (self.dark_count + self.source_freq)
 
         # measurement list
         self.meas = []
@@ -85,26 +89,32 @@ class RelayNodeProtocol(NodeProtocol):
         common = set(q_dict0.keys()) & set(q_dict1.keys())
 
         for i in sorted(common):
-            # detector efficiencies - both fire independently
-            if np.random.random() > self.detector_eff:
-                self.meas.append((i, 0))
-                continue 
-            if np.random.random() > self.detector_eff:
-                self.meas.append((i, 0))
+            real0 = np.random.random() < self.detector_eff
+            real1 = np.random.random() < self.detector_eff
+            dark0 = np.random.random() < self.dark_rate
+            dark1 = np.random.random() < self.dark_rate
+
+            det0 = real0 or dark0
+            det1 = real1 or dark1
+
+            if not (det0 and det1):
                 continue
 
-            q0, q1 = q_dict0[i], q_dict1[i]
-            ns.qubits.operate([q0, q1], ns.CNOT)
-            ns.qubits.operate(q0, ns.H)
-            a, _ = ns.qubits.measure(q0)
-            b, _ = ns.qubits.measure(q1)
-
-            if a == 1 and b == 1:
-                self.meas.append((i, -1))
-            elif a == 0 and b == 1:
-                self.meas.append((i, 1))
+            if (dark0 and not real0) or (dark1 and not real1):
+                self.meas.append((i, np.random.choice([-1, 0, 1])))
             else:
-                self.meas.append((i, 0))
+                q0, q1 = q_dict0[i], q_dict1[i]
+                ns.qubits.operate([q0, q1], ns.CNOT)
+                ns.qubits.operate(q0, ns.H)
+                a, _ = ns.qubits.measure(q0)
+                b, _ = ns.qubits.measure(q1)
+
+                if a == 1 and b == 1:
+                    self.meas.append((i, -1))
+                elif a == 0 and b == 1:
+                    self.meas.append((i, 1))
+                else:
+                    self.meas.append((i, 0))
 
     def basis_matching(self):
         """

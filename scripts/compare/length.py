@@ -18,7 +18,7 @@ import argparse
 import sys
 import os
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 sys.path.append("BB84/") # For BB84 protocols
 sys.path.append("MDI/") # For MDI protocols
 from BB84.BB84_run import run_BB84_sims
@@ -81,7 +81,7 @@ def comparative_stats(stats1, stats2):
     return
 
 
-def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, initLoss=0, detEff=1):
+def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, initLoss=0, detEff=1, darkCount=0):
     # Parameter setup ===========================================
     # print()
     # print("=" * 65)
@@ -104,7 +104,8 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, i
         qSpeed      = speed,
         lenLoss     = lenLoss,
         initLoss    = initLoss,
-        detectorEff = detEff
+        detectorEff = detEff,
+        darkCount   = darkCount
     )
 
     # MDI run ===================================================
@@ -116,7 +117,8 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, i
         qSpeed      = speed,
         lenLoss     = lenLoss,
         initLoss    = initLoss,
-        detectorEff = detEff
+        detectorEff = detEff,
+        darkCount   = darkCount
     )
 
     # Individual runs ===========================================
@@ -134,7 +136,7 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, i
     return bb84_stats, mdi_stats
 
 if __name__ == "__main__":
-    Lx = [0,0.01,0.02,0.05,0.075,0.1,0.125,0.15,0.175,0.2,0.25,0.3]
+    Dx = [1,5,10,20,30,40,50,60,70,80,90,100]
 
     lengths_bb84 = []
     lengths_mdi = []
@@ -143,8 +145,8 @@ if __name__ == "__main__":
     rates_bb84 = []
     rates_mdi = []
 
-    for l in Lx:
-        bb84, mdi = main(runtimes=100, fibre=50, lenLoss=l, detEff=0.9)
+    for d in Dx:
+        bb84, mdi = main(runtimes=100, fibre=d, lenLoss=0.2, detEff=0.9, darkCount=100)
 
         lengths_bb84.append(bb84[1])
         qbers_bb84.append(bb84[2])
@@ -154,19 +156,32 @@ if __name__ == "__main__":
         qbers_mdi.append(mdi[2])
         rates_mdi.append(mdi[3])
 
+    # Store absolute rates before normalising
+    abs_rates_bb84 = [r / 1000 for r in rates_bb84]  # convert to kbps
+    abs_rates_mdi  = [r / 1000 for r in rates_mdi]
+
+    # Then normalise for relative
     base = rates_bb84[0]
-    rates_bb84 = [r / base for r in rates_bb84]
-    rates_mdi  = [r / base for r in rates_mdi]
+    rel_rates_bb84 = [r / base for r in rates_bb84]
+    rel_rates_mdi  = [r / base for r in rates_mdi]
 
-    plt.figure()
-    plt.plot(Lx, rates_bb84, 'o-', label="BB84")
-    plt.plot(Lx, rates_mdi, 's-', label="MDI")
+    fig, ax1 = plt.subplots()
 
-    plt.xlabel("Fibre loss in dB / km")
-    plt.ylabel("Relative secure key rate")
-    plt.yscale("log")
-    plt.title(f"Relative performance: BB84 and MDI-QKD;\n50 km fibre between Alice and Bob")
-    plt.legend()
-    plt.grid(True, alpha=0.3)
+    # Primary axis — absolute scale
+    ax1.plot(Dx, abs_rates_bb84, 'o-', label="BB84")
+    ax1.plot(Dx, abs_rates_mdi, 's-', label="MDI")
+    ax1.set_xlabel("Separation between Alice and Bob in km")
+    ax1.set_ylabel("Absolute secure key rate (kbps)")
+    ax1.set_yscale("log")
+    ax1.grid(True, alpha=0.3)
 
+    # Secondary axis — relative scale
+    ax2 = ax1.twinx()
+    ax2.plot(Dx, rel_rates_bb84, 'o-', alpha=0)
+    ax2.plot(Dx, rel_rates_mdi, 's-', alpha=0)
+    ax2.set_ylabel("Relative secure key rate")
+    ax2.set_yscale("log")
+
+    ax1.legend()
+    plt.title("Relative performance: BB84 and MDI-QKD;\n0.9 detector efficiency; 0.2dB/km fibre loss; 100 dark photons per second")
     plt.show()
