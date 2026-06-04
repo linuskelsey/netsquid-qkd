@@ -10,7 +10,7 @@ Parametric NetSquid simulation comparing BB84 and MDI-QKD across key rate, imple
 |-------|-------------|--------|
 | 1 | Fibre loss: Beer-Lambert `T = 10^(-αL/10)` | **complete** |
 | 2 | Detector efficiency: `η_d ∈ [0.5, 1.0]` | **complete** |
-| 3 | Dark counts: scale `d_c` with detection rate | **next** |
+| 3 | Dark counts: basic model complete; scale `d_c` with detection rate + `d_c/η` sensitivity analysis | **in progress** |
 | 4 | Node / connector loss | planned |
 | 5 | Source bit errors | planned |
 | 6 | Detector basis bias | planned |
@@ -60,6 +60,12 @@ Parametric NetSquid simulation comparing BB84 and MDI-QKD across key rate, imple
 | July | Bug-catching, parameter sweeps, result collection |
 | August | Write-up, final figures, submission |
 | September | Viva |
+
+---
+
+## Performance
+
+- **Multiprocessing** — sweep loops are embarrassingly parallel; replace outer `for` with `Pool.map` for near-linear speedup with core count. Priority before network-scale sweeps become slow.
 
 ---
 
