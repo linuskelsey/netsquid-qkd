@@ -1,17 +1,20 @@
 """
-QKD Simulation Comparison
-============================
-Executes both the BB84 and the MDI-QKD netsquid simulations and prints comparative performance metrics.
+Key Rate vs Detector Efficiency Comparison
+===========================================
+Sweeps detector efficiency (1.0 -> 0.5). Fixed fibre length and loss parameters.
+Note: detector_efficiency in --config is ignored; η_d is the sweep axis.
 
 Usage:
-    python scripts/compare_script.py [--runtimes N] [--photons N] [--fibre F] [--freq F] [--speed S]
+    python scripts/compare/efficiency.py [--config PATH] [--runtimes N] [--fibre F]
+                                         [--loss F] [--dark-count N] [--init-loss F]
 
-Defaults:
-    runtimes    10
-    photons     1024
-    fibre       1       (km)
-    freq        1e7     (Hz)
-    speed       0.8     (fraction of c)
+Defaults (no --config):
+    detector_efficiency     swept 1.0->0.5  (sweep axis — config value ignored)
+    fibre_loss_db_per_km    0.2  dB/km  — pass --config configs/layer0_ideal.json for idealised run
+    dark_count_rate         0    cps
+    init_loss               0.0  dB
+    fibre                   50   km
+    runtimes                100
 """
 
 import argparse
@@ -23,6 +26,7 @@ sys.path.append("BB84/") # For BB84 protocols
 sys.path.append("MDI/") # For MDI protocols
 from BB84.BB84_run import run_BB84_sims
 from MDI.mdiRun import run_mdi_sims
+from lib.functions import load_config, config_arg_parser
 
 import matplotlib.pyplot as plt
 
@@ -65,7 +69,7 @@ def aggregate_summary(KeyListA, KeyListB, KeyRateList, protocol):
     avg_qber     = sum(qbers) / len(qbers) if qbers else float('nan')
     avg_kr       = sum(key_rates) / len(key_rates) if key_rates else float('nan')
     avg_key_len  = sum(key_lengths) / len(key_lengths) if key_lengths else float('nan')
-    
+
     return len(qbers), avg_key_len, avg_qber, avg_kr
 
 
@@ -82,19 +86,6 @@ def comparative_stats(stats1, stats2):
 
 
 def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, initLoss=0, detEff=1, darkCount=0):
-    # Parameter setup ===========================================
-    # print()
-    # print("=" * 65)
-    # print("  QKD Simulations")
-    # print("=" * 65)
-    # print(f"  Runtimes   : {runtimes}")
-    # print(f"  Photons    : {photons}")
-    # print(f"  Fibre      : {fibre} km")
-    # print(f"  Frequency  : {freq:.2e} Hz")
-    # print(f"  Speed      : {speed}c")
-    # print("=" * 65)
-    # print()
-
     # BB84 run ==================================================
     KeyListA_bb84, KeyListB_bb84, KeyRateList_bb84 = run_BB84_sims(
         runtimes    = runtimes,
@@ -121,32 +112,42 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, i
         darkCount   = darkCount
     )
 
-    # Individual runs ===========================================
-    # print("\n  Per-run results:")
-    # print("-" * 65)
-    # for i in range(runtimes):
-        # print_run_summary(i, KeyListA_bb84[i], KeyListB_bb84[i], KeyRateList_bb84[i], "BB84")
-        # print_run_summary(i, KeyListA_mdi[i], KeyListB_mdi[i], KeyRateList_mdi[i], "MDI ")
-
     # Aggregate stats ===========================================
     bb84_stats = aggregate_summary(KeyListA_bb84, KeyListB_bb84, KeyRateList_bb84, "BB84")
-    mdi_stats = aggregate_summary(KeyListA_mdi, KeyListB_mdi, KeyRateList_mdi, "MDI")
-    # NO PRINT -- comparative_stats(bb84_stats, mdi_stats)
+    mdi_stats  = aggregate_summary(KeyListA_mdi,  KeyListB_mdi,  KeyRateList_mdi,  "MDI")
 
     return bb84_stats, mdi_stats
 
 if __name__ == "__main__":
+    parser = config_arg_parser()
+    parser.add_argument("--runtimes",   type=int,   default=100)
+    parser.add_argument("--fibre",      type=float, default=50,   help="Fixed fibre length (km)")
+    parser.add_argument("--loss",       type=float, default=None, help="Fibre loss (dB/km)")
+    parser.add_argument("--dark-count", type=int,   default=None, dest="dark_count", help="Dark count rate (cps)")
+    parser.add_argument("--init-loss",  type=float, default=None, dest="init_loss",  help="Insertion loss, linear fraction [0-1] (e.g. 0.1 = 10%%)")
+    args = parser.parse_args()
+    cfg  = load_config(args.config)
+    if args.loss is not None:       cfg["fibre_loss_db_per_km"] = args.loss
+    if args.dark_count is not None: cfg["dark_count_rate"]      = args.dark_count
+    if args.init_loss is not None:  cfg["init_loss"]            = args.init_loss
+
+    if args.config is not None and cfg["detector_efficiency"] != 1.0:
+        print(f"Note: detector_efficiency={cfg['detector_efficiency']} from config ignored — η_d is the sweep axis")
+    print(f"Sweep: η_d [1.0->0.5]  |  Fixed: L={args.fibre} km  α={cfg['fibre_loss_db_per_km']} dB/km  d_c={cfg['dark_count_rate']} cps")
+
     Ex = [1,0.99,0.95,0.9,0.8,0.7,0.6,0.5]
 
     lengths_bb84 = []
-    lengths_mdi = []
-    qbers_bb84 = []
-    qbers_mdi = []
-    rates_bb84 = []
-    rates_mdi = []
+    lengths_mdi  = []
+    qbers_bb84   = []
+    qbers_mdi    = []
+    rates_bb84   = []
+    rates_mdi    = []
 
     for e in Ex:
-        bb84, mdi = main(runtimes=100, fibre=50, lenLoss=0.2, detEff=e, darkCount=100)
+        bb84, mdi = main(runtimes=args.runtimes, fibre=args.fibre,
+                         lenLoss=cfg["fibre_loss_db_per_km"], initLoss=cfg["init_loss"],
+                         detEff=e, darkCount=cfg["dark_count_rate"])
 
         lengths_bb84.append(bb84[1])
         qbers_bb84.append(bb84[2])
@@ -161,7 +162,7 @@ if __name__ == "__main__":
     abs_rates_mdi  = [r / 1000 for r in rates_mdi]
 
     # Then normalise for relative
-    base = rates_bb84[0]
+    base           = rates_bb84[0]
     rel_rates_bb84 = [r / base for r in rates_bb84]
     rel_rates_mdi  = [r / base for r in rates_mdi]
 
@@ -169,7 +170,7 @@ if __name__ == "__main__":
 
     # Primary axis — absolute scale
     ax1.plot(Ex, abs_rates_bb84, 'o-', label="BB84")
-    ax1.plot(Ex, abs_rates_mdi, 's-', label="MDI")
+    ax1.plot(Ex, abs_rates_mdi,  's-', label="MDI")
     ax1.set_xlabel("Detector efficiency ratio")
     ax1.set_ylabel("Absolute secure key rate (kbps)")
     ax1.set_yscale("log")
@@ -179,10 +180,11 @@ if __name__ == "__main__":
     # Secondary axis — relative scale
     ax2 = ax1.twinx()
     ax2.plot(Ex, rel_rates_bb84, 'o-', alpha=0)
-    ax2.plot(Ex, rel_rates_mdi, 's-', alpha=0)
+    ax2.plot(Ex, rel_rates_mdi,  's-', alpha=0)
     ax2.set_ylabel("Relative secure key rate")
     ax2.set_yscale("log")
 
     ax1.legend()
-    plt.title("Relative performance: BB84 and MDI-QKD;\n50 km fibre between Alice and Bob; 0.2dB/km fibre loss; 100 dark photons per second")
+    plt.title(f"Key rate vs detector efficiency: BB84 and MDI-QKD\n"
+              f"$L$={args.fibre} km  |  $\\alpha$={cfg['fibre_loss_db_per_km']} dB/km  |  $d_c$={cfg['dark_count_rate']} cps")
     plt.show()

@@ -1,8 +1,34 @@
+import json
+import argparse
 import numpy as np
 
 from netsquid.components import QSource
 from netsquid.components.qsource import SourceStatus
 from netsquid.components.models import DelayModel, FibreLossModel
+
+
+DEFAULTS = {
+    "fibre_loss_db_per_km": 0.2,   # non-ideal: pass --config configs/layer0_ideal.json for idealised baseline
+    "init_loss": 0.0,              # linear fraction [0-1], not dB (e.g. 0.1 = 10% loss)
+    "detector_efficiency": 1.0,
+    "dark_count_rate": 0,
+    "source_error_rate": 0.0,
+    "basis_bias": 0.5,
+}
+
+
+def load_config(path=None):
+    config = DEFAULTS.copy()
+    if path is not None:
+        with open(path) as f:
+            config.update(json.load(f))
+    return config
+
+
+def config_arg_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", type=str, default=None, help="Path to JSON config file")
+    return parser
 
 
 

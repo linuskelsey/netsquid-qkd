@@ -1,0 +1,10 @@
+{
+    "layer": 1,
+    "description": "Fibre loss only. Beer-Lambert: T = 10^(-αL/10).",
+    "fibre_loss_db_per_km": 0.2,
+    "init_loss": 0.0,
+    "detector_efficiency": 1.0,
+    "dark_count_rate": 0,
+    "source_error_rate": 0.0,
+    "basis_bias": 0.5
+}

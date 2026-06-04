@@ -1,0 +1,7 @@
+# Netscape HTTP Cookie File
+# https://curl.haxx.se/rfc/cookie_spec.html
+# This is a generated file! Do not edit.
+
+.netsquid.org	TRUE	/	TRUE	1806431308	phpbb3_c9anq_u	1
+.netsquid.org	TRUE	/	TRUE	1806431308	phpbb3_c9anq_k	
+.netsquid.org	TRUE	/	TRUE	1806431308	phpbb3_c9anq_sid	d835e96da7ba809c0e88fb87f46b063b

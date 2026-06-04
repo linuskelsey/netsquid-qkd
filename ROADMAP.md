@@ -47,6 +47,8 @@ Parametric NetSquid simulation comparing BB84 and MDI-QKD across key rate, imple
 - Effect of Charlie's position on performance (asymmetric links)
 - Effect of BB84 repeaters on comparison
 - Practical key rate thresholds for operational viability
+- Idealised branch: run both protocols with all imperfections off; ratio = pure architectural overhead of MDI (cf. GitHub issue #7)
+- Top-level CLI (`scripts/compare/run.py`): single entry point to select comparison type (distance/loss/efficiency) and all parameters, replacing three separate script invocations (cf. GitHub issue #4)
 
 ---
 
@@ -72,5 +74,6 @@ Parametric NetSquid simulation comparing BB84 and MDI-QKD across key rate, imple
 ## Metrics for Final Comparison
 
 1. Key rate vs distance (varying topologies)
-2. Implementation cost — economic and energetic (ILP framework, cf. Karavias et al. 2025)
-3. Scalability — marginal key rate and cost per added user
+2. QBER threshold crossings (> 11%) as function of distance, loss, η_d — protocol viability boundary
+3. Implementation cost — economic and energetic (ILP framework, cf. Karavias et al. 2025)
+4. Scalability — marginal key rate and cost per added user

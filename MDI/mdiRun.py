@@ -6,7 +6,7 @@ from netsquid.components import QuantumChannel, ClassicalChannel
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
-from lib.functions import HybridDelayModel
+from lib.functions import HybridDelayModel, load_config, config_arg_parser
 
 from mdiEndUser import EndNodeProtocol
 from mdiRelayNode import RelayNodeProtocol
@@ -162,3 +162,23 @@ def run_mdi_sims(runtimes=10,
             continue
 
     return KeyListA, KeyListB, KeyRateList
+
+
+if __name__ == "__main__":
+    parser = config_arg_parser()
+    parser.add_argument("--fibre",    type=float, default=50,   help="Fibre length (km)")
+    parser.add_argument("--runtimes", type=int,   default=10,   help="Number of simulation runs")
+    args = parser.parse_args()
+    cfg  = load_config(args.config)
+
+    _, _, rates = run_mdi_sims(
+        runtimes    = args.runtimes,
+        fibreLen    = args.fibre,
+        lenLoss     = cfg["fibre_loss_db_per_km"],
+        initLoss    = cfg["init_loss"],
+        detectorEff = cfg["detector_efficiency"],
+        darkCount   = cfg["dark_count_rate"],
+    )
+    valid = [r for r in rates if r != "nan"]
+    avg   = f"{sum(valid)/len(valid):.2f} bps" if valid else "no completed runs"
+    print(f"MDI  | fibre={args.fibre}km | avg key rate: {avg}")
