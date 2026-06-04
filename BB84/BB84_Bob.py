@@ -71,6 +71,16 @@ class BobProtocol(NodeProtocol):
             self.meas_results.append((i, meas))  # outcome bit with index
             self.bits.append((i, basis, meas))
         
+        # dark counts on lost slots — timeslots of photons absorbed by fibre can still click
+        arrived_set = set(self.arrived_indices)
+        for i in range(self.photon_count):
+            if i in arrived_set:
+                continue
+            if np.random.random() < self.dark_rate:
+                meas = np.random.randint(0, 2)
+                self.meas_results.append((i, meas))
+                self.bits.append((i, self.basis_list[i], meas))
+
         self.key = [m for _, m in self.meas_results]
 
 

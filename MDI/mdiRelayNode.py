@@ -116,6 +116,27 @@ class RelayNodeProtocol(NodeProtocol):
                 else:
                     self.meas.append((i, 0))
 
+        # dark counts on lost slots — one or both photons were absorbed by fibre
+        idx0_set = set(idx0)
+        idx1_set = set(idx1)
+
+        # both photons lost
+        for i in sorted(set(range(self.photon_count)) - idx0_set - idx1_set):
+            if np.random.random() < self.dark_rate and np.random.random() < self.dark_rate:
+                self.meas.append((i, np.random.choice([-1, 0, 1])))
+
+        # only Alice's photon arrived
+        for i in sorted(idx0_set - idx1_set):
+            det0 = np.random.random() < self.detector_eff or np.random.random() < self.dark_rate
+            if det0 and np.random.random() < self.dark_rate:
+                self.meas.append((i, np.random.choice([-1, 0, 1])))
+
+        # only Bob's photon arrived
+        for i in sorted(idx1_set - idx0_set):
+            det1 = np.random.random() < self.detector_eff or np.random.random() < self.dark_rate
+            if np.random.random() < self.dark_rate and det1:
+                self.meas.append((i, np.random.choice([-1, 0, 1])))
+
     def basis_matching(self):
         """
         Receive basis lists from EndNodes and communicate back those bits to discard
