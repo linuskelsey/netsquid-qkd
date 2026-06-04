@@ -4,3 +4,6 @@
 # pycache
 *.pyc
 /__pycache__/*
+
+# netsquid documentation
+Docs/netsquid
