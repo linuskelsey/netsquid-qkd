@@ -63,6 +63,7 @@ Default parameters (no config, no CLI flags):
 | `initLoss` | 0.0 | Insertion loss, linear fraction [0–1] (e.g. 0.1 = 10%) |
 | `runtimes` | 100 | Monte Carlo repetitions per sweep point |
 | `photons` | 1024 | Photons per run |
+| `workers` | 80% of CPU cores | Parallel worker processes (passed to run functions directly) |
 
 ## Dependencies
 

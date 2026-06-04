@@ -69,7 +69,7 @@ Parametric NetSquid simulation comparing BB84 and MDI-QKD across key rate, imple
 
 ## Performance
 
-- **Multiprocessing** — sweep loops are embarrassingly parallel; replace outer `for` with `Pool.map` for near-linear speedup with core count. Priority before network-scale sweeps become slow.
+- **Multiprocessing** — **complete**. `run_BB84_sims` and `run_mdi_sims` split `runtimes` across `floor(0.8 × cpu_count)` worker processes via `multiprocessing.Pool`. Compare scripts require no changes. Pass `workers=N` to override.
 
 ---
 
