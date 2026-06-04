@@ -34,6 +34,7 @@ class BobProtocol(NodeProtocol):
 
         self.dark_count  = darkCount
         self.source_freq = sourceFreq
+        # per-slot dark click probability; distance effect emerges naturally as fewer real photons arrive
         self.dark_rate   = self.dark_count / (self.dark_count + self.source_freq)
 
 

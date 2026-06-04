@@ -11,10 +11,11 @@ UCL MSc Quantum Technologies Research Project — Linus Kelsey
 ```
 BB84/           BB84 Alice/Bob protocols and simulation runner
 MDI/            MDI-QKD Alice/Bob/Charlie protocols and simulation runner
-lib/            Shared utilities (delay model, photon source)
+lib/            Shared utilities (delay model, photon source, config loader)
+configs/        JSON parameter presets (layer0_ideal → layer3_loss_eff_dark)
 scripts/
   raw/          Single-protocol run scripts
-  compare/      Sweep scripts: key rate vs distance, loss, detector efficiency
+  compare/      Sweep scripts: key rate vs distance, loss, efficiency, dark counts
 ```
 
 ## Running
@@ -23,20 +24,44 @@ From the repo root:
 
 ```bash
 # Single comparison at default parameters
-python scripts/compare/length.py    # key rate vs distance
-python scripts/compare/loss.py      # key rate vs fibre attenuation
+python scripts/compare/length.py      # key rate vs distance
+python scripts/compare/loss.py        # key rate vs fibre attenuation
 python scripts/compare/efficiency.py  # key rate vs detector efficiency
+python scripts/compare/dark_count.py  # key rate vs dark count rate
 ```
 
-Key parameters (all comparison scripts accept these via `main(...)`):
+All comparison scripts accept CLI flags and an optional JSON config:
+
+```bash
+# Use a layered config preset
+python scripts/compare/length.py --config configs/layer2_loss_eff.json
+
+# Override individual parameters
+python scripts/compare/length.py --loss 0.3 --det-eff 0.85 --runtimes 50
+
+# Config preset + CLI override (CLI takes precedence)
+python scripts/compare/length.py --config configs/layer3_loss_eff_dark.json --fibre 30
+```
+
+Config presets in `configs/`:
+
+| File | α (dB/km) | η_d | d_c (cps) |
+|------|-----------|-----|-----------|
+| `layer0_ideal.json` | 0.0 | 1.0 | 0 |
+| `layer1_loss.json` | 0.2 | 1.0 | 0 |
+| `layer2_loss_eff.json` | 0.2 | 0.9 | 0 |
+| `layer3_loss_eff_dark.json` | 0.2 | 0.9 | 100 |
+
+Default parameters (no config, no CLI flags):
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `fibre` | 100 km | Alice-Bob separation |
-| `lenLoss` | 0 dB/km | Fibre attenuation coefficient α |
+| `fibre` | 50 km | Alice-Bob separation (not applicable for length sweep) |
+| `lenLoss` | 0.2 dB/km | Fibre attenuation coefficient α |
 | `detEff` | 1.0 | Detector efficiency η_d |
-| `darkCount` | 0 | Dark counts per second |
-| `runtimes` | 10 | Monte Carlo repetitions per data point |
+| `darkCount` | 0 cps | Dark count rate d_c |
+| `initLoss` | 0.0 | Insertion loss, linear fraction [0–1] (e.g. 0.1 = 10%) |
+| `runtimes` | 100 | Monte Carlo repetitions per sweep point |
 | `photons` | 1024 | Photons per run |
 
 ## Dependencies

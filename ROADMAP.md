@@ -10,7 +10,7 @@ Parametric NetSquid simulation comparing BB84 and MDI-QKD across key rate, imple
 |-------|-------------|--------|
 | 1 | Fibre loss: Beer-Lambert `T = 10^(-αL/10)` | **complete** |
 | 2 | Detector efficiency: `η_d ∈ [0.5, 1.0]` | **complete** |
-| 3 | Dark counts: basic model complete; scale `d_c` with detection rate + `d_c/η` sensitivity analysis | **in progress** |
+| 3 | Dark counts: per-slot Bernoulli model + lost-slot dark counts (BB84 + MDI) | **complete** |
 | 4 | Node / connector loss | planned |
 | 5 | Source bit errors | planned |
 | 6 | Detector basis bias | planned |
@@ -30,11 +30,13 @@ Parametric NetSquid simulation comparing BB84 and MDI-QKD across key rate, imple
 
 ---
 
-## Results So Far (April 2026)
+## Results So Far (June 2026)
 
 - **Key rate vs fibre attenuation** (50 km, η_d = 0.9): both linear on log scale; MDI offset below BB84 by constant factor across all α; at α = 0.2 dB/km → BB84 ≈ 70 kbps, MDI ≈ 25 kbps
 - **Key rate vs distance** (α = 0.2 dB/km, η_d = 0.9): MDI decays faster; gap widens beyond ~30 km; at 100 km → BB84 ≈ 4 kbps, MDI ≈ 2 kbps; no crossover observed in 1–100 km range
 - **Key rate vs detector efficiency** (50 km, α = 0.2 dB/km): BB84 degrades ~linearly (−50% over η_d = 1→0.5); MDI degrades quadratically (−90% same range) due to coincident detection at two detectors — SNSPDs (η_d ≈ 0.90–0.95) are not optional for MDI
+
+- **Key rate vs dark count rate** (50 km, α = 0.2 dB/km, η_d = 1.0): negligible effect on both protocols across 0–10000 cps at source_freq = 10 MHz. dark_rate per slot ≤ 1e-3 even at 10000 cps; ~1 spurious click per 1024-photon run. Dark counts are not a limiting factor in the metropolitan regime.
 
 **Why MDI is slower:** (1) 50% BSM efficiency cap from linear-optic HOM setup; (2) η_d² dependence at Charlie's two detectors.
 
@@ -42,7 +44,7 @@ Parametric NetSquid simulation comparing BB84 and MDI-QKD across key rate, imple
 
 ## Open Questions / Analysis Priorities
 
-- Sensitivity analysis on `d_c / η` ratio (dark count model)
+- Dark count QBER impact at long haul: dark_rate is per-slot (dc/source_freq, distance-independent); increasing QBER contribution at longer distances is captured naturally as fewer real photons arrive — verify via QBER vs distance sweep at high dc
 - QBER threshold crossings (> 11%) as function of distance, loss, η_d — for trusted node analysis
 - Effect of Charlie's position on performance (asymmetric links)
 - Effect of BB84 repeaters on comparison

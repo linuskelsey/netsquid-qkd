@@ -23,8 +23,8 @@ class RelayNodeProtocol(NodeProtocol):
         self.node = node
         self.name = name.title()
         
-        # number of photons to expect
-        self.photon_count = photonCount
+        # end users each send photonCount//2 photons; relay index space must match
+        self.photon_count = photonCount // 2
         
         # ports, 0/1 denotes side, i/o denotes in/out. basis ports handle matching.
         self.port_q0_i_name = portNames[0]
@@ -38,7 +38,7 @@ class RelayNodeProtocol(NodeProtocol):
 
         # detector efficiency
         self.detector_eff = detectorEff
-        # dark counts
+        # per-slot dark click probability; distance effect emerges naturally as fewer real photons arrive
         self.dark_count   = darkCount
         self.source_freq  = sourceFreq
         self.dark_rate    = self.dark_count / (self.dark_count + self.source_freq)
