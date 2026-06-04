@@ -1,3 +1,6 @@
+from multiprocessing import Pool
+import os
+
 from difflib import SequenceMatcher
 import netsquid as ns
 
@@ -14,6 +17,75 @@ from BB84_Bob import BobProtocol
 
 
 
+def _bb84_chunk(args):
+    """Sequential simulation block — runs runtimes iterations and returns partial results."""
+    runtimes, fibreLen, qDelay, qSpeed, photonCount, sourceFreq, lenLoss, initLoss, detectorEff, darkCount = args
+
+    KeyListA    = []
+    KeyListB    = []
+    KeyRateList = []
+
+    for _ in range(runtimes):
+        ns.sim_reset()
+
+        # nodes =================================================
+        alice = Node("Alice", port_names=["A.Q.Out", "A.C.Out", "A.C.In", "A.C.Out.tags"])
+        bob   = Node("Bob",   port_names=["B.Q.In",  "B.C.In",  "B.C.Out", "B.C.In.tags"])
+
+        # channels ==============================================
+        QChann = QuantumChannel("[A: -Q-> :B]",
+                                delay=qDelay,
+                                length=fibreLen,
+                                models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed, stddev=0.05)})
+
+        alice.connect_to(bob, QChann,
+                         local_port_name=alice.ports["A.Q.Out"].name,
+                         remote_port_name=bob.ports["B.Q.In"].name)
+
+        CChann1 = ClassicalChannel("[A: -C-> :B]", delay=0, length=fibreLen,
+                                   models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed, stddev=0.05)})
+        CChann2 = ClassicalChannel("[B: -C-> :A]", delay=0, length=fibreLen,
+                                   models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed, stddev=0.05)})
+        CChann3 = ClassicalChannel("[A: -C:tags-> :B]", delay=0, length=fibreLen,
+                                   models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed, stddev=0.05)})
+
+        alice.connect_to(bob, CChann1,
+                         local_port_name=alice.ports["A.C.Out"].name,
+                         remote_port_name=bob.ports["B.C.In"].name)
+        bob.connect_to(alice, CChann2,
+                       local_port_name=bob.ports["B.C.Out"].name,
+                       remote_port_name=alice.ports["A.C.In"].name)
+        alice.connect_to(bob, CChann3,
+                         local_port_name=alice.ports["A.C.Out.tags"].name,
+                         remote_port_name=bob.ports["B.C.In.tags"].name)
+
+        # protocols =============================================
+        aliceProt = AliceProtocol(alice, photonCount, sourceFreq,
+                                  portNames=list(alice.ports.keys()),
+                                  fibreLen=fibreLen, lenLoss=lenLoss, initLoss=initLoss)
+        bobProt   = BobProtocol(bob, photonCount,
+                                portNames=list(bob.ports.keys()),
+                                detectorEff=detectorEff, darkCount=darkCount, sourceFreq=sourceFreq)
+
+        bobProt.start()
+        aliceProt.start()
+
+        startTime = ns.util.simtools.sim_time(magnitude=ns.NANOSECOND)
+        ns.sim_run()
+
+        if bobProt.end_time is not None:
+            keyA, keyB = aliceProt.key, bobProt.key
+            KeyListA.append(keyA)
+            KeyListB.append(keyB)
+            KeyRateList.append(len(keyA) * 10**9 / (bobProt.end_time - startTime))
+        else:
+            KeyListA.append("nan")
+            KeyListB.append("nan")
+            KeyRateList.append("nan")
+
+    return KeyListA, KeyListB, KeyRateList
+
+
 def run_BB84_sims(runtimes=10,
                   fibreLen=1,
                   qDelay=0,
@@ -23,97 +95,35 @@ def run_BB84_sims(runtimes=10,
                   lenLoss=0,
                   initLoss=0,
                   detectorEff=1,
-                  darkCount=0):
-    
-    KeyListA    = []
-    KeyListB    = []
-    KeyRateList = []
+                  darkCount=0,
+                  workers=None):
 
-    counts = []
+    n = max(1, int(os.cpu_count() * 0.8)) if workers is None else workers
+    n = min(n, runtimes)
 
-    for _ in range(runtimes):
+    # distribute runtimes as evenly as possible across workers
+    base, remainder = divmod(runtimes, n)
+    sizes = [base + (1 if i < remainder else 0) for i in range(n)]
 
-        ns.sim_reset()
+    job_args = [(s, fibreLen, qDelay, qSpeed, photonCount, sourceFreq,
+                 lenLoss, initLoss, detectorEff, darkCount) for s in sizes]
 
-        # nodes =================================================
-        alice = Node("Alice", port_names=["A.Q.Out", "A.C.Out", "A.C.In", "A.C.Out.tags"])
-        bob   = Node("Bob", port_names=["B.Q.In", "B.C.In", "B.C.Out", "B.C.In.tags"])
+    with Pool(n) as pool:
+        parts = pool.map(_bb84_chunk, job_args)
 
-        # channels ==============================================
-        QChann = QuantumChannel("[A: -Q-> :B]",
-                                delay=qDelay,
-                                length=fibreLen,
-                                models={
-                                    "delay_model": HybridDelayModel(SoL_fraction=qSpeed,stddev=0.05)
-                                })
-        
-        alice.connect_to(bob,
-                         QChann,
-                         local_port_name=alice.ports["A.Q.Out"].name,
-                         remote_port_name=bob.ports["B.Q.In"].name)
-        
-
-        CChann1 = ClassicalChannel("[A: -C-> :B]",
-                                delay=0,
-                                length=fibreLen,
-                                models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed,stddev=0.05)})
-        
-        CChann2 = ClassicalChannel("[B: -C-> :A]",
-                                delay=0,
-                                length=fibreLen,
-                                models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed,stddev=0.05)})
-        
-        alice.connect_to(bob,
-                         CChann1,
-                         local_port_name=alice.ports["A.C.Out"].name,
-                         remote_port_name=bob.ports["B.C.In"].name)
-        
-        bob.connect_to(alice,
-                       CChann2,
-                       local_port_name=bob.ports["B.C.Out"].name,
-                       remote_port_name=alice.ports["A.C.In"].name)
-
-        CChann3 = ClassicalChannel("[A: -C:tags-> :B]",
-                                   delay=0,
-                                   length=fibreLen,
-                                   models={'delay_model': HybridDelayModel(SoL_fraction=qSpeed, stddev=0.05)})
-        
-        alice.connect_to(bob,
-                         CChann3,
-                         local_port_name=alice.ports["A.C.Out.tags"].name,
-                         remote_port_name=bob.ports["B.C.In.tags"].name)
-
-        # protocols =============================================
-        aliceProt = AliceProtocol(alice, photonCount, sourceFreq, portNames=list(alice.ports.keys()), fibreLen=fibreLen, lenLoss=lenLoss, initLoss=initLoss)
-        bobProt = BobProtocol(bob, photonCount, portNames=list(bob.ports.keys()), detectorEff=detectorEff, darkCount=darkCount, sourceFreq=sourceFreq)
-
-        bobProt.start()
-        aliceProt.start()
-
-        startTime = ns.util.simtools.sim_time(magnitude=ns.NANOSECOND)
-        stats = ns.sim_run()
-
-        if bobProt.end_time is not None:
-            endTime = bobProt.end_time
-            keyA, keyB = aliceProt.key, bobProt.key
-
-            KeyListA.append(keyA)
-            KeyListB.append(keyB)
-
-            keyRate = len(keyA) * 10**9 / (endTime - startTime)
-            KeyRateList.append(keyRate)
-        else:
-            KeyListA.append("nan")
-            KeyListB.append("nan")
-            KeyRateList.append("nan")
+    KeyListA, KeyListB, KeyRateList = [], [], []
+    for kA, kB, kR in parts:
+        KeyListA.extend(kA)
+        KeyListB.extend(kB)
+        KeyRateList.extend(kR)
 
     return KeyListA, KeyListB, KeyRateList
 
 
 if __name__ == "__main__":
     parser = config_arg_parser()
-    parser.add_argument("--fibre",    type=float, default=50,   help="Fibre length (km)")
-    parser.add_argument("--runtimes", type=int,   default=10,   help="Number of simulation runs")
+    parser.add_argument("--fibre",    type=float, default=50,  help="Fibre length (km)")
+    parser.add_argument("--runtimes", type=int,   default=10,  help="Number of simulation runs")
     args = parser.parse_args()
     cfg  = load_config(args.config)
 
