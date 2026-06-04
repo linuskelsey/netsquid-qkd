@@ -1,4 +1,4 @@
-from multiprocessing import Pool
+from multiprocessing import get_context
 import os
 
 import netsquid as ns
@@ -7,7 +7,10 @@ from netsquid.nodes import Node
 from netsquid.components import QuantumChannel, ClassicalChannel
 
 import sys
-sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
+_this_dir  = os.path.dirname(os.path.abspath(__file__))
+_repo_root = os.path.dirname(_this_dir)
+sys.path.insert(0, _this_dir)   # mdiEndUser, mdiRelayNode
+sys.path.insert(0, _repo_root)  # lib.functions
 from lib.functions import HybridDelayModel, load_config, config_arg_parser
 
 from mdiEndUser import EndNodeProtocol
@@ -133,7 +136,7 @@ def run_mdi_sims(runtimes=10,
     job_args = [(s, fibreLen, qDelay, qSpeed, photonCount, sourceFreq,
                  lenLoss, initLoss, detectorEff, darkCount) for s in sizes]
 
-    with Pool(n) as pool:
+    with get_context('spawn').Pool(n) as pool:
         parts = pool.map(_mdi_chunk, job_args)
 
     KeyListA, KeyListB, KeyRateList = [], [], []

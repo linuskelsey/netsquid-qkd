@@ -19,7 +19,7 @@
 | JSON config presets + CLI overrides | complete |
 | Multiprocessing (runtimes split across cores) | complete |
 | Compare scripts: length, loss, efficiency, dark count | complete |
-| Raw script config wiring | planned |
+| Raw script config wiring | complete |
 | Top-level CLI `scripts/compare/run.py` (issue #4) | planned |
 
 ## Analysis

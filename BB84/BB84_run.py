@@ -1,4 +1,4 @@
-from multiprocessing import Pool
+from multiprocessing import get_context
 import os
 
 from difflib import SequenceMatcher
@@ -8,8 +8,10 @@ from netsquid.nodes import Node
 from netsquid.components import QuantumChannel, ClassicalChannel
 
 import sys
-scriptpath = "lib/"
-sys.path.append(scriptpath)
+_this_dir  = os.path.dirname(os.path.abspath(__file__))
+_repo_root = os.path.dirname(_this_dir)
+sys.path.insert(0, _this_dir)   # BB84_Alice, BB84_Bob
+sys.path.insert(0, _repo_root)  # lib.functions
 from lib.functions import HybridDelayModel, load_config, config_arg_parser
 
 from BB84_Alice import AliceProtocol
@@ -71,7 +73,7 @@ def _bb84_chunk(args):
         aliceProt.start()
 
         startTime = ns.util.simtools.sim_time(magnitude=ns.NANOSECOND)
-        ns.sim_run()
+        ns.sim_run(end_time=ns.SECOND * 100)
 
         if bobProt.end_time is not None:
             keyA, keyB = aliceProt.key, bobProt.key
@@ -108,7 +110,7 @@ def run_BB84_sims(runtimes=10,
     job_args = [(s, fibreLen, qDelay, qSpeed, photonCount, sourceFreq,
                  lenLoss, initLoss, detectorEff, darkCount) for s in sizes]
 
-    with Pool(n) as pool:
+    with get_context('spawn').Pool(n) as pool:
         parts = pool.map(_bb84_chunk, job_args)
 
     KeyListA, KeyListB, KeyRateList = [], [], []

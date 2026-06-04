@@ -42,15 +42,22 @@ class BobProtocol(NodeProtocol):
         """
         Receive qubit batch on B.Q.In, measure in pre-assigned bases, store outcomes
         """
-        # wait for qubit array input to port
-        port = self.node.ports[self.port_qi_name]
-        yield self.await_port_input(port)
-        qubit_batch = port.rx_input().items
-
-        # receive arrival indices from Alice
+        # wait for qubits and arrival indices — combined to avoid missing messages
+        # that arrive out of order due to channel delay variation
+        port   = self.node.ports[self.port_qi_name]
         port_c = self.node.ports[self.port_ci_tags_name]
-        yield self.await_port_input(port_c)
-        self.arrived_indices = port_c.rx_input().items
+
+        received = {}
+        while len(received) < 2:
+            yield self.await_port_input(port) | self.await_port_input(port_c)
+            for key, p in [("q", port), ("idx", port_c)]:
+                if key not in received:
+                    msg = p.rx_input()
+                    if msg is not None:
+                        received[key] = msg.items
+
+        qubit_batch          = received["q"]
+        self.arrived_indices = received["idx"]
         
         # measure and store
         for i, q in zip(self.arrived_indices, qubit_batch):
