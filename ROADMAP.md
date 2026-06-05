@@ -11,6 +11,7 @@
 | 5 | Source bit errors | planned |
 | 6 | Detector basis bias | planned |
 | 7 | Fibre dephasing | planned |
+| 8 | Beam splitter efficiency | planned |
 
 ## Infrastructure
 
@@ -30,7 +31,6 @@
 | Key rate vs fibre loss | complete |
 | Key rate vs detector efficiency | complete |
 | Key rate vs dark count rate | complete |
-| QBER threshold crossings vs distance / loss / η_d | planned |
+| QBER threshold cutoffs | planned |
 | Idealised architectural overhead (issue #7) | planned |
 | Charlie placement sweep (asymmetric links) | planned |
-| Dark count QBER impact at long haul | planned |
