@@ -35,7 +35,7 @@ class EndNodeProtocol(NodeProtocol):
         sourceEff       ====
         portNames       ====
     """
-    def __init__(self, node, name, photonCount, sourceFreq, sourceEff=1, portNames=["Q.Out", "C.Out", "C.In", "C.Out.basis"], fibreLen=0, lenLoss=0, initLoss=0):
+    def __init__(self, node, name, photonCount, sourceFreq, sourceEff=1, portNames=["Q.Out", "C.Out", "C.In", "C.Out.basis"], fibreLen=0, lenLoss=0, initLoss=0, sourceErrRate=0.0):
         super().__init__()
         
         # distinguish node on which the protocol runs
@@ -85,6 +85,8 @@ class EndNodeProtocol(NodeProtocol):
         T_total = T_fibre * T_conn
         self.p_loss = 1 - T_total
 
+        self.source_err_rate = sourceErrRate
+
 
     def store_source_output(self, qubit):
         """
@@ -112,6 +114,7 @@ class EndNodeProtocol(NodeProtocol):
             basis, bit = self.basis_list[i], self.bit_list[i]
             if bit: ns.qubits.operate(q, ns.X)
             if basis: ns.qubits.operate(q, ns.H)
+            if np.random.random() < self.source_err_rate: ns.qubits.operate(q, ns.X)
 
             # probabilistic loss before transmission
             if np.random.random() < self.p_loss:

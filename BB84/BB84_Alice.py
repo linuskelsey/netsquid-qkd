@@ -34,7 +34,7 @@ class AliceProtocol(NodeProtocol):
     """
 
 
-    def __init__(self, node, photonCount, sourceFreq, sourceEff=1, portNames=["A.Q.Out","A,C.Out","A.C.In","A.C.Out.tags"], fibreLen=0, lenLoss=0, initLoss=0):
+    def __init__(self, node, photonCount, sourceFreq, sourceEff=1, portNames=["A.Q.Out","A,C.Out","A.C.In","A.C.Out.tags"], fibreLen=0, lenLoss=0, initLoss=0, sourceErrRate=0.0):
         super().__init__()
         self.node         = node
         self.photon_count = photonCount
@@ -68,6 +68,8 @@ class AliceProtocol(NodeProtocol):
         T_total = T_fibre * T_conn
         self.p_loss = 1 - T_total
 
+        self.source_err_rate = sourceErrRate
+
 
     def store_source_output(self, qubit):
         """
@@ -94,6 +96,7 @@ class AliceProtocol(NodeProtocol):
             self.bits.append((basis, bit))
             if bit: ns.qubits.operate(q, ns.X)
             if basis: ns.qubits.operate(q, ns.H)
+            if np.random.random() < self.source_err_rate: ns.qubits.operate(q, ns.X)
             if np.random.random() < self.p_loss:
                 continue
             tagged.append((i, q))

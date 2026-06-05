@@ -21,7 +21,7 @@ from BB84_Bob import BobProtocol
 
 def _bb84_chunk(args):
     """Sequential simulation block — runs runtimes iterations and returns partial results."""
-    runtimes, fibreLen, qDelay, qSpeed, photonCount, sourceFreq, lenLoss, initLoss, detectorEff, darkCount, nodeLossDb = args
+    runtimes, fibreLen, qDelay, qSpeed, photonCount, sourceFreq, lenLoss, initLoss, detectorEff, darkCount, nodeLossDb, sourceErrRate = args
 
     KeyListA    = []
     KeyListB    = []
@@ -64,7 +64,8 @@ def _bb84_chunk(args):
         # protocols =============================================
         aliceProt = AliceProtocol(alice, photonCount, sourceFreq,
                                   portNames=list(alice.ports.keys()),
-                                  fibreLen=fibreLen, lenLoss=lenLoss, initLoss=initLoss)
+                                  fibreLen=fibreLen, lenLoss=lenLoss, initLoss=initLoss,
+                                  sourceErrRate=sourceErrRate)
         bobProt   = BobProtocol(bob, photonCount,
                                 portNames=list(bob.ports.keys()),
                                 detectorEff=detectorEff, darkCount=darkCount, sourceFreq=sourceFreq,
@@ -100,6 +101,7 @@ def run_BB84_sims(runtimes=10,
                   detectorEff=1,
                   darkCount=0,
                   nodeLossDb=0.0,
+                  sourceErrRate=0.0,
                   workers=None):
 
     n = max(1, int(os.cpu_count() * 0.8)) if workers is None else workers
@@ -110,7 +112,7 @@ def run_BB84_sims(runtimes=10,
     sizes = [base + (1 if i < remainder else 0) for i in range(n)]
 
     job_args = [(s, fibreLen, qDelay, qSpeed, photonCount, sourceFreq,
-                 lenLoss, initLoss, detectorEff, darkCount, nodeLossDb) for s in sizes]
+                 lenLoss, initLoss, detectorEff, darkCount, nodeLossDb, sourceErrRate) for s in sizes]
 
     with get_context('spawn').Pool(n) as pool:
         parts = pool.map(_bb84_chunk, job_args)
@@ -138,7 +140,8 @@ if __name__ == "__main__":
         initLoss    = cfg["init_loss"],
         detectorEff = cfg["detector_efficiency"],
         darkCount   = cfg["dark_count_rate"],
-        nodeLossDb  = cfg["node_loss_db"],
+        nodeLossDb    = cfg["node_loss_db"],
+        sourceErrRate = cfg["source_error_rate"],
     )
     valid = [r for r in rates if r != "nan"]
     avg   = f"{sum(valid)/len(valid):.2f} bps" if valid else "no completed runs"
