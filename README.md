@@ -12,7 +12,7 @@ UCL MSc Quantum Technologies Research Project — Linus Kelsey
 BB84/           BB84 Alice/Bob protocols and simulation runner
 MDI/            MDI-QKD Alice/Bob/Charlie protocols and simulation runner
 lib/            Shared utilities (delay model, photon source, config loader)
-configs/        JSON parameter presets (layer0_ideal → layer3_loss_eff_dark)
+configs/        JSON parameter presets (layer0_ideal → layer4_node)
 scripts/
   raw/          Single-protocol run scripts
   compare/      Sweep scripts: key rate vs distance, loss, efficiency, dark counts
@@ -34,24 +34,24 @@ All comparison scripts accept CLI flags and an optional JSON config:
 
 ```bash
 # Use a layered config preset
-python scripts/compare/length.py --config configs/layer2_loss_eff.json
+python scripts/compare/length.py --config configs/layer2_eff.json
 
 # Override individual parameters
 python scripts/compare/length.py --loss 0.3 --det-eff 0.85 --runtimes 50
 
 # Config preset + CLI override (CLI takes precedence)
-python scripts/compare/length.py --config configs/layer3_loss_eff_dark.json --fibre 30
+python scripts/compare/length.py --config configs/layer3_dark.json --fibre 30
 ```
 
 Config presets in `configs/`:
 
-| File | α (dB/km) | η_d | d_c (cps) | L_node (dB) |
-|------|-----------|-----|-----------|-------------|
-| `layer0_ideal.json` | 0.0 | 1.0 | 0 | 0.0 |
-| `layer1_loss.json` | 0.2 | 1.0 | 0 | 0.0 |
-| `layer2_loss_eff.json` | 0.2 | 0.9 | 0 | 0.0 |
-| `layer3_loss_eff_dark.json` | 0.2 | 0.9 | 100 | 0.0 |
-| `layer4_loss_eff_dark_node.json` | 0.2 | 0.9 | 100 | 1.0 |
+| File | Adds | α (dB/km) | η_d | d_c (cps) | L_node (dB) |
+|------|------|-----------|-----|-----------|-------------|
+| `layer0_ideal.json` | baseline | 0.0 | 1.0 | 0 | 0.0 |
+| `layer1_loss.json` | fibre loss | 0.2 | 1.0 | 0 | 0.0 |
+| `layer2_eff.json` | detector efficiency | 0.2 | 0.9 | 0 | 0.0 |
+| `layer3_dark.json` | dark counts | 0.2 | 0.9 | 100 | 0.0 |
+| `layer4_node.json` | node/connector loss | 0.2 | 0.9 | 100 | 1.0 |
 
 Default parameters (no config, no CLI flags):
 
