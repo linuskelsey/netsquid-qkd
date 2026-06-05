@@ -7,3 +7,6 @@
 
 # netsquid documentation
 docs/netsquid
+
+# merge script
+merge-all.sh
