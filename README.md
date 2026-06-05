@@ -45,12 +45,13 @@ python scripts/compare/length.py --config configs/layer3_loss_eff_dark.json --fi
 
 Config presets in `configs/`:
 
-| File | α (dB/km) | η_d | d_c (cps) |
-|------|-----------|-----|-----------|
-| `layer0_ideal.json` | 0.0 | 1.0 | 0 |
-| `layer1_loss.json` | 0.2 | 1.0 | 0 |
-| `layer2_loss_eff.json` | 0.2 | 0.9 | 0 |
-| `layer3_loss_eff_dark.json` | 0.2 | 0.9 | 100 |
+| File | α (dB/km) | η_d | d_c (cps) | L_node (dB) |
+|------|-----------|-----|-----------|-------------|
+| `layer0_ideal.json` | 0.0 | 1.0 | 0 | 0.0 |
+| `layer1_loss.json` | 0.2 | 1.0 | 0 | 0.0 |
+| `layer2_loss_eff.json` | 0.2 | 0.9 | 0 | 0.0 |
+| `layer3_loss_eff_dark.json` | 0.2 | 0.9 | 100 | 0.0 |
+| `layer4_loss_eff_dark_node.json` | 0.2 | 0.9 | 100 | 1.0 |
 
 Default parameters (no config, no CLI flags):
 
@@ -60,7 +61,8 @@ Default parameters (no config, no CLI flags):
 | `lenLoss` | 0.2 dB/km | Fibre attenuation coefficient α |
 | `detEff` | 1.0 | Detector efficiency η_d |
 | `darkCount` | 0 cps | Dark count rate d_c |
-| `initLoss` | 0.0 | Insertion loss, linear fraction [0–1] (e.g. 0.1 = 10%) |
+| `initLoss` | 0.0 | TX-side insertion loss, linear fraction [0–1] (e.g. 0.1 = 10%) |
+| `nodeLossDb` | 0.0 dB | RX-side node/connector loss in dB (Bob for BB84, Charlie for MDI) |
 | `runtimes` | 100 | Monte Carlo repetitions per sweep point |
 | `photons` | 1024 | Photons per run |
 | `workers` | 80% of CPU cores | Parallel worker processes (passed to run functions directly) |
