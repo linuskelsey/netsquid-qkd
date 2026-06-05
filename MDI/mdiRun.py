@@ -20,7 +20,7 @@ from mdiRelayNode import RelayNodeProtocol
 
 def _mdi_chunk(args):
     """Sequential simulation block — runs runtimes iterations and returns partial results."""
-    runtimes, fibreLen, qDelay, qSpeed, photonCount, sourceFreq, lenLoss, initLoss, detectorEff, darkCount = args
+    runtimes, fibreLen, qDelay, qSpeed, photonCount, sourceFreq, lenLoss, initLoss, detectorEff, darkCount, nodeLossDb = args
 
     KeyListA    = []
     KeyListB    = []
@@ -90,7 +90,8 @@ def _mdi_chunk(args):
         charlieProt = RelayNodeProtocol(charlie, 'charlie', photonCount,
                                         portNames=["C.Q.In.A", "C.Q.In.B", "C.C.In.A", "C.C.In.B",
                                                    "C.C.Out.A", "C.C.Out.B", "C.C.In.A.basis", "C.C.In.B.basis"],
-                                        detectorEff=detectorEff, darkCount=darkCount, sourceFreq=sourceFreq)
+                                        detectorEff=detectorEff, darkCount=darkCount, sourceFreq=sourceFreq,
+                                        nodeLossDb=nodeLossDb)
 
         bobProt.flipper = True
 
@@ -125,6 +126,7 @@ def run_mdi_sims(runtimes=10,
                  initLoss=0,
                  detectorEff=1,
                  darkCount=0,
+                 nodeLossDb=0.0,
                  workers=None):
 
     n = max(1, int(os.cpu_count() * 0.8)) if workers is None else workers
@@ -134,7 +136,7 @@ def run_mdi_sims(runtimes=10,
     sizes = [base + (1 if i < remainder else 0) for i in range(n)]
 
     job_args = [(s, fibreLen, qDelay, qSpeed, photonCount, sourceFreq,
-                 lenLoss, initLoss, detectorEff, darkCount) for s in sizes]
+                 lenLoss, initLoss, detectorEff, darkCount, nodeLossDb) for s in sizes]
 
     with get_context('spawn').Pool(n) as pool:
         parts = pool.map(_mdi_chunk, job_args)
@@ -162,6 +164,7 @@ if __name__ == "__main__":
         initLoss    = cfg["init_loss"],
         detectorEff = cfg["detector_efficiency"],
         darkCount   = cfg["dark_count_rate"],
+        nodeLossDb  = cfg["node_loss_db"],
     )
     valid = [r for r in rates if r != "nan"]
     avg   = f"{sum(valid)/len(valid):.2f} bps" if valid else "no completed runs"

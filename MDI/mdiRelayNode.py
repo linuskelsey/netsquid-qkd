@@ -16,16 +16,16 @@ class RelayNodeProtocol(NodeProtocol):
     Parameters:
         
     """
-    def __init__(self, node, name, photonCount, portNames=["Q0.In", "Q1.In", "C0.In", "C1.In", "C0.Out", "C1.Out", "C0.In.basis", "C1.In.basis"], detectorEff=1, darkCount=0, sourceFreq=1e7):
+    def __init__(self, node, name, photonCount, portNames=["Q0.In", "Q1.In", "C0.In", "C1.In", "C0.Out", "C1.Out", "C0.In.basis", "C1.In.basis"], detectorEff=1, darkCount=0, sourceFreq=1e7, nodeLossDb=0.0):
         super().__init__()
-        
+
         # distinguish node on which the protocol runs
         self.node = node
         self.name = name.title()
-        
+
         # end users each send photonCount//2 photons; relay index space must match
         self.photon_count = photonCount // 2
-        
+
         # ports, 0/1 denotes side, i/o denotes in/out. basis ports handle matching.
         self.port_q0_i_name = portNames[0]
         self.port_q1_i_name = portNames[1]
@@ -37,7 +37,8 @@ class RelayNodeProtocol(NodeProtocol):
         self.port_c1_i_basis_name = portNames[7]
 
         # detector efficiency
-        self.detector_eff = detectorEff
+        self.detector_eff  = detectorEff
+        self.node_loss_prob = 1 - 10 ** (-nodeLossDb / 10)
         # per-slot dark click probability; distance effect emerges naturally as fewer real photons arrive
         self.dark_count   = darkCount
         self.source_freq  = sourceFreq
@@ -89,8 +90,10 @@ class RelayNodeProtocol(NodeProtocol):
         common = set(q_dict0.keys()) & set(q_dict1.keys())
 
         for i in sorted(common):
-            real0 = np.random.random() < self.detector_eff
-            real1 = np.random.random() < self.detector_eff
+            coupled0 = np.random.random() >= self.node_loss_prob
+            coupled1 = np.random.random() >= self.node_loss_prob
+            real0 = coupled0 and np.random.random() < self.detector_eff
+            real1 = coupled1 and np.random.random() < self.detector_eff
             dark0 = np.random.random() < self.dark_rate
             dark1 = np.random.random() < self.dark_rate
 
