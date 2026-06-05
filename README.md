@@ -45,13 +45,14 @@ python scripts/compare/length.py --config configs/layer3_dark.json --fibre 30
 
 Config presets in `configs/`:
 
-| File | Adds | α (dB/km) | η_d | d_c (cps) | L_node (dB) |
-|------|------|-----------|-----|-----------|-------------|
-| `layer0_ideal.json` | baseline | 0.0 | 1.0 | 0 | 0.0 |
-| `layer1_loss.json` | fibre loss | 0.2 | 1.0 | 0 | 0.0 |
-| `layer2_eff.json` | detector efficiency | 0.2 | 0.9 | 0 | 0.0 |
-| `layer3_dark.json` | dark counts | 0.2 | 0.9 | 100 | 0.0 |
-| `layer4_node.json` | node/connector loss | 0.2 | 0.9 | 100 | 1.0 |
+| File | Adds | α (dB/km) | η_d | d_c (cps) | L_node (dB) | ε_s |
+|------|------|-----------|-----|-----------|-------------|-----|
+| `layer0_ideal.json` | baseline | 0.0 | 1.0 | 0 | 0.0 | 0.0 |
+| `layer1_loss.json` | fibre loss | 0.2 | 1.0 | 0 | 0.0 | 0.0 |
+| `layer2_eff.json` | detector efficiency | 0.2 | 0.9 | 0 | 0.0 | 0.0 |
+| `layer3_dark.json` | dark counts | 0.2 | 0.9 | 100 | 0.0 | 0.0 |
+| `layer4_node.json` | node/connector loss | 0.2 | 0.9 | 100 | 1.0 | 0.0 |
+| `layer5_source_err.json` | source bit errors | 0.2 | 0.9 | 100 | 1.0 | 0.02 |
 
 Default parameters (no config, no CLI flags):
 

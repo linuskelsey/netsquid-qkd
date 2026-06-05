@@ -8,7 +8,7 @@
 | 2 | Detector efficiency `η_d` | complete |
 | 3 | Dark counts: per-slot Bernoulli + lost-slot model | complete |
 | 4 | Node / connector loss | complete |
-| 5 | Source bit errors | planned |
+| 5 | Source bit errors | complete |
 | 6 | Detector basis bias | planned |
 | 7 | Fibre dephasing | planned |
 | 8 | Beam splitter efficiency | planned |
