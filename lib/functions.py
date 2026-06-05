@@ -12,6 +12,7 @@ DEFAULTS = {
     "init_loss": 0.0,              # linear fraction [0-1], not dB (e.g. 0.1 = 10% loss)
     "detector_efficiency": 1.0,
     "dark_count_rate": 0,
+    "node_loss_db": 0.0,           # receiver-side insertion loss in dB (connectors, coupling at Bob/Charlie)
     "source_error_rate": 0.0,
     "basis_bias": 0.5,
 }
