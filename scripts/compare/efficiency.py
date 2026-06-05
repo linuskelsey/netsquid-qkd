@@ -85,7 +85,7 @@ def comparative_stats(stats1, stats2):
     return
 
 
-def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, initLoss=0, detEff=1, darkCount=0):
+def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, initLoss=0, detEff=1, darkCount=0, nodeLossDb=0.0):
     # BB84 run ==================================================
     KeyListA_bb84, KeyListB_bb84, KeyRateList_bb84 = run_BB84_sims(
         runtimes    = runtimes,
@@ -96,7 +96,8 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, i
         lenLoss     = lenLoss,
         initLoss    = initLoss,
         detectorEff = detEff,
-        darkCount   = darkCount
+        darkCount   = darkCount,
+        nodeLossDb  = nodeLossDb,
     )
 
     # MDI run ===================================================
@@ -109,7 +110,8 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, i
         lenLoss     = lenLoss,
         initLoss    = initLoss,
         detectorEff = detEff,
-        darkCount   = darkCount
+        darkCount   = darkCount,
+        nodeLossDb  = nodeLossDb,
     )
 
     # Aggregate stats ===========================================
@@ -125,11 +127,13 @@ if __name__ == "__main__":
     parser.add_argument("--loss",       type=float, default=None, help="Fibre loss (dB/km)")
     parser.add_argument("--dark-count", type=int,   default=None, dest="dark_count", help="Dark count rate (cps)")
     parser.add_argument("--init-loss",  type=float, default=None, dest="init_loss",  help="Insertion loss, linear fraction [0-1] (e.g. 0.1 = 10%%)")
+    parser.add_argument("--node-loss", type=float, default=None, dest="node_loss",  help="Receiver node insertion loss (dB)")
     args = parser.parse_args()
     cfg  = load_config(args.config)
     if args.loss is not None:       cfg["fibre_loss_db_per_km"] = args.loss
     if args.dark_count is not None: cfg["dark_count_rate"]      = args.dark_count
     if args.init_loss is not None:  cfg["init_loss"]            = args.init_loss
+    if args.node_loss is not None:  cfg["node_loss_db"]         = args.node_loss
 
     if args.config is not None and cfg["detector_efficiency"] != 1.0:
         print(f"Note: detector_efficiency={cfg['detector_efficiency']} from config ignored — η_d is the sweep axis")
@@ -147,7 +151,8 @@ if __name__ == "__main__":
     for e in Ex:
         bb84, mdi = main(runtimes=args.runtimes, fibre=args.fibre,
                          lenLoss=cfg["fibre_loss_db_per_km"], initLoss=cfg["init_loss"],
-                         detEff=e, darkCount=cfg["dark_count_rate"])
+                         detEff=e, darkCount=cfg["dark_count_rate"],
+                         nodeLossDb=cfg["node_loss_db"])
 
         lengths_bb84.append(bb84[1])
         qbers_bb84.append(bb84[2])

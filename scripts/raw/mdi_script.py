@@ -80,12 +80,14 @@ if __name__ == "__main__":
     parser.add_argument("--det-eff",    type=float, default=None, dest="det_eff",    help="Detector efficiency [0-1]")
     parser.add_argument("--dark-count", type=int,   default=None, dest="dark_count", help="Dark count rate (cps)")
     parser.add_argument("--init-loss",  type=float, default=None, dest="init_loss",  help="Insertion loss, linear fraction [0-1]")
+    parser.add_argument("--node-loss", type=float, default=None, dest="node_loss",  help="Receiver node insertion loss (dB)")
     args = parser.parse_args()
     cfg  = load_config(args.config)
     if args.loss is not None:        cfg["fibre_loss_db_per_km"] = args.loss
     if args.det_eff is not None:     cfg["detector_efficiency"]  = args.det_eff
     if args.dark_count is not None:  cfg["dark_count_rate"]      = args.dark_count
     if args.init_loss is not None:   cfg["init_loss"]            = args.init_loss
+    if args.node_loss is not None:   cfg["node_loss_db"]         = args.node_loss
 
     print()
     print("=" * 65)
@@ -110,6 +112,7 @@ if __name__ == "__main__":
         initLoss    = cfg["init_loss"],
         detectorEff = cfg["detector_efficiency"],
         darkCount   = cfg["dark_count_rate"],
+        nodeLossDb  = cfg["node_loss_db"],
     )
 
     print("  Per-run results:")
