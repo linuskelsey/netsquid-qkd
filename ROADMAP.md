@@ -11,7 +11,7 @@
 | 5 | Source bit errors | complete |
 | 6 | Detector basis bias `η_Z` / `η_X` | complete |
 | 7 | Fibre dephasing (`DephaseNoiseModel`, rate per km) | complete |
-| 8 | Beam splitter efficiency | planned |
+| 8 | Beam splitter efficiency (MDI relay BSM, η_bs) | complete |
 
 ## Infrastructure
 

@@ -69,6 +69,7 @@ Default parameters (no config, no CLI flags):
 | `detectorEffZ` | 1.0 | Z-basis detector efficiency η_Z (set via `--det-eff` or config `detector_efficiency`) |
 | `detectorEffX` | = η_Z | X-basis detector efficiency η_X (set via `--det-eff-x`; defaults to η_Z if omitted) |
 | `dephasingRate` | 0.0 | Fibre dephasing rate per km (set via `--dephasing-rate` or config `dephasing_rate`) |
+| `bsEff` | 1.0 | Beam splitter efficiency at MDI relay BSM, η_bs (MDI only; set via `--bs-eff` or config `bs_eff`) |
 | `darkCount` | 0 cps | Dark count rate d_c |
 | `initLoss` | 0.0 | TX-side insertion loss, linear fraction [0–1] (e.g. 0.1 = 10%) |
 | `nodeLossDb` | 0.0 dB | RX-side node/connector loss in dB (Bob for BB84, Charlie for MDI) |
