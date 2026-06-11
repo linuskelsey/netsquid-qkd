@@ -16,7 +16,7 @@ class RelayNodeProtocol(NodeProtocol):
     Parameters:
         
     """
-    def __init__(self, node, name, photonCount, portNames=["Q0.In", "Q1.In", "C0.In", "C1.In", "C0.Out", "C1.Out", "C0.In.basis", "C1.In.basis"], detectorEff=1, darkCount=0, sourceFreq=1e7, nodeLossDb=0.0):
+    def __init__(self, node, name, photonCount, portNames=["Q0.In", "Q1.In", "C0.In", "C1.In", "C0.Out", "C1.Out", "C0.In.basis", "C1.In.basis"], detectorEffZ=1, detectorEffX=None, darkCount=0, sourceFreq=1e7, nodeLossDb=0.0, aliceProto=None, bobProto=None):
         super().__init__()
 
         # distinguish node on which the protocol runs
@@ -37,12 +37,17 @@ class RelayNodeProtocol(NodeProtocol):
         self.port_c1_i_basis_name = portNames[7]
 
         # detector efficiency
-        self.detector_eff  = detectorEff
+        self.detector_eff_z = detectorEffZ
+        self.detector_eff_x = detectorEffX if detectorEffX is not None else detectorEffZ
         self.node_loss_prob = 1 - 10 ** (-nodeLossDb / 10)
         # per-slot dark click probability; distance effect emerges naturally as fewer real photons arrive
         self.dark_count   = darkCount
         self.source_freq  = sourceFreq
         self.dark_rate    = self.dark_count / (self.dark_count + self.source_freq)
+
+        # end-user protocol refs for basis-dependent detector efficiency (simulation peek)
+        self.alice_proto = aliceProto
+        self.bob_proto   = bobProto
 
         # measurement list
         self.meas = []
@@ -92,8 +97,10 @@ class RelayNodeProtocol(NodeProtocol):
         for i in sorted(common):
             coupled0 = np.random.random() >= self.node_loss_prob
             coupled1 = np.random.random() >= self.node_loss_prob
-            real0 = coupled0 and np.random.random() < self.detector_eff
-            real1 = coupled1 and np.random.random() < self.detector_eff
+            eff0 = self.detector_eff_x if (self.alice_proto is not None and self.alice_proto.basis_list[i]) else self.detector_eff_z
+            eff1 = self.detector_eff_x if (self.bob_proto   is not None and self.bob_proto.basis_list[i])   else self.detector_eff_z
+            real0 = coupled0 and np.random.random() < eff0
+            real1 = coupled1 and np.random.random() < eff1
             dark0 = np.random.random() < self.dark_rate
             dark1 = np.random.random() < self.dark_rate
 
