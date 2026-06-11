@@ -66,6 +66,6 @@ Use optimal topology from Phase 1 as fixed input; sweep user count / network siz
 | Key rate vs fibre loss | complete |
 | Key rate vs detector efficiency | complete |
 | Key rate vs dark count rate | complete |
-| QBER threshold cutoffs | planned |
+| QBER threshold cutoffs (11% hard cutoff, both protocols) | complete |
 | Idealised architectural overhead (issue #7) | planned |
 | Charlie placement sweep (asymmetric links) | planned |
