@@ -85,35 +85,37 @@ def comparative_stats(stats1, stats2):
     return
 
 
-def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, initLoss=0, detEff=1, darkCount=0, nodeLossDb=0.0, sourceErrRate=0.0):
+def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, initLoss=0, detEff=1, darkCount=0, nodeLossDb=0.0, sourceErrRate=0.0, dephasingRate=0.0):
     # BB84 run ==================================================
     KeyListA_bb84, KeyListB_bb84, KeyRateList_bb84 = run_BB84_sims(
-        runtimes    = runtimes,
-        fibreLen    = fibre,
-        photonCount = photons,
-        sourceFreq  = freq,
-        qSpeed      = speed,
-        lenLoss     = lenLoss,
-        initLoss    = initLoss,
-        detectorEffZ = detEff,
-        darkCount   = darkCount,
+        runtimes      = runtimes,
+        fibreLen      = fibre,
+        photonCount   = photons,
+        sourceFreq    = freq,
+        qSpeed        = speed,
+        lenLoss       = lenLoss,
+        initLoss      = initLoss,
+        detectorEffZ  = detEff,
+        darkCount     = darkCount,
         nodeLossDb    = nodeLossDb,
         sourceErrRate = sourceErrRate,
+        dephasingRate = dephasingRate,
     )
 
     # MDI run ===================================================
     KeyListA_mdi, KeyListB_mdi, KeyRateList_mdi = run_mdi_sims(
-        runtimes    = runtimes,
-        fibreLen    = fibre,
-        photonCount = photons,
-        sourceFreq  = freq,
-        qSpeed      = speed,
-        lenLoss     = lenLoss,
-        initLoss    = initLoss,
-        detectorEffZ = detEff,
-        darkCount   = darkCount,
+        runtimes      = runtimes,
+        fibreLen      = fibre,
+        photonCount   = photons,
+        sourceFreq    = freq,
+        qSpeed        = speed,
+        lenLoss       = lenLoss,
+        initLoss      = initLoss,
+        detectorEffZ  = detEff,
+        darkCount     = darkCount,
         nodeLossDb    = nodeLossDb,
         sourceErrRate = sourceErrRate,
+        dephasingRate = dephasingRate,
     )
 
     # Aggregate stats ===========================================
@@ -156,7 +158,8 @@ if __name__ == "__main__":
         bb84, mdi = main(runtimes=args.runtimes, fibre=args.fibre,
                          lenLoss=cfg["fibre_loss_db_per_km"], initLoss=cfg["init_loss"],
                          detEff=cfg["detector_efficiency"], darkCount=dc,
-                         nodeLossDb=cfg["node_loss_db"], sourceErrRate=cfg["source_error_rate"])
+                         nodeLossDb=cfg["node_loss_db"], sourceErrRate=cfg["source_error_rate"],
+                         dephasingRate=cfg["dephasing_rate"])
 
         lengths_bb84.append(bb84[1])
         qbers_bb84.append(bb84[2])

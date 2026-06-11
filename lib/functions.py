@@ -15,6 +15,7 @@ DEFAULTS = {
     "node_loss_db": 0.0,           # receiver-side insertion loss in dB (connectors, coupling at Bob/Charlie)
     "source_error_rate": 0.0,
     "basis_bias": 0.5,
+    "dephasing_rate": 0.0,
 }
 
 
