@@ -58,6 +58,7 @@ Config presets in `configs/`:
 | `layer3_dark.json` | dark counts | 0.2 | 0.9 | 100 | 0.0 | 0.0 |
 | `layer4_node.json` | node/connector loss | 0.2 | 0.9 | 100 | 1.0 | 0.0 |
 | `layer5_source_err.json` | source bit errors | 0.2 | 0.9 | 100 | 1.0 | 0.02 |
+| `layer7_dephasing.json` | fibre dephasing | 0.2 | 0.9 | 100 | 1.0 | 0.02 |
 
 Default parameters (no config, no CLI flags):
 
@@ -67,6 +68,7 @@ Default parameters (no config, no CLI flags):
 | `lenLoss` | 0.2 dB/km | Fibre attenuation coefficient α |
 | `detectorEffZ` | 1.0 | Z-basis detector efficiency η_Z (set via `--det-eff` or config `detector_efficiency`) |
 | `detectorEffX` | = η_Z | X-basis detector efficiency η_X (set via `--det-eff-x`; defaults to η_Z if omitted) |
+| `dephasingRate` | 0.0 | Fibre dephasing rate per km (set via `--dephasing-rate` or config `dephasing_rate`) |
 | `darkCount` | 0 cps | Dark count rate d_c |
 | `initLoss` | 0.0 | TX-side insertion loss, linear fraction [0–1] (e.g. 0.1 = 10%) |
 | `nodeLossDb` | 0.0 dB | RX-side node/connector loss in dB (Bob for BB84, Charlie for MDI) |

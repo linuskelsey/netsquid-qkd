@@ -10,7 +10,7 @@
 | 4 | Node / connector loss | complete |
 | 5 | Source bit errors | complete |
 | 6 | Detector basis bias `η_Z` / `η_X` | complete |
-| 7 | Fibre dephasing | planned |
+| 7 | Fibre dephasing (`DephaseNoiseModel`, rate per km) | complete |
 | 8 | Beam splitter efficiency | planned |
 
 ## Infrastructure

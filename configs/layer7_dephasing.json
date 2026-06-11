@@ -1,0 +1,12 @@
+{
+    "layer": 7,
+    "description": "All physical imperfections + fibre dephasing. dephasing_rate = 0.002 /km (~10% dephasing probability at 50 km).",
+    "fibre_loss_db_per_km": 0.2,
+    "init_loss": 0.05,
+    "detector_efficiency": 0.9,
+    "dark_count_rate": 100,
+    "node_loss_db": 1.0,
+    "source_error_rate": 0.02,
+    "basis_bias": 0.5,
+    "dephasing_rate": 0.002
+}
