@@ -40,6 +40,10 @@ python scripts/compare/length.py --config configs/layer2_eff.json
 # Override individual parameters
 python scripts/compare/length.py --loss 0.3 --det-eff 0.85 --runtimes 50
 
+# Basis-biased detector (X-basis efficiency lower than Z) — BB84/MDI runners only
+python BB84/BB84_run.py --config configs/layer2_eff.json --det-eff-x 0.7
+python MDI/mdiRun.py   --config configs/layer2_eff.json --det-eff-x 0.7
+
 # Config preset + CLI override (CLI takes precedence)
 python scripts/compare/length.py --config configs/layer3_dark.json --fibre 30
 ```
@@ -61,7 +65,8 @@ Default parameters (no config, no CLI flags):
 |-----------|---------|-------------|
 | `fibre` | 50 km | Alice-Bob separation (not applicable for length sweep) |
 | `lenLoss` | 0.2 dB/km | Fibre attenuation coefficient α |
-| `detEff` | 1.0 | Detector efficiency η_d |
+| `detectorEffZ` | 1.0 | Z-basis detector efficiency η_Z (set via `--det-eff` or config `detector_efficiency`) |
+| `detectorEffX` | = η_Z | X-basis detector efficiency η_X (set via `--det-eff-x`; defaults to η_Z if omitted) |
 | `darkCount` | 0 cps | Dark count rate d_c |
 | `initLoss` | 0.0 | TX-side insertion loss, linear fraction [0–1] (e.g. 0.1 = 10%) |
 | `nodeLossDb` | 0.0 dB | RX-side node/connector loss in dB (Bob for BB84, Charlie for MDI) |
