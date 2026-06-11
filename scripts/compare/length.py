@@ -108,7 +108,7 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, i
         qSpeed      = speed,
         lenLoss     = lenLoss,
         initLoss    = initLoss,
-        detectorEff = detEff,
+        detectorEffZ = detEff,
         darkCount   = darkCount,
         nodeLossDb    = nodeLossDb,
         sourceErrRate = sourceErrRate,

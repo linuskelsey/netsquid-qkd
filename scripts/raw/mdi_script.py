@@ -112,7 +112,7 @@ if __name__ == "__main__":
         qSpeed      = args.speed,
         lenLoss     = cfg["fibre_loss_db_per_km"],
         initLoss    = cfg["init_loss"],
-        detectorEff = cfg["detector_efficiency"],
+        detectorEffZ = cfg["detector_efficiency"],
         darkCount   = cfg["dark_count_rate"],
         nodeLossDb    = cfg["node_loss_db"],
         sourceErrRate = cfg["source_error_rate"],
