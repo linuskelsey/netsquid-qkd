@@ -83,6 +83,7 @@ if __name__ == "__main__":
     parser.add_argument("--node-loss",  type=float, default=None, dest="node_loss",  help="Receiver node insertion loss (dB)")
     parser.add_argument("--source-err",     type=float, default=None, dest="source_err",     help="Source bit error rate [0-1]")
     parser.add_argument("--dephasing-rate", type=float, default=None, dest="dephasing_rate", help="Dephasing rate per km")
+    parser.add_argument("--bs-eff",         type=float, default=None, dest="bs_eff",         help="Beam splitter efficiency at relay [0-1]")
     args = parser.parse_args()
     cfg  = load_config(args.config)
     if args.loss is not None:           cfg["fibre_loss_db_per_km"] = args.loss
@@ -92,6 +93,7 @@ if __name__ == "__main__":
     if args.node_loss is not None:      cfg["node_loss_db"]         = args.node_loss
     if args.source_err is not None:     cfg["source_error_rate"]    = args.source_err
     if args.dephasing_rate is not None: cfg["dephasing_rate"]       = args.dephasing_rate
+    if args.bs_eff is not None:         cfg["bs_eff"]               = args.bs_eff
 
     print()
     print("=" * 65)
@@ -119,6 +121,7 @@ if __name__ == "__main__":
         nodeLossDb    = cfg["node_loss_db"],
         sourceErrRate = cfg["source_error_rate"],
         dephasingRate = cfg["dephasing_rate"],
+        bsEff         = cfg["bs_eff"],
     )
 
     print("  Per-run results:")

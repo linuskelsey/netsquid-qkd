@@ -16,6 +16,7 @@ DEFAULTS = {
     "source_error_rate": 0.0,
     "basis_bias": 0.5,
     "dephasing_rate": 0.0,
+    "bs_eff": 1.0,
 }
 
 
