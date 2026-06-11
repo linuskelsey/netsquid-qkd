@@ -56,6 +56,7 @@ Use optimal topology from Phase 1 as fixed input; sweep user count / network siz
 | Key rate vs number of repeater hops (sweep) | extension |
 | Repeater spacing optimisation sweep (simulation) | extension |
 | BB84 vs MDI-QKD repeater performance head-to-head | extension |
+| Quantum memory decoherence: T2 dephasing time model (η_mem vs T2, sweep vs coherence time) | extension |
 
 ## Analysis
 
