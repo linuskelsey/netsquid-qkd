@@ -16,7 +16,7 @@ class RelayNodeProtocol(NodeProtocol):
     Parameters:
         
     """
-    def __init__(self, node, name, photonCount, portNames=["Q0.In", "Q1.In", "C0.In", "C1.In", "C0.Out", "C1.Out", "C0.In.basis", "C1.In.basis"], detectorEffZ=1, detectorEffX=None, darkCount=0, sourceFreq=1e7, nodeLossDb=0.0, aliceProto=None, bobProto=None):
+    def __init__(self, node, name, photonCount, portNames=["Q0.In", "Q1.In", "C0.In", "C1.In", "C0.Out", "C1.Out", "C0.In.basis", "C1.In.basis"], detectorEffZ=1, detectorEffX=None, darkCount=0, sourceFreq=1e7, nodeLossDb=0.0, aliceProto=None, bobProto=None, bsEff=1.0):
         super().__init__()
 
         # distinguish node on which the protocol runs
@@ -44,6 +44,9 @@ class RelayNodeProtocol(NodeProtocol):
         self.dark_count   = darkCount
         self.source_freq  = sourceFreq
         self.dark_rate    = self.dark_count / (self.dark_count + self.source_freq)
+
+        # beam splitter efficiency at relay BSM
+        self.bs_eff = bsEff
 
         # end-user protocol refs for basis-dependent detector efficiency (simulation peek)
         self.alice_proto = aliceProto
@@ -99,8 +102,8 @@ class RelayNodeProtocol(NodeProtocol):
             coupled1 = np.random.random() >= self.node_loss_prob
             eff0 = self.detector_eff_x if (self.alice_proto is not None and self.alice_proto.basis_list[i]) else self.detector_eff_z
             eff1 = self.detector_eff_x if (self.bob_proto   is not None and self.bob_proto.basis_list[i])   else self.detector_eff_z
-            real0 = coupled0 and np.random.random() < eff0
-            real1 = coupled1 and np.random.random() < eff1
+            real0 = coupled0 and np.random.random() < (self.bs_eff * eff0)
+            real1 = coupled1 and np.random.random() < (self.bs_eff * eff1)
             dark0 = np.random.random() < self.dark_rate
             dark1 = np.random.random() < self.dark_rate
 

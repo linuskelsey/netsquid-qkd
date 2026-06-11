@@ -21,7 +21,7 @@ from mdiRelayNode import RelayNodeProtocol
 
 def _mdi_chunk(args):
     """Sequential simulation block — runs runtimes iterations and returns partial results."""
-    runtimes, fibreLen, qDelay, qSpeed, photonCount, sourceFreq, lenLoss, initLoss, detectorEffZ, detectorEffX, darkCount, nodeLossDb, sourceErrRate, dephasingRate = args
+    runtimes, fibreLen, qDelay, qSpeed, photonCount, sourceFreq, lenLoss, initLoss, detectorEffZ, detectorEffX, darkCount, nodeLossDb, sourceErrRate, dephasingRate, bsEff = args
 
     KeyListA    = []
     KeyListB    = []
@@ -98,7 +98,7 @@ def _mdi_chunk(args):
                                                    "C.C.Out.A", "C.C.Out.B", "C.C.In.A.basis", "C.C.In.B.basis"],
                                         detectorEffZ=detectorEffZ, detectorEffX=detectorEffX,
                                         darkCount=darkCount, sourceFreq=sourceFreq, nodeLossDb=nodeLossDb,
-                                        aliceProto=aliceProt, bobProto=bobProt)
+                                        aliceProto=aliceProt, bobProto=bobProt, bsEff=bsEff)
 
         bobProt.flipper = True
 
@@ -137,6 +137,7 @@ def run_mdi_sims(runtimes=10,
                  nodeLossDb=0.0,
                  sourceErrRate=0.0,
                  dephasingRate=0.0,
+                 bsEff=1.0,
                  workers=None):
 
     n = max(1, int(os.cpu_count() * 0.8)) if workers is None else workers
@@ -146,7 +147,7 @@ def run_mdi_sims(runtimes=10,
     sizes = [base + (1 if i < remainder else 0) for i in range(n)]
 
     job_args = [(s, fibreLen, qDelay, qSpeed, photonCount, sourceFreq,
-                 lenLoss, initLoss, detectorEffZ, detectorEffX, darkCount, nodeLossDb, sourceErrRate, dephasingRate) for s in sizes]
+                 lenLoss, initLoss, detectorEffZ, detectorEffX, darkCount, nodeLossDb, sourceErrRate, dephasingRate, bsEff) for s in sizes]
 
     with get_context('spawn').Pool(n) as pool:
         parts = pool.map(_mdi_chunk, job_args)
@@ -166,6 +167,7 @@ if __name__ == "__main__":
     parser.add_argument("--runtimes",       type=int,   default=10,   help="Number of simulation runs")
     parser.add_argument("--det-eff-x",      type=float, default=None, help="X-basis detector efficiency (default: same as Z)")
     parser.add_argument("--dephasing-rate", type=float, default=None, help="Dephasing rate per km (default: 0)")
+    parser.add_argument("--bs-eff",         type=float, default=None, help="Beam splitter efficiency at relay (default: 1)")
     args = parser.parse_args()
     cfg  = load_config(args.config)
 
@@ -180,6 +182,7 @@ if __name__ == "__main__":
         nodeLossDb    = cfg["node_loss_db"],
         sourceErrRate = cfg["source_error_rate"],
         dephasingRate = args.dephasing_rate if args.dephasing_rate is not None else cfg["dephasing_rate"],
+        bsEff         = args.bs_eff if args.bs_eff is not None else cfg["bs_eff"],
     )
     valid = [r for r in rates if r != "nan"]
     avg   = f"{sum(valid)/len(valid):.2f} bps" if valid else "no completed runs"
