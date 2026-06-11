@@ -82,9 +82,14 @@ def _bb84_chunk(args):
 
         if bobProt.end_time is not None:
             keyA, keyB = aliceProt.key, bobProt.key
-            KeyListA.append(keyA)
-            KeyListB.append(keyB)
-            KeyRateList.append(len(keyA) * 10**9 / (bobProt.end_time - startTime))
+            length = min(len(keyA), len(keyB))
+            qber = sum(a != b for a, b in zip(keyA, keyB)) / length if length > 0 else 0
+            if qber > 0.11:
+                KeyListA.append("nan"); KeyListB.append("nan"); KeyRateList.append("nan")
+            else:
+                KeyListA.append(keyA)
+                KeyListB.append(keyB)
+                KeyRateList.append(len(keyA) * 10**9 / (bobProt.end_time - startTime))
         else:
             KeyListA.append("nan")
             KeyListB.append("nan")

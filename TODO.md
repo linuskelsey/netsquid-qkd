@@ -2,12 +2,8 @@
 
 ## Next Up
 
-### 1. QBER Cutoff
-Abort runs where QBER exceeds a threshold (key generation not secure above ~11% for BB84, ~15% for MDI under ideal conditions).
-- [ ] Confirm exact cutoff values to use (BB84 and MDI, may differ)
-- [ ] Implement cutoff in both `BB84_run.py` and `mdiRun.py`
-- [ ] Decide: hard abort (return empty key) or soft flag (exclude from aggregate stats)?
-- [ ] Update compare scripts to handle zero-length keys at cutoff points
+### ~~1. QBER Cutoff~~ ✓ complete
+11% threshold for both BB84 and MDI. Runs exceeding cutoff recorded as `"nan"` in chunk functions.
 
 ### 2. Scripting Cleanup + Realistic Hardware Regions
 Identify and annotate realistic operating regions on key rate vs parameter graphs.
