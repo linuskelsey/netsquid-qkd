@@ -23,6 +23,40 @@
 | Raw script config wiring | complete |
 | Top-level CLI `scripts/compare/run.py` (issue #4) | planned |
 
+## Network Scale Modelling
+
+### Phase 1 — Analytical topology optimisation
+Identify optimal topology (repeater spacing, number of hops) for maximum key rate analytically before simulation.
+
+| Item | Status |
+|------|--------|
+| Analytical key rate model for N-hop repeater chain | planned |
+| Optimal repeater spacing derivation (BB84 trusted-node) | planned |
+| Optimal repeater spacing derivation (MDI-QKD multi-Charlie) | planned |
+| Quantum memory decoherence model (T1/T2, η_mem) | planned |
+| BB84 vs MDI-QKD optimal topology comparison | planned |
+
+### Phase 2 — Simulation-based scalability
+Use optimal topology from Phase 1 as fixed input; sweep user count / network size.
+
+| Item | Status |
+|------|--------|
+| N-node repeater chain implementation (NetSquid) | planned |
+| Entanglement swapping at repeater nodes (MDI-QKD native) | planned |
+| Trusted-node repeater model for BB84 | planned |
+| Key rate vs number of users / network nodes | planned |
+| Key rate vs memory coherence time | planned |
+| Effect of repeaters on BB84: range extension vs security assumptions | planned |
+| Effect of repeaters on MDI-QKD: multi-Charlie chain performance | planned |
+
+### Extensions (nice to have)
+
+| Item | Status |
+|------|--------|
+| Key rate vs number of repeater hops (sweep) | extension |
+| Repeater spacing optimisation sweep (simulation) | extension |
+| BB84 vs MDI-QKD repeater performance head-to-head | extension |
+
 ## Analysis
 
 | Item | Status |

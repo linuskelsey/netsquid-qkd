@@ -11,11 +11,12 @@ UCL MSc Quantum Technologies Research Project — Linus Kelsey
 ```
 BB84/           BB84 Alice/Bob protocols and simulation runner
 MDI/            MDI-QKD Alice/Bob/Charlie protocols and simulation runner
+repeater/       (planned) Protocol-agnostic quantum repeater primitives
 lib/            Shared utilities (delay model, photon source, config loader)
-configs/        JSON parameter presets (layer0_ideal → layer4_node)
+configs/        JSON parameter presets (layer0_ideal → layer5_source_err); memory + chain configs planned
 scripts/
   raw/          Single-protocol run scripts
-  compare/      Sweep scripts: key rate vs distance, loss, efficiency, dark counts
+  compare/      Sweep scripts: key rate vs distance, loss, efficiency, dark counts; repeater sweeps planned
 ```
 
 ## Running
