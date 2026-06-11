@@ -5,6 +5,7 @@ import netsquid as ns
 
 from netsquid.nodes import Node
 from netsquid.components import QuantumChannel, ClassicalChannel
+from netsquid.components.models.qerrormodels import DephaseNoiseModel
 
 import sys
 _this_dir  = os.path.dirname(os.path.abspath(__file__))
@@ -20,7 +21,7 @@ from mdiRelayNode import RelayNodeProtocol
 
 def _mdi_chunk(args):
     """Sequential simulation block — runs runtimes iterations and returns partial results."""
-    runtimes, fibreLen, qDelay, qSpeed, photonCount, sourceFreq, lenLoss, initLoss, detectorEffZ, detectorEffX, darkCount, nodeLossDb, sourceErrRate = args
+    runtimes, fibreLen, qDelay, qSpeed, photonCount, sourceFreq, lenLoss, initLoss, detectorEffZ, detectorEffX, darkCount, nodeLossDb, sourceErrRate, dephasingRate = args
 
     KeyListA    = []
     KeyListB    = []
@@ -36,10 +37,13 @@ def _mdi_chunk(args):
                                               "C.C.Out.A", "C.C.Out.B", "C.C.In.A.basis", "C.C.In.B.basis"])
 
         # channels ==============================================
+        p_dephase_arm = min(1.0, dephasingRate * fibreLen / 2)
         QChann1 = QuantumChannel("[A: -Q-> :C]", delay=qDelay, length=fibreLen/2,
-                                 models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed, stddev=0.05)})
+                                 models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed, stddev=0.05),
+                                         "quantum_noise_model": DephaseNoiseModel(p_dephase_arm, time_independent=True)})
         QChann2 = QuantumChannel("[B: -Q-> :C]", delay=qDelay, length=fibreLen/2,
-                                 models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed, stddev=0.05)})
+                                 models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed, stddev=0.05),
+                                         "quantum_noise_model": DephaseNoiseModel(p_dephase_arm, time_independent=True)})
 
         alice.connect_to(charlie, QChann1,
                          local_port_name=alice.ports["A.Q.Out"].name,
@@ -132,6 +136,7 @@ def run_mdi_sims(runtimes=10,
                  darkCount=0,
                  nodeLossDb=0.0,
                  sourceErrRate=0.0,
+                 dephasingRate=0.0,
                  workers=None):
 
     n = max(1, int(os.cpu_count() * 0.8)) if workers is None else workers
@@ -141,7 +146,7 @@ def run_mdi_sims(runtimes=10,
     sizes = [base + (1 if i < remainder else 0) for i in range(n)]
 
     job_args = [(s, fibreLen, qDelay, qSpeed, photonCount, sourceFreq,
-                 lenLoss, initLoss, detectorEffZ, detectorEffX, darkCount, nodeLossDb, sourceErrRate) for s in sizes]
+                 lenLoss, initLoss, detectorEffZ, detectorEffX, darkCount, nodeLossDb, sourceErrRate, dephasingRate) for s in sizes]
 
     with get_context('spawn').Pool(n) as pool:
         parts = pool.map(_mdi_chunk, job_args)
@@ -157,22 +162,24 @@ def run_mdi_sims(runtimes=10,
 
 if __name__ == "__main__":
     parser = config_arg_parser()
-    parser.add_argument("--fibre",     type=float, default=50,   help="Fibre length (km)")
-    parser.add_argument("--runtimes",  type=int,   default=10,   help="Number of simulation runs")
-    parser.add_argument("--det-eff-x", type=float, default=None, help="X-basis detector efficiency (default: same as Z)")
+    parser.add_argument("--fibre",          type=float, default=50,   help="Fibre length (km)")
+    parser.add_argument("--runtimes",       type=int,   default=10,   help="Number of simulation runs")
+    parser.add_argument("--det-eff-x",      type=float, default=None, help="X-basis detector efficiency (default: same as Z)")
+    parser.add_argument("--dephasing-rate", type=float, default=None, help="Dephasing rate per km (default: 0)")
     args = parser.parse_args()
     cfg  = load_config(args.config)
 
     _, _, rates = run_mdi_sims(
-        runtimes     = args.runtimes,
-        fibreLen     = args.fibre,
-        lenLoss      = cfg["fibre_loss_db_per_km"],
-        initLoss     = cfg["init_loss"],
-        detectorEffZ = cfg["detector_efficiency"],
-        detectorEffX = args.det_eff_x,
-        darkCount    = cfg["dark_count_rate"],
-        nodeLossDb   = cfg["node_loss_db"],
-        sourceErrRate= cfg["source_error_rate"],
+        runtimes      = args.runtimes,
+        fibreLen      = args.fibre,
+        lenLoss       = cfg["fibre_loss_db_per_km"],
+        initLoss      = cfg["init_loss"],
+        detectorEffZ  = cfg["detector_efficiency"],
+        detectorEffX  = args.det_eff_x,
+        darkCount     = cfg["dark_count_rate"],
+        nodeLossDb    = cfg["node_loss_db"],
+        sourceErrRate = cfg["source_error_rate"],
+        dephasingRate = args.dephasing_rate if args.dephasing_rate is not None else cfg["dephasing_rate"],
     )
     valid = [r for r in rates if r != "nan"]
     avg   = f"{sum(valid)/len(valid):.2f} bps" if valid else "no completed runs"
