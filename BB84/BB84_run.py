@@ -21,7 +21,7 @@ from BB84_Bob import BobProtocol
 
 def _bb84_chunk(args):
     """Sequential simulation block — runs runtimes iterations and returns partial results."""
-    runtimes, fibreLen, qDelay, qSpeed, photonCount, sourceFreq, lenLoss, initLoss, detectorEff, darkCount, nodeLossDb, sourceErrRate = args
+    runtimes, fibreLen, qDelay, qSpeed, photonCount, sourceFreq, lenLoss, initLoss, detectorEffZ, detectorEffX, darkCount, nodeLossDb, sourceErrRate = args
 
     KeyListA    = []
     KeyListB    = []
@@ -68,7 +68,7 @@ def _bb84_chunk(args):
                                   sourceErrRate=sourceErrRate)
         bobProt   = BobProtocol(bob, photonCount,
                                 portNames=list(bob.ports.keys()),
-                                detectorEff=detectorEff, darkCount=darkCount, sourceFreq=sourceFreq,
+                                detectorEffZ=detectorEffZ, detectorEffX=detectorEffX, darkCount=darkCount, sourceFreq=sourceFreq,
                                 nodeLossDb=nodeLossDb)
 
         bobProt.start()
@@ -98,7 +98,8 @@ def run_BB84_sims(runtimes=10,
                   sourceFreq=1e7,
                   lenLoss=0,
                   initLoss=0,
-                  detectorEff=1,
+                  detectorEffZ=1,
+                  detectorEffX=None,
                   darkCount=0,
                   nodeLossDb=0.0,
                   sourceErrRate=0.0,
@@ -112,7 +113,7 @@ def run_BB84_sims(runtimes=10,
     sizes = [base + (1 if i < remainder else 0) for i in range(n)]
 
     job_args = [(s, fibreLen, qDelay, qSpeed, photonCount, sourceFreq,
-                 lenLoss, initLoss, detectorEff, darkCount, nodeLossDb, sourceErrRate) for s in sizes]
+                 lenLoss, initLoss, detectorEffZ, detectorEffX, darkCount, nodeLossDb, sourceErrRate) for s in sizes]
 
     with get_context('spawn').Pool(n) as pool:
         parts = pool.map(_bb84_chunk, job_args)
@@ -128,20 +129,22 @@ def run_BB84_sims(runtimes=10,
 
 if __name__ == "__main__":
     parser = config_arg_parser()
-    parser.add_argument("--fibre",    type=float, default=50,  help="Fibre length (km)")
-    parser.add_argument("--runtimes", type=int,   default=10,  help="Number of simulation runs")
+    parser.add_argument("--fibre",     type=float, default=50,   help="Fibre length (km)")
+    parser.add_argument("--runtimes",  type=int,   default=10,   help="Number of simulation runs")
+    parser.add_argument("--det-eff-x", type=float, default=None, help="X-basis detector efficiency (default: same as Z)")
     args = parser.parse_args()
     cfg  = load_config(args.config)
 
     _, _, rates = run_BB84_sims(
-        runtimes    = args.runtimes,
-        fibreLen    = args.fibre,
-        lenLoss     = cfg["fibre_loss_db_per_km"],
-        initLoss    = cfg["init_loss"],
-        detectorEff = cfg["detector_efficiency"],
-        darkCount   = cfg["dark_count_rate"],
-        nodeLossDb    = cfg["node_loss_db"],
-        sourceErrRate = cfg["source_error_rate"],
+        runtimes     = args.runtimes,
+        fibreLen     = args.fibre,
+        lenLoss      = cfg["fibre_loss_db_per_km"],
+        initLoss     = cfg["init_loss"],
+        detectorEffZ = cfg["detector_efficiency"],
+        detectorEffX = args.det_eff_x,
+        darkCount    = cfg["dark_count_rate"],
+        nodeLossDb   = cfg["node_loss_db"],
+        sourceErrRate= cfg["source_error_rate"],
     )
     valid = [r for r in rates if r != "nan"]
     avg   = f"{sum(valid)/len(valid):.2f} bps" if valid else "no completed runs"

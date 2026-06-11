@@ -13,7 +13,7 @@ from lib.functions import rng_bin_lst
 
 
 class BobProtocol(NodeProtocol):
-    def __init__(self, node, photonCount, portNames=["B.Q.In","B.C.In","B.C.Out","B.C.In.tags"], detectorEff=1, darkCount=0, sourceFreq=1e7, nodeLossDb=0.0):
+    def __init__(self, node, photonCount, portNames=["B.Q.In","B.C.In","B.C.Out","B.C.In.tags"], detectorEffZ=1, detectorEffX=None, darkCount=0, sourceFreq=1e7, nodeLossDb=0.0):
         super().__init__()
         self.node         = node
         self.photon_count = photonCount
@@ -22,7 +22,8 @@ class BobProtocol(NodeProtocol):
         self.port_co_name = portNames[2]
         self.port_ci_tags_name = portNames[3]
 
-        self.detector_eff  = detectorEff
+        self.detector_eff_z = detectorEffZ
+        self.detector_eff_x = detectorEffX if detectorEffX is not None else detectorEffZ
         self.node_loss_prob = 1 - 10 ** (-nodeLossDb / 10)
 
         self.basis_list   = rng_bin_lst(photonCount)
@@ -64,15 +65,16 @@ class BobProtocol(NodeProtocol):
         for i, q in zip(self.arrived_indices, qubit_batch):
             if np.random.random() < self.node_loss_prob:
                 continue
-            real = np.random.random() < self.detector_eff
+            basis = self.basis_list[i]
+            eff = self.detector_eff_x if basis else self.detector_eff_z
+            real = np.random.random() < eff
             dark = np.random.random() < self.dark_rate
 
             if not (real or dark):
                 continue
 
-            basis = self.basis_list[i]
             if basis: ns.qubits.operate(q,ns.H)  # if: X basis, then: rotate
-            
+
             if dark and not real:
                 # spurious click - random outcome
                 meas = np.random.randint(0,2)
