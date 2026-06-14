@@ -13,10 +13,12 @@ BB84/           BB84 Alice/Bob protocols and simulation runner
 MDI/            MDI-QKD Alice/Bob/Charlie protocols and simulation runner
 repeater/       (planned) Protocol-agnostic quantum repeater primitives
 lib/            Shared utilities (delay model, photon source, config loader)
-configs/        JSON parameter presets (layer0_ideal → layer5_source_err); memory + chain configs planned
+configs/        JSON parameter presets (layer0_ideal → layer8_bs_eff); memory + chain configs planned
 scripts/
   raw/          Single-protocol run scripts
-  compare/      Sweep scripts: key rate vs distance, loss, efficiency, dark counts; repeater sweeps planned
+  compare/      Sweep scripts: key rate vs distance, loss, efficiency, dark count rate,
+                node loss, source error rate, dephasing rate, detector basis bias,
+                beam splitter efficiency; repeater sweeps planned
 ```
 
 ## Running
@@ -29,6 +31,11 @@ python scripts/compare/length.py      # key rate vs distance
 python scripts/compare/loss.py        # key rate vs fibre attenuation
 python scripts/compare/efficiency.py  # key rate vs detector efficiency
 python scripts/compare/dark_count.py  # key rate vs dark count rate
+python scripts/compare/node_loss.py   # key rate vs node/connector loss
+python scripts/compare/source_err.py  # key rate vs source error rate
+python scripts/compare/dephasing.py   # key rate vs fibre dephasing rate
+python scripts/compare/basis_bias.py  # key rate vs detector basis bias (η_X sweep, η_Z fixed)
+python scripts/compare/bs_eff.py      # key rate vs beam splitter efficiency (MDI only)
 ```
 
 All comparison scripts accept CLI flags and an optional JSON config:
@@ -76,6 +83,21 @@ Default parameters (no config, no CLI flags):
 | `runtimes` | 100 | Monte Carlo repetitions per sweep point |
 | `photons` | 1024 | Photons per run |
 | `workers` | 80% of CPU cores | Parallel worker processes (passed to run functions directly) |
+
+## Hardware Parameter Reference
+
+Realistic ranges drawn from deployed QKD systems (Lo et al. 2012, Tang et al. 2016, Berrevoets et al. 2022, Yin et al. 2016). Values marked ⁺ are provisional pending literature verification.
+
+| Parameter (config key) | Symbol | Realistic range | Typical point | Source basis |
+|------------------------|--------|----------------|---------------|--------------|
+| `fibre_loss_db_per_km` | α | 0.15–0.25 dB/km | 0.20 dB/km | SMF-28 telecom fibre at 1550 nm |
+| `detector_efficiency` | η_d | 0.15–0.95 | 0.65 (SNSPD metropolitan) | InGaAs 15–30%; SNSPD 80–95%; Tang 2016 ~65% |
+| `dark_count_rate` | d_c | 1–10,000 cps | 100 cps (SNSPD) | SNSPD: 1–100 cps; InGaAs: 1,000–10,000 cps |
+| `init_loss` | L_i | 0.02–0.20 | 0.10 ⁺ | Source-to-fibre coupling + connector at TX |
+| `node_loss_db` | L_n | 0.5–4 dB | 2 dB ⁺ | FC/PC connectors + optical components at RX |
+| `source_error_rate` | ε_s | 0.001–0.02 | 0.005 | Well-calibrated polarisation source; Lo 2012 used 1.5% |
+| `dephasing_rate` | β | 1×10⁻⁵–1×10⁻³ /km | 1×10⁻⁴ /km ⁺ | SMF polarisation stability; literature rarely quoted explicitly |
+| `bs_eff` | η_bs | 0.90–0.99 | 0.97 | Commercial 50:50 BS; integrated photonic ~95% |
 
 ## Dependencies
 

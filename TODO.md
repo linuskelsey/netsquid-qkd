@@ -4,8 +4,8 @@
 
 ### 1. Scripting Cleanup + Realistic Hardware Regions
 Identify and annotate realistic operating regions on key rate vs parameter graphs.
-- [ ] Define realistic hardware parameter ranges (α, η_d, d_c) from literature / BT spec
-- [ ] Add shaded regions or reference lines to compare script plots (loss, efficiency, dark count)
+- [ ] Define realistic hardware parameter ranges for each sweep axis (from literature / BT spec)
+- [ ] Add shaded regions or reference lines to all compare script plots
 - [ ] Consider a `configs/realistic_hardware.json` preset for a real-world baseline
 - [ ] Review compare scripts for any shared boilerplate worth factoring out
 
