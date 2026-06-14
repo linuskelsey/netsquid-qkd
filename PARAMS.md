@@ -2,18 +2,19 @@
 
 ## Config Presets
 
-Presets in `configs/` layer physical effects incrementally:
+Presets in `configs/` layer physical effects cumulatively. Each layer adds one parameter at its industry-typical value to the previous layer. All values provisional pending literature verification.
 
-| File | Adds | α (dB/km) | η_d | d_c (cps) | L_node (dB) | ε_s |
-|------|------|-----------|-----|-----------|-------------|-----|
-| `layer0_ideal.json` | baseline | 0.0 | 1.0 | 0 | 0.0 | 0.0 |
-| `layer1_loss.json` | fibre loss | 0.2 | 1.0 | 0 | 0.0 | 0.0 |
-| `layer2_eff.json` | detector efficiency | 0.2 | 0.9 | 0 | 0.0 | 0.0 |
-| `layer3_dark.json` | dark counts | 0.2 | 0.9 | 100 | 0.0 | 0.0 |
-| `layer4_node.json` | node/connector loss | 0.2 | 0.9 | 100 | 1.0 | 0.0 |
-| `layer5_source_err.json` | source bit errors | 0.2 | 0.9 | 100 | 1.0 | 0.02 |
-| `layer7_dephasing.json` | fibre dephasing | 0.2 | 0.9 | 100 | 1.0 | 0.02 |
-| `layer8_bs_eff.json` | beam splitter efficiency (MDI) | 0.2 | 0.9 | 100 | 1.0 | 0.02 |
+| File | Adds | α | η_d | d_c | L_i | L_n | ε_s | β | η_bs |
+|------|------|---|-----|-----|-----|-----|-----|---|------|
+| `layer0_ideal.json` | baseline (all ideal) | 0.0 | 1.0 | 0 | 0.0 | 0.0 | 0.0 | 0.0 | 1.0 |
+| `layer1_loss.json` | + fibre loss | 0.20 | 1.0 | 0 | 0.0 | 0.0 | 0.0 | 0.0 | 1.0 |
+| `layer2_eff.json` | + detector efficiency | 0.20 | 0.65 | 0 | 0.0 | 0.0 | 0.0 | 0.0 | 1.0 |
+| `layer3_dark.json` | + dark count rate | 0.20 | 0.65 | 100 | 0.0 | 0.0 | 0.0 | 0.0 | 1.0 |
+| `layer4_init_loss.json` | + TX insertion loss | 0.20 | 0.65 | 100 | 0.10 | 0.0 | 0.0 | 0.0 | 1.0 |
+| `layer5_node_loss.json` | + RX node loss | 0.20 | 0.65 | 100 | 0.10 | 2.0 | 0.0 | 0.0 | 1.0 |
+| `layer6_source_err.json` | + source error rate | 0.20 | 0.65 | 100 | 0.10 | 2.0 | 0.005 | 0.0 | 1.0 |
+| `layer7_dephasing.json` | + fibre dephasing | 0.20 | 0.65 | 100 | 0.10 | 2.0 | 0.005 | 1e-4 | 1.0 |
+| `layer8_bs_eff.json` | + BS efficiency (MDI only) | 0.20 | 0.65 | 100 | 0.10 | 2.0 | 0.005 | 1e-4 | 0.97 |
 
 Pass any preset with `--config configs/<file>`. CLI flags override config values.
 

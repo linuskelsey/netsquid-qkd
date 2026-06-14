@@ -1,10 +1,12 @@
 {
     "layer": 0,
-    "description": "Idealised baseline — no physical imperfections. Pure architectural overhead.",
+    "description": "Idealised baseline — all parameters at physical ideal. No loss, perfect detectors, no noise.",
     "fibre_loss_db_per_km": 0.0,
     "init_loss": 0.0,
     "detector_efficiency": 1.0,
     "dark_count_rate": 0,
+    "node_loss_db": 0.0,
     "source_error_rate": 0.0,
-    "basis_bias": 0.5
+    "dephasing_rate": 0.0,
+    "bs_eff": 1.0
 }

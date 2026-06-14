@@ -1,13 +1,12 @@
 {
     "layer": 8,
-    "description": "All physical imperfections + fibre dephasing + beam splitter efficiency. bs_eff = 0.9 (typical fibre-coupled BS at relay). MDI-only parameter; ignored by BB84.",
+    "description": "Layer 7 + beam splitter efficiency. η_bs = 0.97 (commercial 50:50 BS at MDI relay). MDI-only; ignored by BB84.",
     "fibre_loss_db_per_km": 0.2,
-    "init_loss": 0.05,
-    "detector_efficiency": 0.9,
+    "init_loss": 0.1,
+    "detector_efficiency": 0.65,
     "dark_count_rate": 100,
-    "node_loss_db": 1.0,
-    "source_error_rate": 0.02,
-    "basis_bias": 0.5,
-    "dephasing_rate": 0.002,
-    "bs_eff": 0.9
+    "node_loss_db": 2.0,
+    "source_error_rate": 0.005,
+    "dephasing_rate": 0.0001,
+    "bs_eff": 0.97
 }

@@ -1,0 +1,12 @@
+{
+    "layer": 5,
+    "description": "Layer 4 + RX-side node/connector loss. L_n = 2.0 dB (FC/PC connectors + optical components at receiver).",
+    "fibre_loss_db_per_km": 0.2,
+    "init_loss": 0.1,
+    "detector_efficiency": 0.65,
+    "dark_count_rate": 100,
+    "node_loss_db": 2.0,
+    "source_error_rate": 0.0,
+    "dephasing_rate": 0.0,
+    "bs_eff": 1.0
+}
