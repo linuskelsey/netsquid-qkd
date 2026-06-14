@@ -62,7 +62,7 @@ def aggregate(KeyListA, KeyListB, KeyRateList):
 
 
 def run_layer_bb84(cfg, runtimes, db_conn=None, layer_name=""):
-    rates = []
+    rates, mins, maxs = [], [], []
     for d in Dx:
         KA, KB, KR = run_BB84_sims(
             runtimes      = runtimes,
@@ -80,6 +80,9 @@ def run_layer_bb84(cfg, runtimes, db_conn=None, layer_name=""):
         )
         avg, raw_rates, raw_qbers, raw_lengths = aggregate(KA, KB, KR)
         rates.append(avg)
+        nz = [r for r in raw_rates if r > 0]
+        mins.append(min(nz) if nz else float('nan'))
+        maxs.append(max(raw_rates) if raw_rates else float('nan'))
         if db_conn is not None:
             params = {
                 "fibre_len":  d,
@@ -94,11 +97,12 @@ def run_layer_bb84(cfg, runtimes, db_conn=None, layer_name=""):
             }
             save_sweep_point(db_conn, "BB84", params, raw_rates, raw_qbers, raw_lengths,
                              script=f"layers/{layer_name}", runtimes=runtimes, photons=1024)
-    return [r / 1000 for r in rates]
+    k = 1000
+    return [r / k for r in rates], [r / k for r in mins], [r / k for r in maxs]
 
 
 def run_layer_mdi(cfg, runtimes, db_conn=None, layer_name=""):
-    rates = []
+    rates, mins, maxs = [], [], []
     for d in Dx:
         KA, KB, KR = run_mdi_sims(
             runtimes      = runtimes,
@@ -117,6 +121,9 @@ def run_layer_mdi(cfg, runtimes, db_conn=None, layer_name=""):
         )
         avg, raw_rates, raw_qbers, raw_lengths = aggregate(KA, KB, KR)
         rates.append(avg)
+        nz = [r for r in raw_rates if r > 0]
+        mins.append(min(nz) if nz else float('nan'))
+        maxs.append(max(raw_rates) if raw_rates else float('nan'))
         if db_conn is not None:
             params = {
                 "fibre_len":  d,
@@ -131,7 +138,8 @@ def run_layer_mdi(cfg, runtimes, db_conn=None, layer_name=""):
             }
             save_sweep_point(db_conn, "MDI", params, raw_rates, raw_qbers, raw_lengths,
                              script=f"layers/{layer_name}", runtimes=runtimes, photons=1024)
-    return [r / 1000 for r in rates]
+    k = 1000
+    return [r / k for r in rates], [r / k for r in mins], [r / k for r in maxs]
 
 
 if __name__ == "__main__":
@@ -154,8 +162,12 @@ if __name__ == "__main__":
         for i, (cfg_file, label, label_plain) in enumerate(LAYERS[:8]):
             cfg = load_config(os.path.join(ROOT, "configs", cfg_file))
             print(f"BB84 {label_plain}...")
-            rates = run_layer_bb84(cfg, args.runtimes, db_conn=db_conn, layer_name=cfg_file.replace(".json", ""))
-            ax_bb84.plot(Dx, rates, 'o-', color=colours_bb84[i], label=label)
+            rates, mins, maxs = run_layer_bb84(cfg, args.runtimes, db_conn=db_conn, layer_name=cfg_file.replace(".json", ""))
+            yerr = [
+                [max(r - m, 0) for r, m in zip(rates, mins)],
+                [max(m - r, 0) for r, m in zip(rates, maxs)],
+            ]
+            ax_bb84.errorbar(Dx, rates, yerr=yerr, fmt='o-', color=colours_bb84[i], label=label, capsize=3)
         ax_bb84.set_xlabel("Separation between Alice and Bob (km)")
         ax_bb84.set_ylabel("Secure key rate (kbps)")
         ax_bb84.set_yscale("log")
@@ -169,7 +181,12 @@ if __name__ == "__main__":
         for i, (cfg_file, label, label_plain) in enumerate(LAYERS):
             cfg = load_config(os.path.join(ROOT, "configs", cfg_file))
             print(f"MDI {label_plain}...")
-            rates = run_layer_mdi(cfg, args.runtimes, db_conn=db_conn, layer_name=cfg_file.replace(".json", ""))
+            rates, mins, maxs = run_layer_mdi(cfg, args.runtimes, db_conn=db_conn, layer_name=cfg_file.replace(".json", ""))
+            yerr = [
+                [max(r - m, 0) for r, m in zip(rates, mins)],
+                [max(m - r, 0) for r, m in zip(rates, maxs)],
+            ]
+            ax_mdi.errorbar(Dx, rates, yerr=yerr, fmt='o-', color=colours_mdi[i], label=label, capsize=3)
         ax_mdi.set_xlabel("Separation between Alice and Bob (km)")
         ax_mdi.set_ylabel("Secure key rate (kbps)")
         ax_mdi.set_yscale("log")
