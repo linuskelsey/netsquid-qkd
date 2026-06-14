@@ -23,7 +23,7 @@ Defaults (no --config):
 import sys
 import os
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 sys.path.append("BB84/")
 sys.path.append("MDI/")
 from BB84.BB84_run import run_BB84_sims
@@ -113,7 +113,7 @@ if __name__ == "__main__":
         print(f"Note: source_error_rate from config ignored — ε_s is the sweep axis")
     print(f"Sweep: ε_s [0-10%]  |  Fixed: L={args.fibre} km  α={cfg['fibre_loss_db_per_km']} dB/km  η_d={cfg['detector_efficiency']}")
 
-    SEx = [0, 0.005, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1]
+    SEx = [0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.03, 0.04]
 
     rates_bb84, rates_mdi = [], []
 
@@ -148,6 +148,26 @@ if __name__ == "__main__":
     ax2.set_yscale("log")
 
     ax1.legend()
+
+    REALISTIC_MIN, REALISTIC_MAX = 0.001, 0.02
+    ax1.axvspan(REALISTIC_MIN, REALISTIC_MAX, alpha=0.08, color='red', zorder=0)
+    ax1.axvline(REALISTIC_MIN, color='black', linestyle=':', linewidth=1.2)
+    ax1.axvline(REALISTIC_MAX, color='black', linestyle=':', linewidth=1.2)
+    _ticks  = ax1.get_xticks()
+    _xlim   = ax1.get_xlim()
+    _dx     = 0.012 * abs(_xlim[1] - _xlim[0])
+    _inv    = _xlim[0] > _xlim[1]
+    _ha_min = 'left'  if _inv else 'right'
+    _ha_max = 'right' if _inv else 'left'
+    for _xv, _lbl, _ha in [(REALISTIC_MIN, "0.001", _ha_min), (REALISTIC_MAX, "0.02", _ha_max)]:
+        if not any(abs(_xv - _t) < max(abs(_xv), 1e-9) * 1e-3 + 1e-9 for _t in _ticks):
+            _xpos = _xv - _dx if _xv < (REALISTIC_MIN + REALISTIC_MAX) / 2 else _xv + _dx
+            ax1.text(_xpos, 0.01, _lbl, transform=ax1.get_xaxis_transform(),
+                     ha=_ha, va='bottom', fontsize=7, color='dimgray')
+    ax1.text((REALISTIC_MIN + REALISTIC_MAX) / 2, 0.97, "Realistic hardware regime",
+             transform=ax1.get_xaxis_transform(),
+             ha='center', va='top', fontsize=7, color='darkred', alpha=0.7, style='italic')
+
     plt.title(f"Key rate vs source error rate: BB84 and MDI-QKD\n"
               f"$L$={args.fibre} km  |  $\\alpha$={cfg['fibre_loss_db_per_km']} dB/km  |  $\\eta_d$={cfg['detector_efficiency']}  |  $d_c$={cfg['dark_count_rate']} cps\n"
               f"$L_i$={cfg['init_loss']}  |  $L_n$={cfg['node_loss_db']} dB  |  $\\beta$={cfg['dephasing_rate']} /km  |  $\\eta_{{bs}}$={cfg['bs_eff']}")

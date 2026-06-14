@@ -19,7 +19,7 @@ Defaults (no --config):
 import sys
 import os
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
 from BB84.BB84_run import run_BB84_sims
 from lib.functions import load_config, config_arg_parser
