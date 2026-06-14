@@ -10,3 +10,6 @@ docs/netsquid
 
 # merge script
 merge-all.sh
+
+# simulation results database
+*.db
