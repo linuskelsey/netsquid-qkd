@@ -15,11 +15,12 @@ Expected params dict keys:
     bs_eff      — beam splitter efficiency (MDI only)
 """
 
+import os
 import sqlite3
 import json
 from datetime import datetime
 
-DEFAULT_DB_PATH = "results.db"
+DEFAULT_DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "results.db")
 
 _CREATE_TABLE = """
 CREATE TABLE IF NOT EXISTS runs (

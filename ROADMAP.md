@@ -29,9 +29,9 @@
 
 | Feature | Status |
 |---------|--------|
-| Save simulation results to disk (parameter point → key rate list per runtime) | planned |
+| P2P results schema: 9-parameter point → per-runtime key rates, QBERs, key lengths | planned |
+| Network results schema: separate schema for multi-hop/multi-user topology results | planned |
 | Query/load saved results for offline analysis and plotting | planned |
-| Avoid re-running existing parameter points (cache lookup) | planned |
 
 ---
 
