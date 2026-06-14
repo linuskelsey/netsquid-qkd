@@ -29,9 +29,9 @@
 
 | Feature | Status |
 |---------|--------|
-| P2P results schema: 9-parameter point → per-runtime key rates, QBERs, key lengths | planned |
+| P2P results schema: 9-parameter point → per-runtime key rates, QBERs, key lengths (`lib/db.py`) | complete |
 | Network results schema: separate schema for multi-hop/multi-user topology results | planned |
-| Query/load saved results for offline analysis and plotting | planned |
+| Query/load saved results for offline analysis and plotting (litecli / pandas / sqlite3) | complete |
 
 ---
 

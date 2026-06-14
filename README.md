@@ -12,7 +12,7 @@ UCL MSc Quantum Technologies Research Project — Linus Kelsey
 BB84/           BB84 Alice/Bob protocols and simulation runner
 MDI/            MDI-QKD Alice/Bob/Charlie protocols and simulation runner
 repeater/       (planned) Protocol-agnostic quantum repeater primitives
-lib/            Shared utilities (delay model, photon source, config loader)
+lib/            Shared utilities (delay model, photon source, config loader, DB persistence)
 configs/        JSON parameter presets (layer0_ideal → layer8_bs_eff); memory + chain configs planned
 scripts/
   P2P/
@@ -57,6 +57,22 @@ python MDI/mdiRun.py   --config configs/layer2_eff.json --det-eff-x 0.7
 
 # Config preset + CLI override (CLI takes precedence)
 python scripts/P2P/compare/length.py --config configs/layer3_dark.json --fibre 30
+```
+
+All comparison scripts and `layers.py` save results to `results.db` (repo root) by default:
+
+```bash
+# Skip DB saving
+python scripts/P2P/compare/length.py --no-save
+
+# Use a custom DB path
+python scripts/P2P/compare/length.py --db /path/to/custom.db
+
+# Browse results interactively (requires: pip install litecli)
+litecli results.db
+
+# View schema without opening TUI
+sqlite3 results.db ".schema"
 ```
 
 See [PARAMS.md](PARAMS.md) for config presets, simulation defaults, and realistic hardware parameter ranges.
