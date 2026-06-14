@@ -141,10 +141,10 @@ if __name__ == "__main__":
     fig, ax1 = plt.subplots()
     ax1.plot(Bx, abs_rates_bb84, 'o-', label="BB84")
     ax1.plot(Bx, abs_rates_mdi,  's-', label="MDI")
-    ax1.set_xlabel("X-basis detector efficiency η_X")
+    ax1.set_xlabel(r"X-basis detector efficiency $\eta_X$")
     ax1.set_ylabel("Absolute secure key rate (kbps)")
     ax1.set_yscale("log")
-    ax1.set_xlim(1.0, 0.5)
+    ax1.invert_xaxis()
     ax1.grid(True, alpha=0.3)
 
     ax2 = ax1.twinx()
@@ -155,5 +155,6 @@ if __name__ == "__main__":
 
     ax1.legend()
     plt.title(f"Key rate vs detector basis bias: BB84 and MDI-QKD\n"
-              f"$\\eta_Z$={det_eff_z}  |  $L$={args.fibre} km  |  $\\alpha$={cfg['fibre_loss_db_per_km']} dB/km")
+              f"$\\eta_Z$={det_eff_z}  |  $L$={args.fibre} km  |  $\\alpha$={cfg['fibre_loss_db_per_km']} dB/km  |  $d_c$={cfg['dark_count_rate']} cps\n"
+              f"$L_i$={cfg['init_loss']}  |  $L_n$={cfg['node_loss_db']} dB  |  $\\varepsilon_s$={cfg['source_error_rate']}  |  $\\beta$={cfg['dephasing_rate']} /km  |  $\\eta_{{bs}}$={cfg['bs_eff']}")
     plt.show()

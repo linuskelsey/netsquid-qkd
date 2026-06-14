@@ -139,7 +139,7 @@ if __name__ == "__main__":
     fig, ax1 = plt.subplots()
     ax1.plot(Dpx, abs_rates_bb84, 'o-', label="BB84")
     ax1.plot(Dpx, abs_rates_mdi,  's-', label="MDI")
-    ax1.set_xlabel("Fibre dephasing rate β (per km)")
+    ax1.set_xlabel(r"Fibre dephasing rate $\beta$ (per km)")
     ax1.set_ylabel("Absolute secure key rate (kbps)")
     ax1.set_yscale("log")
     ax1.grid(True, alpha=0.3)
@@ -152,5 +152,6 @@ if __name__ == "__main__":
 
     ax1.legend()
     plt.title(f"Key rate vs fibre dephasing rate: BB84 and MDI-QKD\n"
-              f"$L$={args.fibre} km  |  $\\alpha$={cfg['fibre_loss_db_per_km']} dB/km  |  $\\eta_d$={cfg['detector_efficiency']}")
+              f"$L$={args.fibre} km  |  $\\alpha$={cfg['fibre_loss_db_per_km']} dB/km  |  $\\eta_d$={cfg['detector_efficiency']}  |  $d_c$={cfg['dark_count_rate']} cps\n"
+              f"$L_i$={cfg['init_loss']}  |  $L_n$={cfg['node_loss_db']} dB  |  $\\varepsilon_s$={cfg['source_error_rate']}  |  $\\eta_{{bs}}$={cfg['bs_eff']}")
     plt.show()

@@ -199,5 +199,6 @@ if __name__ == "__main__":
 
     ax1.legend()
     plt.title(f"Key rate vs detector efficiency: BB84 and MDI-QKD\n"
-              f"$L$={args.fibre} km  |  $\\alpha$={cfg['fibre_loss_db_per_km']} dB/km  |  $d_c$={cfg['dark_count_rate']} cps")
+              f"$L$={args.fibre} km  |  $\\alpha$={cfg['fibre_loss_db_per_km']} dB/km  |  $d_c$={cfg['dark_count_rate']} cps\n"
+              f"$L_i$={cfg['init_loss']}  |  $L_n$={cfg['node_loss_db']} dB  |  $\\varepsilon_s$={cfg['source_error_rate']}  |  $\\beta$={cfg['dephasing_rate']} /km  |  $\\eta_{{bs}}$={cfg['bs_eff']}")
     plt.show()

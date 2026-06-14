@@ -136,7 +136,7 @@ if __name__ == "__main__":
     fig, ax1 = plt.subplots()
     ax1.plot(SEx, abs_rates_bb84, 'o-', label="BB84")
     ax1.plot(SEx, abs_rates_mdi,  's-', label="MDI")
-    ax1.set_xlabel("Source error rate ε_s")
+    ax1.set_xlabel(r"Source error rate $\varepsilon_s$")
     ax1.set_ylabel("Absolute secure key rate (kbps)")
     ax1.set_yscale("log")
     ax1.grid(True, alpha=0.3)
@@ -149,5 +149,6 @@ if __name__ == "__main__":
 
     ax1.legend()
     plt.title(f"Key rate vs source error rate: BB84 and MDI-QKD\n"
-              f"$L$={args.fibre} km  |  $\\alpha$={cfg['fibre_loss_db_per_km']} dB/km  |  $\\eta_d$={cfg['detector_efficiency']}")
+              f"$L$={args.fibre} km  |  $\\alpha$={cfg['fibre_loss_db_per_km']} dB/km  |  $\\eta_d$={cfg['detector_efficiency']}  |  $d_c$={cfg['dark_count_rate']} cps\n"
+              f"$L_i$={cfg['init_loss']}  |  $L_n$={cfg['node_loss_db']} dB  |  $\\beta$={cfg['dephasing_rate']} /km  |  $\\eta_{{bs}}$={cfg['bs_eff']}")
     plt.show()

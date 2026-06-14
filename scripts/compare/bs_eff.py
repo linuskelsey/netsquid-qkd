@@ -141,10 +141,10 @@ if __name__ == "__main__":
     fig, ax1 = plt.subplots()
     ax1.plot(BSx, abs_rates_bb84, 'o-', label="BB84 (unaffected)")
     ax1.plot(BSx, abs_rates_mdi,  's-', label="MDI")
-    ax1.set_xlabel("Beam splitter efficiency η_bs")
+    ax1.set_xlabel(r"Beam splitter efficiency $\eta_{bs}$")
     ax1.set_ylabel("Absolute secure key rate (kbps)")
     ax1.set_yscale("log")
-    ax1.set_xlim(1.0, 0.5)
+    ax1.invert_xaxis()
     ax1.grid(True, alpha=0.3)
 
     ax2 = ax1.twinx()
@@ -155,5 +155,6 @@ if __name__ == "__main__":
 
     ax1.legend()
     plt.title(f"Key rate vs beam splitter efficiency: BB84 and MDI-QKD\n"
-              f"$L$={args.fibre} km  |  $\\alpha$={cfg['fibre_loss_db_per_km']} dB/km  |  $\\eta_d$={cfg['detector_efficiency']}")
+              f"$L$={args.fibre} km  |  $\\alpha$={cfg['fibre_loss_db_per_km']} dB/km  |  $\\eta_d$={cfg['detector_efficiency']}  |  $d_c$={cfg['dark_count_rate']} cps\n"
+              f"$L_i$={cfg['init_loss']}  |  $L_n$={cfg['node_loss_db']} dB  |  $\\varepsilon_s$={cfg['source_error_rate']}  |  $\\beta$={cfg['dephasing_rate']} /km")
     plt.show()
