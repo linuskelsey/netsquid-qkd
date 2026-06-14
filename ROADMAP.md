@@ -85,5 +85,7 @@ Use optimal topology from Phase 1 as fixed input; sweep user count / network siz
 | Key rate vs beam splitter efficiency (MDI only) | complete |
 | Realistic hardware regime shading on all sweep plots | complete |
 | QBER threshold cutoffs (11% hard cutoff, both protocols) | complete |
+| Per-point error bars on compare scripts (`--error bars` min/max whiskers, `--error shade` ±1σ band) | complete |
+| Always-on min/max error bars on `layers.py` | complete |
 | Charlie placement sweep (asymmetric links) | planned |
 | Script to compare effect of each layer of modelling parameter per-protocol | complete |

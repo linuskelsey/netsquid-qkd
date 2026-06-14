@@ -11,7 +11,8 @@
 - [ ] `scripts/P2P/analyse.py` — load saved results from `results.db` and regenerate plots without re-running simulations
 
 ### 3. Confidence Intervals on Plots
-- [ ] Shade ±1 std dev around mean key rate curve using per-runtime data stored in DB
+- [x] Compare scripts: `--error bars` (min/max whiskers, default) or `--error shade` (±1σ log-space band)
+- [x] `layers.py`: always-on min/max error bars (no flag)
 
 ### 4. Charlie Placement Sweep
 - [ ] Sweep Charlie's position on the MDI link (asymmetric Alice-Charlie / Charlie-Bob split)

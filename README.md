@@ -51,6 +51,10 @@ python scripts/P2P/compare/length.py --config configs/layer2_eff.json
 # Override individual parameters
 python scripts/P2P/compare/length.py --loss 0.3 --det-eff 0.85 --runtimes 50
 
+# Error display: min/max whiskers (default) or ±1 std dev shading on log scale
+python scripts/P2P/compare/length.py --error bars    # default
+python scripts/P2P/compare/length.py --error shade
+
 # Basis-biased detector (X-basis efficiency lower than Z) — BB84/MDI runners only
 python BB84/BB84_run.py --config configs/layer2_eff.json --det-eff-x 0.7
 python MDI/mdiRun.py   --config configs/layer2_eff.json --det-eff-x 0.7
