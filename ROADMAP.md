@@ -25,6 +25,16 @@
 | Config presets unified (layer0–layer8, cumulative, industry-typical values) | complete |
 | Raw script config wiring | complete |
 
+## Data Persistence
+
+| Feature | Status |
+|---------|--------|
+| Save simulation results to disk (parameter point → key rate list per runtime) | planned |
+| Query/load saved results for offline analysis and plotting | planned |
+| Avoid re-running existing parameter points (cache lookup) | planned |
+
+---
+
 ## Network Scale Modelling
 
 ### Phase 1 — Analytical topology optimisation

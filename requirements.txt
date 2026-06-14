@@ -1,0 +1,8 @@
+numpy
+matplotlib
+
+# NetSquid requires free registration at https://netsquid.org before install:
+# pip install netsquid --extra-index-url https://<user>:<password>@pypi.netsquid.org
+
+# Optional dev tools (not required to run simulations)
+# litecli   — TUI for querying SQLite results database (pip install litecli)
