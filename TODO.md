@@ -5,7 +5,7 @@
 ### 1. Realistic Hardware Regions on Plots
 - [ ] Finalise hardware parameter values from literature (Lo 2012, Tang 2016, Berrevoets 2022) — web search pending
 - [ ] Update PARAMS.md + configs with verified values (remove ⁺ markers)
-- [ ] Add shaded regions or reference lines to all 9 compare scripts marking realistic operating range on sweep axis
+- [x] Add shaded regions to all 9 compare scripts marking realistic operating range on sweep axis
 
 ### 2. Charlie Placement Sweep
 - [ ] Sweep Charlie's position on the MDI link (asymmetric Alice-Charlie / Charlie-Bob split)

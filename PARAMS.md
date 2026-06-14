@@ -26,13 +26,14 @@ Defaults used when no `--config` and no CLI flag is given:
 |-----------|---------|-------------|
 | `fibre` | 50 km | Alice-Bob separation (not applicable for length sweep) |
 | `lenLoss` | 0.2 dB/km | Fibre attenuation coefficient α |
-| `detectorEffZ` | 1.0 | Z-basis detector efficiency η_Z (set via `--det-eff` or config `detector_efficiency`) |
+| `detectorEffZ` | 0.65 | Z-basis detector efficiency η_Z (set via `--det-eff` or config `detector_efficiency`) |
 | `detectorEffX` | = η_Z | X-basis detector efficiency η_X (set via `--det-eff-x`; defaults to η_Z if omitted) |
-| `dephasingRate` | 0.0 | Fibre dephasing rate per km (set via `--dephasing-rate` or config `dephasing_rate`) |
-| `bsEff` | 1.0 | Beam splitter efficiency at MDI relay BSM, η_bs (MDI only; set via `--bs-eff` or config `bs_eff`) |
-| `darkCount` | 0 cps | Dark count rate d_c |
-| `initLoss` | 0.0 | TX-side insertion loss, linear fraction [0–1] (e.g. 0.1 = 10%) |
-| `nodeLossDb` | 0.0 dB | RX-side node/connector loss in dB (Bob for BB84, Charlie for MDI) |
+| `dephasingRate` | 1×10⁻⁴ /km | Fibre dephasing rate per km (set via `--dephasing-rate` or config `dephasing_rate`) |
+| `bsEff` | 0.97 | Beam splitter efficiency at MDI relay BSM, η_bs (MDI only; set via `--bs-eff` or config `bs_eff`) |
+| `darkCount` | 100 cps | Dark count rate d_c |
+| `initLoss` | 0.10 | TX-side insertion loss, linear fraction [0–1] (e.g. 0.1 = 10%) |
+| `nodeLossDb` | 2.0 dB | RX-side node/connector loss in dB (Bob for BB84, Charlie for MDI) |
+| `sourceErrRate` | 0.005 | Source bit error rate ε_s |
 | `runtimes` | 100 | Monte Carlo repetitions per sweep point |
 | `photons` | 1024 | Photons per run |
 | `workers` | 80% of CPU cores | Parallel worker processes (passed to run functions directly) |

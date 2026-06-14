@@ -19,11 +19,11 @@
 |---------|--------|
 | JSON config presets + CLI overrides | complete |
 | Multiprocessing (runtimes split across cores) | complete |
-| Compare scripts: length, loss, efficiency, dark count, node loss, source error, dephasing, basis bias, beam splitter efficiency | complete |
-| Layer comparison script (`scripts/compare/layers.py`) | complete |
+| Compare scripts: length, loss, efficiency, dark count, node loss, source error, dephasing, basis bias, beam splitter efficiency (`scripts/P2P/compare/`) | complete |
+| Run-all parallel launcher (`scripts/P2P/compare/run_all.py`) | complete |
+| Layer comparison script (`scripts/P2P/layers.py`) | complete |
 | Config presets unified (layer0–layer8, cumulative, industry-typical values) | complete |
 | Raw script config wiring | complete |
-| Top-level CLI `scripts/compare/run.py` (issue #4) | planned |
 
 ## Network Scale Modelling
 
@@ -68,6 +68,12 @@ Use optimal topology from Phase 1 as fixed input; sweep user count / network siz
 | Key rate vs fibre loss | complete |
 | Key rate vs detector efficiency | complete |
 | Key rate vs dark count rate | complete |
+| Key rate vs node/connector loss | complete |
+| Key rate vs source error rate | complete |
+| Key rate vs fibre dephasing rate | complete |
+| Key rate vs detector basis bias (η_X sweep) | complete |
+| Key rate vs beam splitter efficiency (MDI only) | complete |
+| Realistic hardware regime shading on all sweep plots | complete |
 | QBER threshold cutoffs (11% hard cutoff, both protocols) | complete |
 | Charlie placement sweep (asymmetric links) | planned |
 | Script to compare effect of each layer of modelling parameter per-protocol | complete |
