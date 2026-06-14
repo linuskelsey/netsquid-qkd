@@ -2,12 +2,14 @@
 
 ## Next Up
 
-### 1. Scripting Cleanup + Realistic Hardware Regions
-Identify and annotate realistic operating regions on key rate vs parameter graphs.
-- [ ] Define realistic hardware parameter ranges for each sweep axis (from literature / BT spec)
-- [ ] Add shaded regions or reference lines to all compare script plots
-- [ ] Consider a `configs/realistic_hardware.json` preset for a real-world baseline
-- [ ] Review compare scripts for any shared boilerplate worth factoring out
+### 1. Realistic Hardware Regions on Plots
+- [ ] Finalise hardware parameter values from literature (Lo 2012, Tang 2016, Berrevoets 2022) — web search pending
+- [ ] Update PARAMS.md + configs with verified values (remove ⁺ markers)
+- [ ] Add shaded regions or reference lines to all 9 compare scripts marking realistic operating range on sweep axis
+
+### 2. Charlie Placement Sweep
+- [ ] Sweep Charlie's position on the MDI link (asymmetric Alice-Charlie / Charlie-Bob split)
+- [ ] BB84 flat reference line (unaffected by relay placement)
 
 ---
 

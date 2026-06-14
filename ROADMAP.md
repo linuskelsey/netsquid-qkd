@@ -20,6 +20,8 @@
 | JSON config presets + CLI overrides | complete |
 | Multiprocessing (runtimes split across cores) | complete |
 | Compare scripts: length, loss, efficiency, dark count, node loss, source error, dephasing, basis bias, beam splitter efficiency | complete |
+| Layer comparison script (`scripts/compare/layers.py`) | complete |
+| Config presets unified (layer0–layer8, cumulative, industry-typical values) | complete |
 | Raw script config wiring | complete |
 | Top-level CLI `scripts/compare/run.py` (issue #4) | planned |
 
@@ -68,4 +70,4 @@ Use optimal topology from Phase 1 as fixed input; sweep user count / network siz
 | Key rate vs dark count rate | complete |
 | QBER threshold cutoffs (11% hard cutoff, both protocols) | complete |
 | Charlie placement sweep (asymmetric links) | planned |
-| Script to compare effect of each layer of modelling parameter per-protocol | planned|
+| Script to compare effect of each layer of modelling parameter per-protocol | complete |
