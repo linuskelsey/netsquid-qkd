@@ -29,6 +29,7 @@ sys.path.append("MDI/")
 from BB84.BB84_run import run_BB84_sims
 from MDI.mdiRun import run_mdi_sims
 from lib.functions import load_config, config_arg_parser
+from lib.db import init_db, save_sweep_point, DEFAULT_DB_PATH
 
 import matplotlib.pyplot as plt
 
@@ -54,7 +55,7 @@ def aggregate_summary(KeyListA, KeyListB, KeyRateList, protocol):
     avg_qber    = sum(qbers) / len(qbers)             if qbers      else float('nan')
     avg_kr      = sum(key_rates) / len(key_rates)     if key_rates  else float('nan')
     avg_key_len = sum(key_lengths) / len(key_lengths) if key_lengths else float('nan')
-    return len(qbers), avg_key_len, avg_qber, avg_kr
+    return len(qbers), avg_key_len, avg_qber, avg_kr, key_rates, qbers, key_lengths
 
 
 def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, initLoss=0, detEff=1, darkCount=0, nodeLossDb=0.0, sourceErrRate=0.0, dephasingRate=0.0, bsEff=1.0):
@@ -101,6 +102,8 @@ if __name__ == "__main__":
     parser.add_argument("--dark-count", type=int,   default=None, dest="dark_count", help="Dark count rate (cps)")
     parser.add_argument("--init-loss",  type=float, default=None, dest="init_loss",  help="Insertion loss, linear fraction [0-1]")
     parser.add_argument("--source-err", type=float, default=None, dest="source_err", help="Source bit error rate [0-1]")
+    parser.add_argument("--no-save",  action="store_true", help="Skip saving results to DB")
+    parser.add_argument("--db",       type=str, default=DEFAULT_DB_PATH, help="Path to results SQLite DB")
     args = parser.parse_args()
     cfg  = load_config(args.config)
     if args.loss is not None:        cfg["fibre_loss_db_per_km"] = args.loss
@@ -112,6 +115,8 @@ if __name__ == "__main__":
     if args.config is not None:
         print(f"Note: node_loss_db from config ignored — L_node is the sweep axis")
     print(f"Sweep: L_node [0-6 dB]  |  Fixed: L={args.fibre} km  α={cfg['fibre_loss_db_per_km']} dB/km  η_d={cfg['detector_efficiency']}")
+
+    db_conn = None if args.no_save else init_db(args.db)
 
     NLx = [0, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 6.0]
 
@@ -125,6 +130,26 @@ if __name__ == "__main__":
                          dephasingRate=cfg["dephasing_rate"], bsEff=cfg["bs_eff"])
         rates_bb84.append(bb84[3])
         rates_mdi.append(mdi[3])
+
+        if db_conn is not None:
+            params = {
+                "fibre_len":  args.fibre,
+                "fibre_loss": cfg["fibre_loss_db_per_km"],
+                "det_eff":    cfg["detector_efficiency"],
+                "dark_count": cfg["dark_count_rate"],
+                "init_loss":  cfg["init_loss"],
+                "node_loss":  nl,
+                "source_err": cfg["source_error_rate"],
+                "dephasing":  cfg["dephasing_rate"],
+                "bs_eff":     cfg["bs_eff"],
+            }
+            save_sweep_point(db_conn, "BB84", params, bb84[4], bb84[5], bb84[6],
+                             script="node_loss", runtimes=args.runtimes, photons=1024)
+            save_sweep_point(db_conn, "MDI",  params, mdi[4],  mdi[5],  mdi[6],
+                             script="node_loss", runtimes=args.runtimes, photons=1024)
+
+    if db_conn is not None:
+        db_conn.close()
 
     abs_rates_bb84 = [r / 1000 for r in rates_bb84]
     abs_rates_mdi  = [r / 1000 for r in rates_mdi]
