@@ -28,6 +28,8 @@ from lib.functions import load_config, config_arg_parser
 from lib.db import init_db, save_sweep_point, DEFAULT_DB_PATH
 
 import matplotlib.pyplot as plt
+import math
+import statistics
 
 
 
@@ -135,6 +137,8 @@ if __name__ == "__main__":
     parser.add_argument("--source-err", type=float, default=None, dest="source_err", help="Source bit error rate [0-1]")
     parser.add_argument("--no-save",  action="store_true", help="Skip saving results to DB")
     parser.add_argument("--db",       type=str, default=DEFAULT_DB_PATH, help="Path to results SQLite DB")
+    parser.add_argument("--error",    choices=["bars", "shade"], default="bars",
+                        help="Error display: bars=min/max whiskers (default), shade=±1 std dev band")
     args = parser.parse_args()
     cfg  = load_config(args.config)
     if args.det_eff is not None:     cfg["detector_efficiency"] = args.det_eff
@@ -157,6 +161,12 @@ if __name__ == "__main__":
     qbers_mdi    = []
     rates_bb84   = []
     rates_mdi    = []
+    mins_bb84    = []
+    maxs_bb84    = []
+    stds_bb84    = []
+    mins_mdi     = []
+    maxs_mdi     = []
+    stds_mdi     = []
 
     for l in Lx:
         bb84, mdi = main(runtimes=args.runtimes, fibre=args.fibre,
@@ -172,6 +182,13 @@ if __name__ == "__main__":
         lengths_mdi.append(mdi[1])
         qbers_mdi.append(mdi[2])
         rates_mdi.append(mdi[3])
+
+        for rs, mins, maxs, stds in [(bb84[4], mins_bb84, maxs_bb84, stds_bb84),
+                                     (mdi[4],  mins_mdi,  maxs_mdi,  stds_mdi)]:
+            nz = [r for r in rs if r > 0]
+            mins.append(min(nz) if nz else float('nan'))
+            maxs.append(max(rs) if rs else float('nan'))
+            stds.append(statistics.stdev([math.log(r) for r in nz]) if len(nz) > 1 else 0.0)
 
         if db_conn is not None:
             params = {
@@ -205,8 +222,31 @@ if __name__ == "__main__":
     fig, ax1 = plt.subplots()
 
     # Primary axis — absolute scale
-    ax1.plot(Lx, abs_rates_bb84, 'o-', label="BB84")
-    ax1.plot(Lx, abs_rates_mdi,  's-', label="MDI")
+    abs_mins_bb84 = [r / 1000 for r in mins_bb84]
+    abs_maxs_bb84 = [r / 1000 for r in maxs_bb84]
+    abs_mins_mdi  = [r / 1000 for r in mins_mdi]
+    abs_maxs_mdi  = [r / 1000 for r in maxs_mdi]
+
+    if args.error == 'bars':
+        yerr_bb84 = [
+            [max(r - m, 0) for r, m in zip(abs_rates_bb84, abs_mins_bb84)],
+            [max(m - r, 0) for r, m in zip(abs_rates_bb84, abs_maxs_bb84)],
+        ]
+        yerr_mdi = [
+            [max(r - m, 0) for r, m in zip(abs_rates_mdi, abs_mins_mdi)],
+            [max(m - r, 0) for r, m in zip(abs_rates_mdi, abs_maxs_mdi)],
+        ]
+        ax1.errorbar(Lx, abs_rates_bb84, yerr=yerr_bb84, fmt='o-', label="BB84", capsize=3)
+        ax1.errorbar(Lx, abs_rates_mdi,  yerr=yerr_mdi,  fmt='s-', label="MDI",  capsize=3)
+    else:
+        line1, = ax1.plot(Lx, abs_rates_bb84, 'o-', label="BB84")
+        line2, = ax1.plot(Lx, abs_rates_mdi,  's-', label="MDI")
+        lo1 = [r * math.exp(-s) for r, s in zip(abs_rates_bb84, stds_bb84)]
+        hi1 = [r * math.exp(+s) for r, s in zip(abs_rates_bb84, stds_bb84)]
+        lo2 = [r * math.exp(-s) for r, s in zip(abs_rates_mdi,  stds_mdi)]
+        hi2 = [r * math.exp(+s) for r, s in zip(abs_rates_mdi,  stds_mdi)]
+        ax1.fill_between(Lx, lo1, hi1, alpha=0.15, color=line1.get_color())
+        ax1.fill_between(Lx, lo2, hi2, alpha=0.15, color=line2.get_color())
     ax1.set_xlabel("Fibre attenuation in dB / km")
     ax1.set_ylabel("Absolute secure key rate (kbps)")
     ax1.set_yscale("log")
