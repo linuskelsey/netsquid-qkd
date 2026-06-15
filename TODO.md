@@ -8,7 +8,7 @@
 - [x] Add shaded regions to all 9 compare scripts marking realistic operating range on sweep axis
 
 ### 2. DB Query / Replot Script
-- [ ] `scripts/P2P/analyse.py` — load saved results from `results.db` and regenerate plots without re-running simulations
+- [x] `scripts/P2P/analyse.py` — load saved results from `results.db` and regenerate plots without re-running simulations
 
 ### 3. Confidence Intervals on Plots
 - [ ] Shade ±1 std dev around mean key rate curve using per-runtime data stored in DB
