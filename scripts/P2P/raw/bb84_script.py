@@ -12,7 +12,7 @@ Defaults (no --config):
     detector_efficiency     1.0
     dark_count_rate         0    cps
     init_loss               0.0  (linear fraction)
-    fibre                   50   km
+    fibre                   20   km
     runtimes                10
 """
 
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     parser = config_arg_parser()
     parser.add_argument("--runtimes",   type=int,   default=10)
     parser.add_argument("--photons",    type=int,   default=1024)
-    parser.add_argument("--fibre",      type=float, default=50,   help="Fibre length (km)")
+    parser.add_argument("--fibre",      type=float, default=20,   help="Fibre length (km)")
     parser.add_argument("--freq",       type=float, default=1e7,  help="Source frequency (Hz)")
     parser.add_argument("--speed",      type=float, default=0.8,  help="Speed of light fraction")
     parser.add_argument("--loss",       type=float, default=None, help="Fibre loss (dB/km)")

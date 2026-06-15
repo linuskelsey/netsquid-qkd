@@ -16,7 +16,7 @@ Defaults (no --config):
     dark_count_rate         0    cps
     init_loss               0.0
     source_error_rate       0.0
-    fibre                   50   km
+    fibre                   20   km
     runtimes                100
 """
 
@@ -98,7 +98,7 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, i
 if __name__ == "__main__":
     parser = config_arg_parser()
     parser.add_argument("--runtimes",   type=int,   default=100)
-    parser.add_argument("--fibre",      type=float, default=50,   help="Fixed fibre length (km)")
+    parser.add_argument("--fibre",      type=float, default=20,   help="Fixed fibre length (km)")
     parser.add_argument("--loss",       type=float, default=None, help="Fibre loss (dB/km)")
     parser.add_argument("--det-eff",    type=float, default=None, dest="det_eff",    help="Detector efficiency [0-1]")
     parser.add_argument("--dark-count", type=int,   default=None, dest="dark_count", help="Dark count rate (cps)")

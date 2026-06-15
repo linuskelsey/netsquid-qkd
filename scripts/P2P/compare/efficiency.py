@@ -13,7 +13,7 @@ Defaults (no --config):
     fibre_loss_db_per_km    0.2  dB/km  — pass --config configs/layer0_ideal.json for idealised run
     dark_count_rate         0    cps
     init_loss               0.0  dB
-    fibre                   50   km
+    fibre                   20   km
     runtimes                100
 """
 
@@ -129,7 +129,7 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, i
 if __name__ == "__main__":
     parser = config_arg_parser()
     parser.add_argument("--runtimes",   type=int,   default=100)
-    parser.add_argument("--fibre",      type=float, default=50,   help="Fixed fibre length (km)")
+    parser.add_argument("--fibre",      type=float, default=20,   help="Fixed fibre length (km)")
     parser.add_argument("--loss",       type=float, default=None, help="Fibre loss (dB/km)")
     parser.add_argument("--dark-count", type=int,   default=None, dest="dark_count", help="Dark count rate (cps)")
     parser.add_argument("--init-loss",  type=float, default=None, dest="init_loss",  help="Insertion loss, linear fraction [0-1] (e.g. 0.1 = 10%%)")
@@ -149,11 +149,11 @@ if __name__ == "__main__":
 
     if args.config is not None and cfg["detector_efficiency"] != 1.0:
         print(f"Note: detector_efficiency={cfg['detector_efficiency']} from config ignored — η_d is the sweep axis")
-    print(f"Sweep: η_d [1.0->0.5]  |  Fixed: L={args.fibre} km  α={cfg['fibre_loss_db_per_km']} dB/km  d_c={cfg['dark_count_rate']} cps")
+    print(f"Sweep: η_d [1.0->0.15]  |  Fixed: L={args.fibre} km  α={cfg['fibre_loss_db_per_km']} dB/km  d_c={cfg['dark_count_rate']} cps")
 
     db_conn = None if args.no_save else init_db(args.db)
 
-    Ex = [1,0.99,0.95,0.9,0.8,0.7,0.65,0.6,0.5]
+    Ex = [1.0, 0.99, 0.95, 0.90, 0.80, 0.70, 0.65, 0.60, 0.50, 0.40, 0.30, 0.20, 0.15]
 
     lengths_bb84 = []
     lengths_mdi  = []
@@ -262,22 +262,36 @@ if __name__ == "__main__":
 
     ax1.legend()
 
-    REALISTIC_MIN, REALISTIC_MAX = 0.65, 0.90
-    ax1.axvspan(REALISTIC_MIN, REALISTIC_MAX, alpha=0.08, color='red', zorder=0)
-    ax1.axvline(REALISTIC_MIN, color='black', linestyle=':', linewidth=1.2)
-    ax1.axvline(REALISTIC_MAX, color='black', linestyle=':', linewidth=1.2)
+    SNSPD_MIN, SNSPD_MAX = 0.80, 0.95
+    SPAD_MIN,  SPAD_MAX  = 0.15, 0.30
+
+    ax1.axvspan(SNSPD_MIN, SNSPD_MAX, alpha=0.08, color='green', zorder=0)
+    ax1.axvspan(SPAD_MIN,  SPAD_MAX,  alpha=0.08, color='red',   zorder=0)
+
+    for _xv in [SNSPD_MIN, SNSPD_MAX, SPAD_MIN, SPAD_MAX]:
+        ax1.axvline(_xv, color='black', linestyle=':', linewidth=1.2)
+
     _ticks  = ax1.get_xticks()
     _xlim   = ax1.get_xlim()
     _dx     = 0.012 * abs(_xlim[1] - _xlim[0])
     _inv    = _xlim[0] > _xlim[1]
     _ha_min = 'left'  if _inv else 'right'
     _ha_max = 'right' if _inv else 'left'
-    for _xv, _lbl, _ha in [(REALISTIC_MIN, "0.65", _ha_min), (REALISTIC_MAX, "0.90", _ha_max)]:
+    for _xv, _lbl, _ha, _mid in [
+        (SNSPD_MIN, "0.80", _ha_min, (SNSPD_MIN + SNSPD_MAX) / 2),
+        (SNSPD_MAX, "0.95", _ha_max, (SNSPD_MIN + SNSPD_MAX) / 2),
+        (SPAD_MIN,  "0.15", _ha_min, (SPAD_MIN  + SPAD_MAX)  / 2),
+        (SPAD_MAX,  "0.30", _ha_max, (SPAD_MIN  + SPAD_MAX)  / 2),
+    ]:
         if not any(abs(_xv - _t) < max(abs(_xv), 1e-9) * 1e-3 + 1e-9 for _t in _ticks):
-            _xpos = _xv - _dx if _xv < (REALISTIC_MIN + REALISTIC_MAX) / 2 else _xv + _dx
+            _xpos = _xv - _dx if _xv < _mid else _xv + _dx
             ax1.text(_xpos, 0.01, _lbl, transform=ax1.get_xaxis_transform(),
                      ha=_ha, va='bottom', fontsize=7, color='dimgray')
-    ax1.text((REALISTIC_MIN + REALISTIC_MAX) / 2, 0.97, "Realistic hardware regime",
+
+    ax1.text((SNSPD_MIN + SNSPD_MAX) / 2, 0.97, "SNSPD",
+             transform=ax1.get_xaxis_transform(),
+             ha='center', va='top', fontsize=7, color='darkgreen', alpha=0.7, style='italic')
+    ax1.text((SPAD_MIN + SPAD_MAX) / 2, 0.97, "InGaAs SPAD",
              transform=ax1.get_xaxis_transform(),
              ha='center', va='top', fontsize=7, color='darkred', alpha=0.7, style='italic')
 

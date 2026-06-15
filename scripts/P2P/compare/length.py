@@ -258,24 +258,37 @@ if __name__ == "__main__":
 
     ax1.legend()
 
-    REALISTIC_MIN, REALISTIC_MAX = 5, 50
-    ax1.axvspan(REALISTIC_MIN, REALISTIC_MAX, alpha=0.08, color='red', zorder=0)
-    ax1.axvline(REALISTIC_MIN, color='black', linestyle=':', linewidth=1.2)
-    ax1.axvline(REALISTIC_MAX, color='black', linestyle=':', linewidth=1.2)
+    METRO_MIN, METRO_MAX = 5,  50
+    LONG_MIN             = 80
+
     _ticks  = ax1.get_xticks()
     _xlim   = ax1.get_xlim()
     _dx     = 0.012 * abs(_xlim[1] - _xlim[0])
     _inv    = _xlim[0] > _xlim[1]
     _ha_min = 'left'  if _inv else 'right'
     _ha_max = 'right' if _inv else 'left'
-    for _xv, _lbl, _ha in [(REALISTIC_MIN, "5", _ha_min), (REALISTIC_MAX, "50", _ha_max)]:
+
+    ax1.axvspan(METRO_MIN, METRO_MAX, alpha=0.08, color='red',   zorder=0)
+    ax1.axvspan(LONG_MIN,  _xlim[1], alpha=0.08, color='green', zorder=0)
+
+    for _xv in [METRO_MIN, METRO_MAX, LONG_MIN]:
+        ax1.axvline(_xv, color='black', linestyle=':', linewidth=1.2)
+    for _xv, _lbl, _ha, _mid in [
+        (METRO_MIN, "5",  _ha_min, (METRO_MIN + METRO_MAX) / 2),
+        (METRO_MAX, "50", _ha_max, (METRO_MIN + METRO_MAX) / 2),
+        (LONG_MIN,  "80", _ha_min, (LONG_MIN  + Dx[-1])    / 2),
+    ]:
         if not any(abs(_xv - _t) < max(abs(_xv), 1e-9) * 1e-3 + 1e-9 for _t in _ticks):
-            _xpos = _xv - _dx if _xv < (REALISTIC_MIN + REALISTIC_MAX) / 2 else _xv + _dx
+            _xpos = _xv - _dx if _xv < _mid else _xv + _dx
             ax1.text(_xpos, 0.01, _lbl, transform=ax1.get_xaxis_transform(),
                      ha=_ha, va='bottom', fontsize=7, color='dimgray')
-    ax1.text((REALISTIC_MIN + REALISTIC_MAX) / 2, 0.97, "Metropolitan regime",
+
+    ax1.text((METRO_MIN + METRO_MAX) / 2, 0.97, "Metropolitan regime",
              transform=ax1.get_xaxis_transform(),
              ha='center', va='top', fontsize=7, color='darkred', alpha=0.7, style='italic')
+    ax1.text((LONG_MIN + Dx[-1]) / 2, 0.97, "Long-range regime",
+             transform=ax1.get_xaxis_transform(),
+             ha='center', va='top', fontsize=7, color='darkgreen', alpha=0.7, style='italic')
 
     plt.title(f"Key rate vs distance: BB84 and MDI-QKD\n"
               f"$\\alpha$={cfg['fibre_loss_db_per_km']} dB/km  |  $\\eta_d$={cfg['detector_efficiency']}  |  $d_c$={cfg['dark_count_rate']} cps\n"

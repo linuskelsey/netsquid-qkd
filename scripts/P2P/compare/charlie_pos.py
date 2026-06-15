@@ -40,7 +40,7 @@ def aggregate(key_rates):
 if __name__ == "__main__":
     parser = config_arg_parser()
     parser.add_argument("--runtimes", type=int,   default=100)
-    parser.add_argument("--fibre",    type=float, default=50,  help="Fixed total Alice-Bob distance (km)")
+    parser.add_argument("--fibre",    type=float, default=20,  help="Fixed total Alice-Bob distance (km)")
     parser.add_argument("--error",    choices=["bars", "shade"], default="bars",
                         help="Error display: bars=min/max whiskers (default), shade=±1σ log-space band")
     parser.add_argument("--no-save",  action="store_true", help="Skip saving results to DB")

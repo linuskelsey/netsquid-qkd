@@ -13,3 +13,4 @@ merge-all.sh
 
 # simulation results database
 *.db
+*.db*
