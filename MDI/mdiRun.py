@@ -170,7 +170,7 @@ def run_mdi_sims(runtimes=10,
 
 if __name__ == "__main__":
     parser = config_arg_parser()
-    parser.add_argument("--fibre",          type=float, default=50,   help="Fibre length (km)")
+    parser.add_argument("--fibre",          type=float, default=20,   help="Fibre length (km)")
     parser.add_argument("--runtimes",       type=int,   default=10,   help="Number of simulation runs")
     parser.add_argument("--det-eff-x",      type=float, default=None, help="X-basis detector efficiency (default: same as Z)")
     parser.add_argument("--dephasing-rate", type=float, default=None, help="Dephasing rate per km (default: 0)")

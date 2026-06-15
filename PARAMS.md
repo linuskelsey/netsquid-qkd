@@ -24,7 +24,7 @@ Defaults used when no `--config` and no CLI flag is given:
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `fibre` | 50 km | Alice-Bob separation (not applicable for length sweep) |
+| `fibre` | 20 km | Alice-Bob separation (not applicable for length sweep) |
 | `lenLoss` | 0.2 dB/km | Fibre attenuation coefficient α |
 | `detectorEffZ` | 0.65 | Z-basis detector efficiency η_Z (set via `--det-eff` or config `detector_efficiency`) |
 | `detectorEffX` | = η_Z | X-basis detector efficiency η_X (set via `--det-eff-x`; defaults to η_Z if omitted) |
@@ -45,6 +45,7 @@ Realistic ranges drawn from deployed QKD systems (Lo et al. 2012, Tang et al. 20
 
 | Parameter (config key) | Symbol | Realistic range | Typical point | Source basis |
 |------------------------|--------|----------------|---------------|--------------|
+| `fibre` (distance) | L | 5–50 km | 20 km | Metropolitan regime 5–50 km; long-range 80+ km |
 | `fibre_loss_db_per_km` | α | 0.15–0.25 dB/km | 0.20 dB/km | SMF-28 telecom fibre at 1550 nm |
 | `detector_efficiency` | η_d | 0.15–0.95 | 0.65 (SNSPD metropolitan) | InGaAs 15–30%; SNSPD 80–95%; Tang 2016 ~65% |
 | `dark_count_rate` | d_c | 1–10,000 cps | 100 cps (SNSPD) | SNSPD: 1–100 cps; InGaAs: 1,000–10,000 cps |
