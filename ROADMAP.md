@@ -38,38 +38,46 @@
 
 ## Network Scale Modelling
 
-### Phase 1 — Analytical topology optimisation
-Identify optimal topology (repeater spacing, number of hops) for maximum key rate analytically before simulation.
+Primary focus: metropolitan multi-user networks. Long-distance repeater chains treated as extension.
+
+### Experiment 1 — Relay count sweep
+Fixed N users (randomly placed in geographic space). Vary relay count K. Relay positions optimised per K by minimising total user-to-nearest-relay distance (k-means / least-squares). BB84 (trusted relay) and MDI-QKD simulated on identical infrastructure. K at which key rate plateaus becomes the fixed relay count for Experiment 2.
 
 | Item | Status |
 |------|--------|
-| Analytical key rate model for N-hop repeater chain | planned |
-| Optimal repeater spacing derivation (BB84 trusted-node) | planned |
-| Optimal repeater spacing derivation (MDI-QKD multi-Charlie) | planned |
-| Quantum memory decoherence model (T1/T2, η_mem) | planned |
-| BB84 vs MDI-QKD optimal topology comparison | planned |
+| Network topology generator: random user placement, per-K relay optimisation | planned |
+| BB84 trusted-node network simulator (N users, K trusted relays) | planned |
+| MDI-QKD network simulator (N users, K Charlie relays, passive optical routing) | planned |
+| Passive optical routing model: cross-cluster photon redirection via optical switch (insertion loss ~0.5–2 dB, timing compensation) | planned |
+| Key rate vs relay count K — both protocols | planned |
+| Network success rate (QBER < 11%) vs relay count K | planned |
 
-### Phase 2 — Simulation-based scalability
-Use optimal topology from Phase 1 as fixed input; sweep user count / network size.
+### Experiment 2 — User count sweep
+Fixed K relays (positions from Experiment 1 plateau). Vary N users. Keygen events driven by Poisson process; two random available users selected per event, removed from pool during keygen, returned on completion. Aggregated over many random user placements of the same N.
 
 | Item | Status |
 |------|--------|
-| N-node repeater chain implementation (NetSquid) | planned |
-| Entanglement swapping at repeater nodes (MDI-QKD native) | planned |
-| Trusted-node repeater model for BB84 | planned |
-| Key rate vs number of users / network nodes | planned |
-| Key rate vs memory coherence time | planned |
-| Effect of repeaters on BB84: range extension vs security assumptions | planned |
-| Effect of repeaters on MDI-QKD: multi-Charlie chain performance | planned |
+| Poisson keygen event scheduler with user availability pool | planned |
+| Key rate vs user count N — both protocols | planned |
+| Network success rate vs user count N | planned |
+| Cost model: per-component hardware cost markers (source, detector, relay node, fiber/km, optical switch), bounded by industry estimates | planned |
+| Cost-efficiency metric: key rate per unit cost vs N — both protocols | planned |
 
 ### Extensions (nice to have)
 
 | Item | Status |
 |------|--------|
+| WDM multi-user MDI-QKD: multiple Alice-Bob pairs on separate wavelengths, MUX onto shared fibre, DEMUX at Charlie for per-channel BSM | extension |
+| Key rate vs WDM user count: MUX/DEMUX insertion loss (~1–3 dB per device) per channel | extension |
+| Quantum memory coherence time at WDM relay nodes: T1/T2 decoherence during inter-channel wait limits scalable user count | extension |
+| Key rate vs memory coherence time (T2 sweep) | extension |
+| Entanglement swapping at relay nodes (MDI-QKD, no trusted relay required) | extension |
+| Long-distance repeater chain: N-hop linear topology for range extension (BB84 and MDI-QKD) | extension |
 | Key rate vs number of repeater hops (sweep) | extension |
-| Repeater spacing optimisation sweep (simulation) | extension |
-| BB84 vs MDI-QKD repeater performance head-to-head | extension |
-| Quantum memory decoherence: T2 dephasing time model (η_mem vs T2, sweep vs coherence time) | extension |
+| BB84 vs MDI-QKD repeater chain performance head-to-head | extension |
+| Fully connected BB84 (direct pairwise links, no relay) as additional baseline | extension |
+| Relay placement sensitivity: random vs optimal placement comparison | extension |
+| Cross-relay vs same-relay pair success rate comparison | extension |
 
 ## Analysis
 

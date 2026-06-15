@@ -1,0 +1,64 @@
+# Network Modelling Plan
+
+## Goal
+
+Compare BB84 and MDI-QKD on key rate, cost, and scalability across multi-user network topologies. Identify conditions under which each protocol is preferable.
+
+## Network Model
+
+**Application layer:** All users form a fully connected graph — every user can request a key with any other. User positions are randomised in geographic space. The same positions are used for both protocols in any given simulation instance.
+
+**Transport layer:** Relay nodes sit in the physical network. For MDI, relays are Charlie nodes (BSM only, untrusted). For BB84, relays are trusted nodes at the same positions (they see key material). This makes the infrastructure comparison explicit and fair.
+
+**Cross-cluster routing (MDI):** When two users are homed to different relay nodes (C1, C2), C2 acts as a passive optical router — redirecting the photon toward C1 without measuring it (fiber switch / optical circulator). Quantum state is preserved. Extra cost: C2→C1 fiber loss plus switch insertion loss (~0.5–2 dB). Timing compensation: the user homed to C2 emits earlier to ensure simultaneous arrival at C1 for BSM.
+
+## Experiments
+
+**Experiment 1 — Relay count sweep (fixed N users, vary K relays)**
+Relay positions are optimised for each K by minimising total user-to-nearest-relay distance (least-squares / k-means). Measures how key rate evolves as relay infrastructure is added. The K at which performance plateaus becomes the fixed relay count for Experiment 2.
+
+**Experiment 2 — User count sweep (fixed K relays, vary N users)**
+Transport layer fixed. User count increased. Measures how each protocol degrades as user load grows and users are statistically further from relays. Primary scalability comparison.
+
+Both experiments aggregate statistics across many random user placements of the same network size N to yield results representative of an average randomised N-user metropolitan network.
+
+## Scheduling
+
+Key generation events are driven by a Poisson process. On each firing, two users are selected uniformly at random from the available pool. Both are removed from the pool for the duration of their keygen event and returned on completion. No user participates in two simultaneous keygen events.
+
+## Metrics
+
+| Metric | Role |
+|--------|------|
+| Average key rate per keygen event | Primary — summative, highlights general trend |
+| Network success rate (fraction of events with QBER < 11%) | Primary — captures reliability at network level |
+| Minimum key rate across events | Secondary |
+| Total network throughput | Secondary |
+
+Extension: compare success rate for same-relay pairs vs cross-relay pairs to quantify the cost of passive routing.
+
+## Cost Model
+
+Each hardware component (user node source, user node detector, relay node, fiber per km, optical switch) is assigned an arbitrary cost unit. Network cost is computed per simulation instance. Industry-standard component prices are used to lower- and upper-bound the arbitrary units, enabling cost-efficiency comparisons (key rate per unit cost).
+
+Relay count comparison (cost vs performance) is a secondary analysis. Primary focus is user scaling.
+
+## Working Hypotheses
+
+- MDI cheaper to scale: adding a user requires only a source (no detector), versus BB84 which requires both source and detector per user node.
+- MDI key rate degrades more slowly with N: detector count at relay nodes is fixed regardless of user count; BB84 adds detectors with each user, increasing vulnerability to detector efficiency losses.
+- A crossover user count exists beyond which MDI dominates BB84 on average key rate.
+
+## Extensions (nice to have)
+
+- WDM multi-user MDI: multiple user pairs on separate wavelengths, simultaneous BSM at shared Charlie. Extra cost: MUX/DEMUX insertion loss (~1–3 dB per device). Requires T1/T2 quantum memory decoherence model — photons from different wavelength channels must be stored at Charlie until all channels are ready for BSM; coherence time during that wait is the fundamental scalability limit.
+- Key rate vs memory coherence time (T2 sweep) for WDM relay nodes.
+- Entanglement swapping at relay nodes: MDI-QKD without trusted relay requirement at backbone. Needs quantum memory and additional BSM node between Charlies. More complex than passive optical routing but preserves MDI security end-to-end.
+- Long-distance repeater chain: N-hop linear topology for range extension beyond metropolitan scale. Separate from metro network model. Most prior repeater research covers this regime.
+- Key rate vs number of repeater hops (sweep) for long-distance chain.
+- BB84 vs MDI-QKD repeater chain performance head-to-head.
+- Fully connected BB84 (direct pairwise links, no relay) as additional baseline.
+- Relay count as secondary analysis axis: key rate per unit cost vs K at fixed N.
+- Relay placement sensitivity: random vs optimal placement comparison.
+- Cross-relay vs same-relay pair success rate comparison.
+- Untrusted BB84 relay model (removes the security-model equivalence assumption).

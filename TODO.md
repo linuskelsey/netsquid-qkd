@@ -7,16 +7,11 @@
 - [ ] Update PARAMS.md + configs with verified values (remove ⁺ markers)
 - [x] Add shaded regions to all 9 compare scripts marking realistic operating range on sweep axis
 
-### 2. DB Query / Replot Script
-- [x] `scripts/P2P/analyse.py` — load saved results from `results.db` and regenerate plots without re-running simulations
-
-### 3. Confidence Intervals on Plots
-- [x] Shade ±1 std dev around mean key rate curve using per-runtime data stored in DB
-- [x] Confirm and implement visualisation for `layers.py`
-
-### 4. Charlie Placement Sweep
-- [x] Sweep Charlie's position on the MDI link (asymmetric Alice-Charlie / Charlie-Bob split)
-- [x] BB84 flat reference line (unaffected by relay placement)
+### 2. Literature Validation on layers.py
+- [ ] Identify 2–3 published experimental key rate vs distance curves for BB84 (e.g. Lo 2012, Tang 2016)
+- [ ] Identify 2–3 published experimental curves for MDI-QKD (e.g. Tang 2016, Yin 2016)
+- [ ] Overlay literature data points on `layers.py` plots (scatter markers, distinct style from simulation lines)
+- [ ] Add legend entries and source citations for each literature curve
 
 ---
 
