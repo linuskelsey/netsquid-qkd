@@ -19,7 +19,7 @@
 |---------|--------|
 | JSON config presets + CLI overrides | complete |
 | Multiprocessing (runtimes split across cores) | complete |
-| Compare scripts: length, loss, efficiency, dark count, node loss, source error, dephasing, basis bias, beam splitter efficiency (`scripts/P2P/compare/`) | complete |
+| Compare scripts: length, loss, efficiency, dark count, node loss, source error, dephasing, basis bias, beam splitter efficiency, Charlie placement (`scripts/P2P/compare/`) | complete |
 | Run-all parallel launcher (`scripts/P2P/compare/run_all.py`) | complete |
 | Layer comparison script (`scripts/P2P/layers.py`) | complete |
 | Config presets unified (layer0–layer8, cumulative, industry-typical values) | complete |
@@ -29,7 +29,8 @@
 
 | Feature | Status |
 |---------|--------|
-| P2P results schema: 9-parameter point → per-runtime key rates, QBERs, key lengths (`lib/db.py`) | complete |
+| P2P results schema: 10-parameter point (incl. `charlie_pos`) → per-runtime key rates, QBERs, key lengths (`lib/db.py`) | complete |
+| DB replot script: `scripts/P2P/analyse.py` — reload any sweep from `results.db` without re-running | complete |
 | Network results schema: separate schema for multi-hop/multi-user topology results | planned |
 | Query/load saved results for offline analysis and plotting (litecli / pandas / sqlite3) | complete |
 
@@ -87,5 +88,5 @@ Use optimal topology from Phase 1 as fixed input; sweep user count / network siz
 | QBER threshold cutoffs (11% hard cutoff, both protocols) | complete |
 | Per-point error bars on compare scripts (`--error bars` min/max whiskers, `--error shade` ±1σ band) | complete |
 | Always-on min/max error bars on `layers.py` | complete |
-| Charlie placement sweep (asymmetric links) | planned |
+| Charlie placement sweep (asymmetric Alice-Charlie / Charlie-Bob links) | complete |
 | Script to compare effect of each layer of modelling parameter per-protocol | complete |

@@ -15,8 +15,8 @@
 - [x] Confirm and implement visualisation for `layers.py`
 
 ### 4. Charlie Placement Sweep
-- [ ] Sweep Charlie's position on the MDI link (asymmetric Alice-Charlie / Charlie-Bob split)
-- [ ] BB84 flat reference line (unaffected by relay placement)
+- [x] Sweep Charlie's position on the MDI link (asymmetric Alice-Charlie / Charlie-Bob split)
+- [x] BB84 flat reference line (unaffected by relay placement)
 
 ---
 

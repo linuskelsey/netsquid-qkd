@@ -36,6 +36,7 @@ Defaults used when no `--config` and no CLI flag is given:
 | `sourceErrRate` | 0.005 | Source bit error rate ε_s |
 | `runtimes` | 100 | Monte Carlo repetitions per sweep point |
 | `photons` | 1024 | Photons per run |
+| `charliePos` | 0.5 | Relay position as fraction of total link from Alice (MDI only; 0.5 = symmetric midpoint) |
 | `workers` | 80% of CPU cores | Parallel worker processes (passed to run functions directly) |
 
 ## Hardware Parameter Reference

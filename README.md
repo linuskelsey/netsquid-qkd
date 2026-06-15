@@ -29,17 +29,18 @@ From the repo root:
 
 ```bash
 # Single comparison at default parameters
-python scripts/P2P/compare/run_all.py     # run all 9 sweeps simultaneously
+python scripts/P2P/compare/run_all.py       # run all 10 sweeps simultaneously
 
-python scripts/P2P/compare/length.py      # key rate vs distance
-python scripts/P2P/compare/loss.py        # key rate vs fibre attenuation
-python scripts/P2P/compare/efficiency.py  # key rate vs detector efficiency
-python scripts/P2P/compare/dark_count.py  # key rate vs dark count rate
-python scripts/P2P/compare/node_loss.py   # key rate vs node/connector loss
-python scripts/P2P/compare/source_err.py  # key rate vs source error rate
-python scripts/P2P/compare/dephasing.py   # key rate vs fibre dephasing rate
-python scripts/P2P/compare/basis_bias.py  # key rate vs detector basis bias (η_X sweep, η_Z fixed)
-python scripts/P2P/compare/bs_eff.py      # key rate vs beam splitter efficiency (MDI only)
+python scripts/P2P/compare/length.py        # key rate vs distance
+python scripts/P2P/compare/loss.py          # key rate vs fibre attenuation
+python scripts/P2P/compare/efficiency.py    # key rate vs detector efficiency
+python scripts/P2P/compare/dark_count.py    # key rate vs dark count rate
+python scripts/P2P/compare/node_loss.py     # key rate vs node/connector loss
+python scripts/P2P/compare/source_err.py    # key rate vs source error rate
+python scripts/P2P/compare/dephasing.py     # key rate vs fibre dephasing rate
+python scripts/P2P/compare/basis_bias.py    # key rate vs detector basis bias (η_X sweep, η_Z fixed)
+python scripts/P2P/compare/bs_eff.py        # key rate vs beam splitter efficiency (MDI only)
+python scripts/P2P/compare/charlie_pos.py   # MDI key rate vs Charlie relay position (BB84 flat reference)
 ```
 
 All comparison scripts accept CLI flags and an optional JSON config:
@@ -61,6 +62,14 @@ python MDI/mdiRun.py   --config configs/layer2_eff.json --det-eff-x 0.7
 
 # Config preset + CLI override (CLI takes precedence)
 python scripts/P2P/compare/length.py --config configs/layer3_dark.json --fibre 30
+```
+
+Replot any saved sweep without re-running simulations:
+
+```bash
+python scripts/P2P/analyse.py --list                   # show what's in the DB
+python scripts/P2P/analyse.py --script length          # replot length sweep
+python scripts/P2P/analyse.py --script charlie_pos --error shade
 ```
 
 All comparison scripts and `layers.py` save results to `results.db` (repo root) by default:
