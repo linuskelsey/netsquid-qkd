@@ -21,6 +21,7 @@ SCRIPTS = [
     "dephasing.py",
     "basis_bias.py",
     "bs_eff.py",
+    "charlie_pos.py",
 ]
 
 if __name__ == "__main__":

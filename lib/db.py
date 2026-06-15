@@ -42,7 +42,8 @@ CREATE TABLE IF NOT EXISTS runs (
     n_completed INTEGER,
     runtimes    INTEGER,
     photons     INTEGER,
-    timestamp   TEXT
+    timestamp   TEXT,
+    charlie_pos REAL
 )
 """
 
@@ -51,6 +52,9 @@ def init_db(path=DEFAULT_DB_PATH):
     conn = sqlite3.connect(path)
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute(_CREATE_TABLE)
+    existing = {row[1] for row in conn.execute("PRAGMA table_info(runs)")}
+    if "charlie_pos" not in existing:
+        conn.execute("ALTER TABLE runs ADD COLUMN charlie_pos REAL")
     conn.commit()
     return conn
 
@@ -63,8 +67,8 @@ def save_sweep_point(conn, protocol, params, key_rates, qbers, key_lengths,
                 fibre_len, fibre_loss, det_eff, dark_count,
                 init_loss, node_loss, source_err, dephasing, bs_eff,
                 key_rates, qbers, key_lengths,
-                n_completed, runtimes, photons, timestamp)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                n_completed, runtimes, photons, timestamp, charlie_pos)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (
             protocol,
             script,
@@ -84,6 +88,7 @@ def save_sweep_point(conn, protocol, params, key_rates, qbers, key_lengths,
             runtimes,
             photons,
             datetime.utcnow().isoformat(),
+            params.get("charlie_pos"),
         ),
     )
     conn.commit()

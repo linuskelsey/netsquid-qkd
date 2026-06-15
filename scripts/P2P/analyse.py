@@ -50,6 +50,7 @@ SWEEP_MAP = {
     "dephasing":  ("dephasing",  r"Dephasing rate $\beta$ (per km)",         1e-4,  1e-3,  False, "Realistic hardware regime"),
     "basis_bias": ("det_eff",    r"X-basis detector efficiency $\eta_X$",    0.65,  0.90,  True,  "Realistic hardware regime"),
     "bs_eff":     ("bs_eff",     r"Beam splitter efficiency $\eta_{bs}$",    0.90,  0.99,  True,  "Realistic hardware regime"),
+    "charlie_pos":("charlie_pos","Charlie position (fraction from Alice)",   0.4,   0.6,   False, "Near-symmetric regime"),
 }
 
 TITLE_MAP = {
@@ -62,6 +63,7 @@ TITLE_MAP = {
     "dephasing":  "Key rate vs dephasing rate",
     "basis_bias": "Key rate vs detector basis bias",
     "bs_eff":     "Key rate vs beam splitter efficiency",
+    "charlie_pos":"Key rate vs Charlie position",
 }
 
 # (db_col, latex_label, unit_suffix)

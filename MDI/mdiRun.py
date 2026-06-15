@@ -21,7 +21,7 @@ from mdiRelayNode import RelayNodeProtocol
 
 def _mdi_chunk(args):
     """Sequential simulation block — runs runtimes iterations and returns partial results."""
-    runtimes, fibreLen, qDelay, qSpeed, photonCount, sourceFreq, lenLoss, initLoss, detectorEffZ, detectorEffX, darkCount, nodeLossDb, sourceErrRate, dephasingRate, bsEff = args
+    runtimes, fibreLen, qDelay, qSpeed, photonCount, sourceFreq, lenLoss, initLoss, detectorEffZ, detectorEffX, darkCount, nodeLossDb, sourceErrRate, dephasingRate, bsEff, charliePos = args
 
     KeyListA    = []
     KeyListB    = []
@@ -37,13 +37,14 @@ def _mdi_chunk(args):
                                               "C.C.Out.A", "C.C.Out.B", "C.C.In.A.basis", "C.C.In.B.basis"])
 
         # channels ==============================================
-        p_dephase_arm = min(1.0, dephasingRate * fibreLen / 2)
-        QChann1 = QuantumChannel("[A: -Q-> :C]", delay=qDelay, length=fibreLen/2,
+        lenA = fibreLen * charliePos
+        lenB = fibreLen * (1 - charliePos)
+        QChann1 = QuantumChannel("[A: -Q-> :C]", delay=qDelay, length=lenA,
                                  models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed, stddev=0.05),
-                                         "quantum_noise_model": DephaseNoiseModel(p_dephase_arm, time_independent=True)})
-        QChann2 = QuantumChannel("[B: -Q-> :C]", delay=qDelay, length=fibreLen/2,
+                                         "quantum_noise_model": DephaseNoiseModel(min(1.0, dephasingRate * lenA), time_independent=True)})
+        QChann2 = QuantumChannel("[B: -Q-> :C]", delay=qDelay, length=lenB,
                                  models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed, stddev=0.05),
-                                         "quantum_noise_model": DephaseNoiseModel(p_dephase_arm, time_independent=True)})
+                                         "quantum_noise_model": DephaseNoiseModel(min(1.0, dephasingRate * lenB), time_independent=True)})
 
         alice.connect_to(charlie, QChann1,
                          local_port_name=alice.ports["A.Q.Out"].name,
@@ -52,17 +53,17 @@ def _mdi_chunk(args):
                        local_port_name=bob.ports["B.Q.Out"].name,
                        remote_port_name=charlie.ports["C.Q.In.B"].name)
 
-        CChann1 = ClassicalChannel("[A: -C-> :C]", delay=0, length=fibreLen/2,
+        CChann1 = ClassicalChannel("[A: -C-> :C]", delay=0, length=lenA,
                                    models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed, stddev=0.05)})
-        CChann2 = ClassicalChannel("[B: -C-> :C]", delay=0, length=fibreLen/2,
+        CChann2 = ClassicalChannel("[B: -C-> :C]", delay=0, length=lenB,
                                    models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed, stddev=0.05)})
-        CChann3 = ClassicalChannel("[C: -C-> :A]", delay=0, length=fibreLen/2,
+        CChann3 = ClassicalChannel("[C: -C-> :A]", delay=0, length=lenA,
                                    models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed, stddev=0.05)})
-        CChann4 = ClassicalChannel("[C: -C-> :B]", delay=0, length=fibreLen/2,
+        CChann4 = ClassicalChannel("[C: -C-> :B]", delay=0, length=lenB,
                                    models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed, stddev=0.05)})
-        CChann5 = ClassicalChannel("[A: -C.basis-> :C]", delay=0, length=fibreLen/2,
+        CChann5 = ClassicalChannel("[A: -C.basis-> :C]", delay=0, length=lenA,
                                    models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed, stddev=0.05)})
-        CChann6 = ClassicalChannel("[B: -C.basis-> :C]", delay=0, length=fibreLen/2,
+        CChann6 = ClassicalChannel("[B: -C.basis-> :C]", delay=0, length=lenB,
                                    models={"delay_model": HybridDelayModel(SoL_fraction=qSpeed, stddev=0.05)})
 
         alice.connect_to(charlie, CChann1,
@@ -87,11 +88,11 @@ def _mdi_chunk(args):
         # protocols =============================================
         aliceProt   = EndNodeProtocol(alice, 'alice', photonCount, sourceFreq,
                                       portNames=["A.Q.Out", "A.C.Out", "A.C.In", "A.C.Out.basis"],
-                                      fibreLen=fibreLen/2, lenLoss=lenLoss, initLoss=initLoss,
+                                      fibreLen=lenA, lenLoss=lenLoss, initLoss=initLoss,
                                       sourceErrRate=sourceErrRate)
         bobProt     = EndNodeProtocol(bob, 'bob', photonCount, sourceFreq,
                                       portNames=["B.Q.Out", "B.C.Out", "B.C.In", "B.C.Out.basis"],
-                                      fibreLen=fibreLen/2, lenLoss=lenLoss, initLoss=initLoss,
+                                      fibreLen=lenB, lenLoss=lenLoss, initLoss=initLoss,
                                       sourceErrRate=sourceErrRate)
         charlieProt = RelayNodeProtocol(charlie, 'charlie', photonCount,
                                         portNames=["C.Q.In.A", "C.Q.In.B", "C.C.In.A", "C.C.In.B",
@@ -143,6 +144,7 @@ def run_mdi_sims(runtimes=10,
                  sourceErrRate=0.0,
                  dephasingRate=0.0,
                  bsEff=1.0,
+                 charliePos=0.5,
                  workers=None):
 
     n = max(1, int(os.cpu_count() * 0.8)) if workers is None else workers
@@ -152,7 +154,7 @@ def run_mdi_sims(runtimes=10,
     sizes = [base + (1 if i < remainder else 0) for i in range(n)]
 
     job_args = [(s, fibreLen, qDelay, qSpeed, photonCount, sourceFreq,
-                 lenLoss, initLoss, detectorEffZ, detectorEffX, darkCount, nodeLossDb, sourceErrRate, dephasingRate, bsEff) for s in sizes]
+                 lenLoss, initLoss, detectorEffZ, detectorEffX, darkCount, nodeLossDb, sourceErrRate, dephasingRate, bsEff, charliePos) for s in sizes]
 
     with get_context('spawn').Pool(n) as pool:
         parts = pool.map(_mdi_chunk, job_args)
