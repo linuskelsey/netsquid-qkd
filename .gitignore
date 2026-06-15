@@ -8,6 +8,9 @@
 # netsquid documentation
 docs/netsquid
 
+# latex
+docs/latex_slides
+
 # merge script
 merge-all.sh
 
