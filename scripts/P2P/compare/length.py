@@ -271,6 +271,8 @@ if __name__ == "__main__":
     ax1.axvspan(METRO_MIN, METRO_MAX, alpha=0.08, color='red',   zorder=0)
     ax1.axvspan(LONG_MIN,  _xlim[1], alpha=0.08, color='green', zorder=0)
 
+    ax1.set_xlim(_xlim)
+
     for _xv in [METRO_MIN, METRO_MAX, LONG_MIN]:
         ax1.axvline(_xv, color='black', linestyle=':', linewidth=1.2)
     for _xv, _lbl, _ha, _mid in [
