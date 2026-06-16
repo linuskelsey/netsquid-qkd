@@ -108,7 +108,7 @@ if __name__ == "__main__":
     print("=" * 65)
     print()
 
-    KeyListA, KeyListB, KeyRateList = run_mdi_sims(
+    KeyListA, KeyListB, KeyRateList, _ = run_mdi_sims(
         runtimes    = args.runtimes,
         fibreLen    = args.fibre,
         photonCount = args.photons,

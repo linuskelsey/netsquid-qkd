@@ -39,23 +39,13 @@ LAYERS = [
 Dx = [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 
 
-def qber(keyA, keyB):
-    if not keyA or not keyB:
-        return None
-    length = min(len(keyA), len(keyB))
-    if length == 0:
-        return None
-    errors = sum(a != b for a, b in zip(keyA[:length], keyB[:length]))
-    return errors / length
-
-
-def aggregate(KeyListA, KeyListB, KeyRateList):
+def aggregate(KeyListA, KeyListB, KeyRateList, QBERList):
     rates, qbers, lengths = [], [], []
-    for i, (keyA, keyB) in enumerate(zip(KeyListA, KeyListB)):
-        q = qber(keyA, keyB)
-        if q is not None and keyA != "nan":
-            rates.append(KeyRateList[i])
+    for i, (keyA, keyB, q) in enumerate(zip(KeyListA, KeyListB, QBERList)):
+        if q is not None:
             qbers.append(q)
+        if keyA != "nan":
+            rates.append(KeyRateList[i])
             lengths.append(min(len(keyA), len(keyB)))
     avg = sum(rates) / len(rates) if rates else float('nan')
     return avg, rates, qbers, lengths
@@ -64,7 +54,7 @@ def aggregate(KeyListA, KeyListB, KeyRateList):
 def run_layer_bb84(cfg, runtimes, db_conn=None, layer_name=""):
     rates, mins, maxs = [], [], []
     for d in Dx:
-        KA, KB, KR = run_BB84_sims(
+        KA, KB, KR, KQ = run_BB84_sims(
             runtimes      = runtimes,
             fibreLen      = d,
             photonCount   = 1024,
@@ -78,7 +68,7 @@ def run_layer_bb84(cfg, runtimes, db_conn=None, layer_name=""):
             sourceErrRate = cfg["source_error_rate"],
             dephasingRate = cfg["dephasing_rate"],
         )
-        avg, raw_rates, raw_qbers, raw_lengths = aggregate(KA, KB, KR)
+        avg, raw_rates, raw_qbers, raw_lengths = aggregate(KA, KB, KR, KQ)
         rates.append(avg)
         nz = [r for r in raw_rates if r > 0]
         mins.append(min(nz) if nz else float('nan'))
@@ -104,7 +94,7 @@ def run_layer_bb84(cfg, runtimes, db_conn=None, layer_name=""):
 def run_layer_mdi(cfg, runtimes, db_conn=None, layer_name=""):
     rates, mins, maxs = [], [], []
     for d in Dx:
-        KA, KB, KR = run_mdi_sims(
+        KA, KB, KR, KQ = run_mdi_sims(
             runtimes      = runtimes,
             fibreLen      = d,
             photonCount   = 1024,
@@ -119,7 +109,7 @@ def run_layer_mdi(cfg, runtimes, db_conn=None, layer_name=""):
             dephasingRate = cfg["dephasing_rate"],
             bsEff         = cfg["bs_eff"],
         )
-        avg, raw_rates, raw_qbers, raw_lengths = aggregate(KA, KB, KR)
+        avg, raw_rates, raw_qbers, raw_lengths = aggregate(KA, KB, KR, KQ)
         rates.append(avg)
         nz = [r for r in raw_rates if r > 0]
         mins.append(min(nz) if nz else float('nan'))
