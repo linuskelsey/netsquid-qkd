@@ -26,6 +26,7 @@ def _mdi_chunk(args):
     KeyListA    = []
     KeyListB    = []
     KeyRateList = []
+    QBERList    = []
 
     for _ in range(runtimes):
         ns.sim_reset()
@@ -115,6 +116,7 @@ def _mdi_chunk(args):
             keyA, keyB = aliceProt.key, bobProt.key
             length = min(len(keyA), len(keyB))
             qber = sum(a != b for a, b in zip(keyA, keyB)) / length if length > 0 else 0
+            QBERList.append(qber)
             if qber > 0.11:
                 KeyListA.append("nan"); KeyListB.append("nan"); KeyRateList.append("nan")
             else:
@@ -122,11 +124,12 @@ def _mdi_chunk(args):
                 KeyListB.append(keyB)
                 KeyRateList.append(len(keyA) * 10**9 / (endTime - startTime))
         else:
+            QBERList.append(None)
             KeyListA.append("nan")
             KeyListB.append("nan")
             KeyRateList.append("nan")
 
-    return KeyListA, KeyListB, KeyRateList
+    return KeyListA, KeyListB, KeyRateList, QBERList
 
 
 def run_mdi_sims(runtimes=10,
@@ -159,13 +162,14 @@ def run_mdi_sims(runtimes=10,
     with get_context('spawn').Pool(n) as pool:
         parts = pool.map(_mdi_chunk, job_args)
 
-    KeyListA, KeyListB, KeyRateList = [], [], []
-    for kA, kB, kR in parts:
+    KeyListA, KeyListB, KeyRateList, QBERList = [], [], [], []
+    for kA, kB, kR, kQ in parts:
         KeyListA.extend(kA)
         KeyListB.extend(kB)
         KeyRateList.extend(kR)
+        QBERList.extend(kQ)
 
-    return KeyListA, KeyListB, KeyRateList
+    return KeyListA, KeyListB, KeyRateList, QBERList
 
 
 if __name__ == "__main__":
@@ -178,7 +182,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     cfg  = load_config(args.config)
 
-    _, _, rates = run_mdi_sims(
+    _, _, rates, _ = run_mdi_sims(
         runtimes      = args.runtimes,
         fibreLen      = args.fibre,
         lenLoss       = cfg["fibre_loss_db_per_km"],
