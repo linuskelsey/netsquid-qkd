@@ -27,6 +27,7 @@ from lib.db import init_db, save_sweep_point, DEFAULT_DB_PATH
 
 import math
 import statistics
+import numpy as np
 import matplotlib.pyplot as plt
 
 
@@ -135,7 +136,7 @@ if __name__ == "__main__":
     parser.add_argument("--source-err", type=float, default=None, dest="source_err", help="Source bit error rate [0-1]")
     parser.add_argument("--no-save",  action="store_true", help="Skip saving results to DB")
     parser.add_argument("--db",       type=str, default=DEFAULT_DB_PATH, help="Path to results SQLite DB")
-    parser.add_argument("--error",    choices=["bars", "shade"], default="bars",
+    parser.add_argument("--error",    choices=["bars", "shade", "sigma", "iqr", "sem"], default="bars",
                         help="Error display: bars=min/max whiskers (default), shade=±1 std dev band")
     parser.add_argument("--output-dir", type=str, default=None, help="Directory to save figure into (skips interactive display)")
     args = parser.parse_args()
@@ -165,6 +166,12 @@ if __name__ == "__main__":
     mins_mdi     = []
     maxs_mdi     = []
     stds_mdi     = []
+    q25s_bb84    = []
+    q75s_bb84    = []
+    sems_bb84    = []
+    q25s_mdi     = []
+    q75s_mdi     = []
+    sems_mdi     = []
 
     for d in Dx:
         bb84, mdi = main(runtimes=args.runtimes, fibre=d,
@@ -181,12 +188,16 @@ if __name__ == "__main__":
         qbers_mdi.append(mdi[2])
         rates_mdi.append(mdi[3])
 
-        for rs, mins, maxs, stds in [(bb84[4], mins_bb84, maxs_bb84, stds_bb84),
-                                     (mdi[4],  mins_mdi,  maxs_mdi,  stds_mdi)]:
+        for rs, mins, maxs, stds, q25s, q75s, sems in [
+                (bb84[4], mins_bb84, maxs_bb84, stds_bb84, q25s_bb84, q75s_bb84, sems_bb84),
+                (mdi[4],  mins_mdi,  maxs_mdi,  stds_mdi,  q25s_mdi,  q75s_mdi,  sems_mdi)]:
             nz = [r for r in rs if r > 0]
             mins.append(min(nz) if nz else float('nan'))
             maxs.append(max(rs) if rs else float('nan'))
             stds.append(statistics.stdev([math.log(r) for r in nz]) if len(nz) > 1 else 0.0)
+            q25s.append(float(np.percentile(nz, 25)) if nz else float('nan'))
+            q75s.append(float(np.percentile(nz, 75)) if nz else float('nan'))
+            sems.append(statistics.stdev(nz) / math.sqrt(len(nz)) if len(nz) > 1 else 0.0)
 
         if db_conn is not None:
             params = {
@@ -222,18 +233,46 @@ if __name__ == "__main__":
     abs_mins_bb84 = [r / 1000 for r in mins_bb84]
     abs_maxs_bb84 = [r / 1000 for r in maxs_bb84]
     abs_mins_mdi  = [r / 1000 for r in mins_mdi]
+    abs_q25s_bb84 = [r / 1000 for r in q25s_bb84]
+    abs_q75s_bb84 = [r / 1000 for r in q75s_bb84]
+    abs_sems_bb84 = [r / 1000 for r in sems_bb84]
+    abs_q25s_mdi  = [r / 1000 for r in q25s_mdi]
+    abs_q75s_mdi  = [r / 1000 for r in q75s_mdi]
+    abs_sems_mdi  = [r / 1000 for r in sems_mdi]
     abs_maxs_mdi  = [r / 1000 for r in maxs_mdi]
 
     # Primary axis — absolute scale
-    if args.error == 'bars':
-        yerr_bb84 = [
-            [max(r - m, 0) for r, m in zip(abs_rates_bb84, abs_mins_bb84)],
-            [max(m - r, 0) for r, m in zip(abs_rates_bb84, abs_maxs_bb84)],
-        ]
-        yerr_mdi = [
-            [max(r - m, 0) for r, m in zip(abs_rates_mdi, abs_mins_mdi)],
-            [max(m - r, 0) for r, m in zip(abs_rates_mdi, abs_maxs_mdi)],
-        ]
+    if args.error in ('bars', 'sigma', 'iqr', 'sem'):
+        if args.error == 'bars':
+            yerr_bb84 = [
+                [max(r - m, 0) for r, m in zip(abs_rates_bb84, abs_mins_bb84)],
+                [max(m - r, 0) for r, m in zip(abs_rates_bb84, abs_maxs_bb84)],
+            ]
+            yerr_mdi = [
+                [max(r - m, 0) for r, m in zip(abs_rates_mdi, abs_mins_mdi)],
+                [max(m - r, 0) for r, m in zip(abs_rates_mdi, abs_maxs_mdi)],
+            ]
+        elif args.error == 'sigma':
+            yerr_bb84 = [
+                [r * (1 - math.exp(-s)) for r, s in zip(abs_rates_bb84, stds_bb84)],
+                [r * (math.exp(s) - 1)  for r, s in zip(abs_rates_bb84, stds_bb84)],
+            ]
+            yerr_mdi = [
+                [r * (1 - math.exp(-s)) for r, s in zip(abs_rates_mdi, stds_mdi)],
+                [r * (math.exp(s) - 1)  for r, s in zip(abs_rates_mdi, stds_mdi)],
+            ]
+        elif args.error == 'iqr':
+            yerr_bb84 = [
+                [max(r - q25, 0) for r, q25 in zip(abs_rates_bb84, abs_q25s_bb84)],
+                [max(q75 - r, 0) for r, q75 in zip(abs_rates_bb84, abs_q75s_bb84)],
+            ]
+            yerr_mdi = [
+                [max(r - q25, 0) for r, q25 in zip(abs_rates_mdi, abs_q25s_mdi)],
+                [max(q75 - r, 0) for r, q75 in zip(abs_rates_mdi, abs_q75s_mdi)],
+            ]
+        elif args.error == 'sem':
+            yerr_bb84 = [abs_sems_bb84, abs_sems_bb84]
+            yerr_mdi  = [abs_sems_mdi,  abs_sems_mdi]
         ax1.errorbar(Dx, abs_rates_bb84, yerr=yerr_bb84, fmt='o-', label="BB84", capsize=3)
         ax1.errorbar(Dx, abs_rates_mdi,  yerr=yerr_mdi,  fmt='s-', label="MDI",  capsize=3)
     else:
@@ -289,7 +328,7 @@ if __name__ == "__main__":
     ax1.text((METRO_MIN + METRO_MAX) / 2, 0.97, "Metropolitan regime",
              transform=ax1.get_xaxis_transform(),
              ha='center', va='top', fontsize=7, color='darkred', alpha=0.7, style='italic')
-    ax1.text((LONG_MIN + Dx[-1]) / 2, 0.97, "Long-range regime",
+    ax1.text(LONG_MIN + 0.6 * (Dx[-1] - LONG_MIN), 0.97, "Long-range regime",
              transform=ax1.get_xaxis_transform(),
              ha='center', va='top', fontsize=7, color='darkgreen', alpha=0.7, style='italic')
 

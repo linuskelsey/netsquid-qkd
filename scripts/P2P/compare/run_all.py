@@ -31,8 +31,9 @@ if __name__ == "__main__":
     parser.add_argument("--runtimes",   type=int,  default=100)
     parser.add_argument("--no-save",    action="store_true", help="Skip saving results to DB")
     parser.add_argument("--db",         type=str,  default=None, help="Path to results SQLite DB")
-    parser.add_argument("--error",      choices=["bars", "shade"], default="bars",
-                        help="Error display: bars=min/max whiskers (default), shade=±1 std dev band")
+    parser.add_argument("--error",      choices=["bars", "shade", "sigma", "iqr", "sem"], default="bars",
+                        help="Error display: bars=min/max whiskers (default), shade=±1σ log-space band, "
+                             "sigma=±1σ whiskers, iqr=IQR 25–75th percentile, sem=±1 SEM")
     parser.add_argument("--output-dir", type=str,  default=None,
                         help="Directory to write figures (default: <project_root>/figures/P2P)")
     parser.add_argument("--show",       action="store_true",
