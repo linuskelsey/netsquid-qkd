@@ -110,6 +110,7 @@ if __name__ == "__main__":
     parser.add_argument("--db",       type=str, default=DEFAULT_DB_PATH, help="Path to results SQLite DB")
     parser.add_argument("--error",    choices=["bars", "shade"], default="bars",
                         help="Error display: bars=min/max whiskers (default), shade=±1 std dev band")
+    parser.add_argument("--output-dir", type=str, default=None, help="Directory to save figure into (skips interactive display)")
     args = parser.parse_args()
     cfg  = load_config(args.config)
     if args.loss is not None:       cfg["fibre_loss_db_per_km"] = args.loss
@@ -240,4 +241,10 @@ if __name__ == "__main__":
     plt.title(f"Key rate vs fibre dephasing rate: BB84 and MDI-QKD\n"
               f"$L$={args.fibre} km  |  $\\alpha$={cfg['fibre_loss_db_per_km']} dB/km  |  $\\eta_d$={cfg['detector_efficiency']}  |  $d_c$={cfg['dark_count_rate']} cps\n"
               f"$L_i$={cfg['init_loss']}  |  $L_n$={cfg['node_loss_db']} dB  |  $\\varepsilon_s$={cfg['source_error_rate']}  |  $\\eta_{{bs}}$={cfg['bs_eff']}")
-    plt.show()
+    if args.output_dir:
+        os.makedirs(args.output_dir, exist_ok=True)
+        fig_name = os.path.splitext(os.path.basename(__file__))[0] + ".png"
+        plt.savefig(os.path.join(args.output_dir, fig_name), dpi=150, bbox_inches="tight")
+        plt.close()
+    else:
+        plt.show()

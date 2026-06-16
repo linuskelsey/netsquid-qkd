@@ -45,6 +45,7 @@ if __name__ == "__main__":
                         help="Error display: bars=min/max whiskers (default), shade=±1σ log-space band")
     parser.add_argument("--no-save",  action="store_true", help="Skip saving results to DB")
     parser.add_argument("--db",       type=str, default=DEFAULT_DB_PATH, help="Path to results SQLite DB")
+    parser.add_argument("--output-dir", type=str, default=None, help="Directory to save figure into (skips interactive display)")
     args = parser.parse_args()
     cfg  = load_config(args.config)
 
@@ -183,4 +184,10 @@ if __name__ == "__main__":
               f"$\\varepsilon_s$={cfg['source_error_rate']}  |  $\\beta$={cfg['dephasing_rate']} /km  |  "
               f"$\\eta_{{bs}}$={cfg['bs_eff']}")
     plt.tight_layout()
-    plt.show()
+    if args.output_dir:
+        os.makedirs(args.output_dir, exist_ok=True)
+        fig_name = os.path.splitext(os.path.basename(__file__))[0] + ".png"
+        plt.savefig(os.path.join(args.output_dir, fig_name), dpi=150, bbox_inches="tight")
+        plt.close()
+    else:
+        plt.show()

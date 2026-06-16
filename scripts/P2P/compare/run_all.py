@@ -1,9 +1,11 @@
 """
 Run all P2P compare scripts in parallel.
-All plot windows open simultaneously — close them in any order.
+By default saves figures to figures/P2P/ in the project root.
+Pass --show to open interactive plot windows instead.
 
 Usage:
     python scripts/P2P/compare/run_all.py [--runtimes N] [--no-save] [--db PATH]
+                                          [--output-dir PATH] [--show]
 """
 
 import argparse
@@ -26,14 +28,26 @@ SCRIPTS = [
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--runtimes", type=int,  default=100)
-    parser.add_argument("--no-save",  action="store_true", help="Skip saving results to DB")
-    parser.add_argument("--db",       type=str,  default=None, help="Path to results SQLite DB")
-    parser.add_argument("--error",    choices=["bars", "shade"], default="bars",
+    parser.add_argument("--runtimes",   type=int,  default=100)
+    parser.add_argument("--no-save",    action="store_true", help="Skip saving results to DB")
+    parser.add_argument("--db",         type=str,  default=None, help="Path to results SQLite DB")
+    parser.add_argument("--error",      choices=["bars", "shade"], default="bars",
                         help="Error display: bars=min/max whiskers (default), shade=±1 std dev band")
+    parser.add_argument("--output-dir", type=str,  default=None,
+                        help="Directory to write figures (default: <project_root>/figures/P2P)")
+    parser.add_argument("--show",       action="store_true",
+                        help="Open interactive plot windows instead of saving to disk")
     args = parser.parse_args()
 
-    here = os.path.dirname(os.path.abspath(__file__))
+    here         = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(here)))
+
+    if not args.show:
+        output_dir = args.output_dir or os.path.join(project_root, "figures", "P2P")
+        os.makedirs(output_dir, exist_ok=True)
+        print(f"Figures will be saved to: {output_dir}")
+    else:
+        output_dir = None
 
     processes = []
     for i, script in enumerate(SCRIPTS, 1):
@@ -43,12 +57,17 @@ if __name__ == "__main__":
         if args.db is not None:
             cmd += ["--db", args.db]
         cmd += ["--error", args.error]
+        if output_dir is not None:
+            cmd += ["--output-dir", output_dir]
         print(f"[{i}/{len(SCRIPTS)}] Starting {script}  (runtimes={args.runtimes})")
         p = subprocess.Popen(cmd)
         processes.append(p)
 
-    print(f"\nAll {len(SCRIPTS)} scripts running — close windows when done.")
+    print(f"\nAll {len(SCRIPTS)} scripts running...")
     for p in processes:
         p.wait()
 
-    print("All done.")
+    if output_dir:
+        print(f"All done. Figures saved to {output_dir}")
+    else:
+        print("All done.")
