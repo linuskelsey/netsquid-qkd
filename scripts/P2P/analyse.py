@@ -187,7 +187,7 @@ def query_and_aggregate_qber(conn, script, sweep_col):
 
     results = {}
     for protocol in protocols:
-        xs, avgs, stds, success_rates = [], [], [], []
+        xs, avgs, stds = [], [], []
         for sv in sweep_vals:
             key = (protocol, sv)
             if key not in buckets or not buckets[key]:
@@ -196,12 +196,77 @@ def query_and_aggregate_qber(conn, script, sweep_col):
             xs.append(sv)
             avgs.append(sum(qbers) / len(qbers))
             stds.append(statistics.stdev(qbers) if len(qbers) > 1 else 0.0)
-            success_rates.append(sum(1 for q in qbers if q < QBER_CUTOFF) / len(qbers))
-        results[protocol] = (xs, avgs, stds, success_rates)
+        results[protocol] = (xs, avgs, stds)
 
     first_meta = meta_row[next(iter(meta_row))]
     fixed = _fixed_str(first_meta, sweep_col)
     return results, sweep_vals, protocols, fixed
+
+
+def query_and_aggregate_keylength(conn, script, sweep_col):
+    rows, meta_cols = _build_query(conn, script, sweep_col, "key_lengths")
+    if not rows:
+        return None, None, None, None
+
+    buckets  = defaultdict(list)
+    meta_row = {}
+    for row in rows:
+        protocol, sweep_val, kl_json = row[0], row[1], row[2]
+        key = (protocol, sweep_val)
+        loaded = json.loads(kl_json)
+        buckets[key].extend(loaded)
+        meta_row[key] = row[3:]
+
+    if sum(len(v) for v in buckets.values()) == 0:
+        return None, None, None, None
+
+    sweep_vals = sorted(set(v for _, v in buckets))
+    protocols  = sorted(set(p for p, _ in buckets))
+
+    results = {}
+    for protocol in protocols:
+        xs, avgs, stds = [], [], []
+        for sv in sweep_vals:
+            key = (protocol, sv)
+            if key not in buckets or not buckets[key]:
+                continue
+            lengths = buckets[key]
+            xs.append(sv)
+            avgs.append(sum(lengths) / len(lengths))
+            stds.append(statistics.stdev(lengths) if len(lengths) > 1 else 0.0)
+        results[protocol] = (xs, avgs, stds)
+
+    first_meta = meta_row[next(iter(meta_row))]
+    fixed = _fixed_str(first_meta, sweep_col)
+    return results, sweep_vals, protocols, fixed
+
+
+def plot_key_length(results, x_label, title, fixed, invert_x, rmin, rmax, region_label):
+    fmt = {'BB84': 'o-', 'MDI': 's-'}
+
+    fig, ax1 = plt.subplots()
+
+    for protocol, (xs, avgs, stds) in results.items():
+        mk = fmt.get(protocol, 'o-')
+        line, = ax1.plot(xs, avgs, mk, label=protocol)
+        ax1.fill_between(xs,
+                         [max(a - s, 0) for a, s in zip(avgs, stds)],
+                         [a + s          for a, s in zip(avgs, stds)],
+                         alpha=0.15, color=line.get_color())
+
+    ax1.set_xlabel(x_label)
+    ax1.set_ylabel("Mean sifted key length (bits)  (±1σ shaded)")
+    ax1.set_yscale("log")
+    ax1.grid(True, alpha=0.3)
+
+    if invert_x:
+        ax1.invert_xaxis()
+
+    ax1.legend()
+    _draw_region(ax1, rmin, rmax, region_label)
+    plt.title(f"{title}: BB84 and MDI-QKD\n{fixed}")
+    plt.tight_layout()
+    plt.show()
 
 
 def _draw_region(ax1, rmin, rmax, label):
@@ -287,17 +352,14 @@ def plot_qber(results, x_label, title, fixed, invert_x, rmin, rmax, region_label
     fmt = {'BB84': 'o-', 'MDI': 's-'}
 
     fig, ax1 = plt.subplots()
-    ax2 = ax1.twinx()
 
-    for protocol, (xs, avgs, stds, success_rates) in results.items():
+    for protocol, (xs, avgs, stds) in results.items():
         mk = fmt.get(protocol, 'o-')
         line, = ax1.plot(xs, avgs, mk, label=protocol)
         ax1.fill_between(xs,
                          [max(a - s, 0) for a, s in zip(avgs, stds)],
                          [a + s for a, s in zip(avgs, stds)],
                          alpha=0.15, color=line.get_color())
-        ax2.plot(xs, success_rates, mk, alpha=0.4, linestyle='--',
-                 color=line.get_color(), label=f"{protocol} success rate")
 
     ax1.axhline(QBER_CUTOFF, color='red', linestyle='--', linewidth=1.2,
                 label=f"QBER cutoff ({QBER_CUTOFF*100:.0f}%)")
@@ -306,14 +368,11 @@ def plot_qber(results, x_label, title, fixed, invert_x, rmin, rmax, region_label
     ax1.set_ylabel("Mean QBER  (±1σ shaded)")
     ax1.set_ylim(bottom=0)
     ax1.grid(True, alpha=0.3)
-    ax2.set_ylabel("Success rate (QBER < 11%)")
-    ax2.set_ylim(0, 1.05)
 
     if invert_x:
         ax1.invert_xaxis()
 
-    ax1.legend(loc='upper left')
-    ax2.legend(loc='upper right')
+    ax1.legend()
     _draw_region(ax1, rmin, rmax, region_label)
     plt.title(f"{title}: BB84 and MDI-QKD\n{fixed}")
     plt.tight_layout()
@@ -328,8 +387,8 @@ def main():
                         help="Sweep to load and plot")
     parser.add_argument("--db",    type=str, default=DEFAULT_DB_PATH,
                         help="Path to results SQLite DB")
-    parser.add_argument("--mode",  choices=["key_rate", "qber"], default="key_rate",
-                        help="Plot mode: key_rate (default) or qber")
+    parser.add_argument("--mode",  choices=["key_rate", "qber", "key_length"], default="key_rate",
+                        help="Plot mode: key_rate (default), qber, or key_length")
     parser.add_argument("--error", choices=["bars", "shade", "sigma", "iqr", "sem"], default="bars",
                         help="Error display (key_rate mode only): bars=min/max, shade/sigma=±1σ, iqr=IQR, sem=±SEM")
     parser.add_argument("--list",  action="store_true",
@@ -358,6 +417,15 @@ def main():
         print(f"Loaded '{args.script}' QBER: {len(sweep_vals)} sweep points, protocols: {protocols}")
         plot_qber(results, x_label, QBER_TITLE_MAP[args.script], fixed,
                   invert_x, rmin, rmax, region_label)
+    elif args.mode == "key_length":
+        results, sweep_vals, protocols, fixed = query_and_aggregate_keylength(conn, args.script, sweep_col)
+        conn.close()
+        if results is None:
+            print(f"No key_length data for script='{args.script}'.")
+            sys.exit(1)
+        print(f"Loaded '{args.script}' key lengths: {len(sweep_vals)} sweep points, protocols: {protocols}")
+        plot_key_length(results, x_label, TITLE_MAP[args.script], fixed,
+                        invert_x, rmin, rmax, region_label)
     else:
         results, sweep_vals, protocols, fixed = query_and_aggregate(conn, args.script, sweep_col)
         conn.close()
