@@ -61,7 +61,7 @@ if __name__ == "__main__":
     db_conn = None if args.no_save else init_db(args.db)
 
     # BB84 — run once; rate is independent of Charlie position
-    KA_bb84, KB_bb84, KR_bb84 = run_BB84_sims(
+    KA_bb84, KB_bb84, KR_bb84, KQ_bb84 = run_BB84_sims(
         runtimes      = args.runtimes,
         fibreLen      = args.fibre,
         photonCount   = 1024,
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     sems_mdi  = []
 
     for cp in Cx:
-        _, _, KR_mdi = run_mdi_sims(
+        _, _, KR_mdi, KQ_mdi = run_mdi_sims(
             runtimes      = args.runtimes,
             fibreLen      = args.fibre,
             photonCount   = 1024,
@@ -125,9 +125,9 @@ if __name__ == "__main__":
                 "charlie_pos": cp,
             }
             # BB84 saved at each sweep point so analyse.py can reconstruct the flat reference line
-            save_sweep_point(db_conn, "BB84", params, bb84_rates, [], [],
+            save_sweep_point(db_conn, "BB84", params, bb84_rates, KQ_bb84, [],
                              script="charlie_pos", runtimes=args.runtimes, photons=1024)
-            save_sweep_point(db_conn, "MDI",  params, mdi_rates,  [], [],
+            save_sweep_point(db_conn, "MDI",  params, mdi_rates,  KQ_mdi,  [],
                              script="charlie_pos", runtimes=args.runtimes, photons=1024)
 
     if db_conn is not None:
