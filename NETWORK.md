@@ -8,9 +8,9 @@ Compare BB84 and MDI-QKD on key rate, cost, and scalability across multi-user ne
 
 **Application layer:** All users form a fully connected graph — every user can request a key with any other. User positions are randomised in geographic space. The same positions are used for both protocols in any given simulation instance.
 
-**Transport layer:** Relay nodes sit in the physical network. For MDI, relays are Charlie nodes (BSM only, untrusted). For BB84, relays are trusted nodes at the same positions (they see key material). This makes the infrastructure comparison explicit and fair.
+**Transport layer:** MDI-QKD uses K Charlie nodes (BSM only, untrusted). BB84 uses no relay nodes — instead each user pair is connected by a direct P2P fibre link (fully connected mesh, N(N-1)/2 links total). Relay nodes introduce unnecessary trust assumptions for BB84 and are not deployed in practice when direct links are available.
 
-**Cross-cluster routing (MDI):** When two users are homed to different relay nodes (C1, C2), C2 acts as a passive optical router — redirecting the photon toward C1 without measuring it (fiber switch / optical circulator). Quantum state is preserved. Extra cost: C2→C1 fiber loss plus switch insertion loss (~0.5–2 dB). Timing compensation: the user homed to C2 emits earlier to ensure simultaneous arrival at C1 for BSM.
+**Cross-cluster routing (MDI):** When two users are homed to different Charlie nodes (C1, C2), C2 acts as a passive optical router — redirecting the photon toward C1 without measuring it (fibre switch / optical circulator). Quantum state is preserved. Extra cost: C2→C1 fibre loss plus switch insertion loss (~0.5–2 dB). Timing compensation: the user homed to C2 emits earlier to ensure simultaneous arrival at C1 for BSM.
 
 ## Experiments
 
@@ -43,11 +43,22 @@ Each hardware component (user node source, user node detector, relay node, fiber
 
 Relay count comparison (cost vs performance) is a secondary analysis. Primary focus is user scaling.
 
+## Infrastructure Comparison
+
+| | BB84 | MDI-QKD |
+|---|---|---|
+| Fibre links | N(N-1)/2 direct P2P links | ~N links (user → nearest Charlie) |
+| Relay hardware | none | K Charlie nodes (untrusted) |
+| Security assumptions | none beyond endpoints | relay untrusted — MDI advantage |
+| Infrastructure scaling | O(N²) | O(N) |
+
+BB84's O(N²) fibre scaling makes it prohibitively expensive at large N even if per-pair key rate is higher. MDI's O(N) fibre scaling is the primary economic argument for network deployment.
+
 ## Working Hypotheses
 
-- MDI cheaper to scale: adding a user requires only a source (no detector), versus BB84 which requires both source and detector per user node.
-- MDI key rate degrades more slowly with N: detector count at relay nodes is fixed regardless of user count; BB84 adds detectors with each user, increasing vulnerability to detector efficiency losses.
-- A crossover user count exists beyond which MDI dominates BB84 on average key rate.
+- MDI infrastructure scales better: BB84 requires N(N-1)/2 fibre links; MDI requires ~N links to K relays. At large N, MDI fibre cost grows far more slowly.
+- MDI key rate per pair degrades more slowly with N: detector count is fixed at Charlie nodes regardless of user count; BB84 per-pair rate is unaffected by N (direct links) but total fibre cost is not.
+- A crossover user count exists beyond which MDI total infrastructure cost is lower than BB84, despite potentially lower per-pair key rate.
 
 ## Extensions (nice to have)
 

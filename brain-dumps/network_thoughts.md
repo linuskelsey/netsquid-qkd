@@ -23,7 +23,7 @@ Given the same physical fiber infrastructure (same nodes, same links), what does
 - BB84 through trusted intermediate nodes (same relay positions as MDI Charlies, but trusted)?
 Which is the fair comparison?
 
-**A2** - I think let's do it with trusted relay nodes for the time being, with placement mirroring that of MDI. This makes it most explicitly a fair comparison. It is a nice to have to investigate what a fair comparison might look like were we to model pairwise links between communicating nodes, or even to add in pairwise links (fully connected) as a comparison. Perhaps - we can use fully connected BB84 as a sort of baseline for all our comparisons. Worth considering.
+**A2** - BB84 uses no relay nodes. Each user pair is connected by a direct P2P fibre link — fully connected mesh, N(N-1)/2 links. Relay nodes introduce unnecessary trust assumptions and are not deployed in practice when direct links are available. This makes the infrastructure comparison asymmetric but honest: BB84 O(N²) fibre vs MDI O(N) fibre + K relay nodes.
 
 **Q3 — Topology definition**
 What does "variety of topologies" mean concretely? Options:
@@ -79,8 +79,8 @@ Writing the claims first will sharpen the experimental design.
 
 ## Design Challenges & Resolutions
 
-**C1 — Cross-cluster photon routing**
-Cross-cluster user pairs (A1 on C1, B2 on C2) cannot have C2 measure and re-emit B2's photon — no-cloning. *Resolution:* C2 acts as a passive optical router (fiber switch / optical circulator), redirecting B2's photon to C1 without measuring it. Quantum state is preserved. Cost: extra fiber loss on the C2→C1 link plus switch insertion loss (~0.5–2 dB). Timing: B2 must emit earlier than A1 to compensate for extra travel time so both photons arrive at C1 simultaneously. BSM then proceeds normally at C1.
+**C1 — Cross-cluster photon routing (MDI only)**
+Cross-cluster MDI pairs (A1 on C1, B2 on C2) cannot have C2 measure and re-emit B2's photon — no-cloning. *Resolution:* C2 acts as a passive optical router (fibre switch / optical circulator), redirecting B2's photon to C1 without measuring it. Quantum state is preserved. Cost: extra fibre loss on the C2→C1 link plus switch insertion loss (~0.5–2 dB). Timing: B2 must emit earlier than A1 to compensate for extra travel time so both photons arrive at C1 simultaneously. BSM then proceeds normally at C1. BB84 has no analogue — all pairs use direct links, no routing needed.
 
 **C2 — Relay saturation / capacity**
 Not in scope. Dropped.
