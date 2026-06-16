@@ -7,13 +7,15 @@ Total Alice-Bob distance is fixed; only the relay split changes.
 
 Usage:
     python scripts/P2P/compare/charlie_pos.py [--config PATH] [--runtimes N] [--fibre F]
-                                               [--error {bars,shade}] [--no-save] [--db PATH]
+                                               [--error {bars,shade,sigma,iqr,sem}] [--no-save] [--db PATH]
 """
 
 import math
 import os
 import statistics
 import sys
+
+import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 from BB84.BB84_run import run_BB84_sims
@@ -34,15 +36,19 @@ def aggregate(key_rates):
     mn      = min(valid)   if valid   else float('nan')
     mx      = max(numeric) if numeric else float('nan')
     std     = statistics.stdev([math.log(r) for r in valid]) if len(valid) > 1 else 0.0
-    return avg, mn, mx, std, numeric
+    q25     = float(np.percentile(valid, 25)) if valid else float('nan')
+    q75     = float(np.percentile(valid, 75)) if valid else float('nan')
+    sem     = (statistics.stdev(valid) / math.sqrt(len(valid))) if len(valid) > 1 else 0.0
+    return avg, mn, mx, std, q25, q75, sem, numeric
 
 
 if __name__ == "__main__":
     parser = config_arg_parser()
     parser.add_argument("--runtimes", type=int,   default=100)
     parser.add_argument("--fibre",    type=float, default=20,  help="Fixed total Alice-Bob distance (km)")
-    parser.add_argument("--error",    choices=["bars", "shade"], default="bars",
-                        help="Error display: bars=min/max whiskers (default), shade=±1σ log-space band")
+    parser.add_argument("--error",    choices=["bars", "shade", "sigma", "iqr", "sem"], default="bars",
+                        help="Error display: bars=min/max whiskers (default), shade=±1σ log-space band, "
+                             "sigma=±1σ whiskers, iqr=IQR 25–75th percentile, sem=±1 SEM")
     parser.add_argument("--no-save",  action="store_true", help="Skip saving results to DB")
     parser.add_argument("--db",       type=str, default=DEFAULT_DB_PATH, help="Path to results SQLite DB")
     parser.add_argument("--output-dir", type=str, default=None, help="Directory to save figure into (skips interactive display)")
@@ -69,9 +75,15 @@ if __name__ == "__main__":
         sourceErrRate = cfg["source_error_rate"],
         dephasingRate = cfg["dephasing_rate"],
     )
-    bb84_avg, bb84_min, bb84_max, bb84_std, bb84_rates = aggregate(KR_bb84)
+    bb84_avg, bb84_min, bb84_max, bb84_std, bb84_q25, bb84_q75, bb84_sem, bb84_rates = aggregate(KR_bb84)
 
-    avgs_mdi, mins_mdi, maxs_mdi, stds_mdi = [], [], [], []
+    avgs_mdi  = []
+    mins_mdi  = []
+    maxs_mdi  = []
+    stds_mdi  = []
+    q25s_mdi  = []
+    q75s_mdi  = []
+    sems_mdi  = []
 
     for cp in Cx:
         _, _, KR_mdi = run_mdi_sims(
@@ -90,11 +102,14 @@ if __name__ == "__main__":
             bsEff         = cfg["bs_eff"],
             charliePos    = cp,
         )
-        avg, mn, mx, std, mdi_rates = aggregate(KR_mdi)
+        avg, mn, mx, std, q25, q75, sem, mdi_rates = aggregate(KR_mdi)
         avgs_mdi.append(avg)
         mins_mdi.append(mn)
         maxs_mdi.append(mx)
         stds_mdi.append(std)
+        q25s_mdi.append(q25)
+        q75s_mdi.append(q75)
+        sems_mdi.append(sem)
 
         if db_conn is not None:
             params = {
@@ -122,9 +137,15 @@ if __name__ == "__main__":
     abs_avg_mdi  = [r / 1000 for r in avgs_mdi]
     abs_min_mdi  = [r / 1000 for r in mins_mdi]
     abs_max_mdi  = [r / 1000 for r in maxs_mdi]
+    abs_q25_mdi  = [r / 1000 for r in q25s_mdi]
+    abs_q75_mdi  = [r / 1000 for r in q75s_mdi]
+    abs_sem_mdi  = [r / 1000 for r in sems_mdi]
     abs_avg_bb84 = bb84_avg / 1000
     abs_min_bb84 = bb84_min / 1000
     abs_max_bb84 = bb84_max / 1000
+    abs_q25_bb84 = bb84_q25 / 1000
+    abs_q75_bb84 = bb84_q75 / 1000
+    abs_sem_bb84 = bb84_sem / 1000
 
     base         = bb84_avg
     rel_mdi      = [r / base for r in avgs_mdi]
@@ -140,13 +161,32 @@ if __name__ == "__main__":
         ]
         ax1.errorbar(Cx, abs_avg_mdi, yerr=yerr_mdi, fmt='s-', label="MDI", capsize=3)
         ax1.axhspan(abs_min_bb84, abs_max_bb84, alpha=0.10, color='steelblue')
-    else:
+    elif args.error == 'shade':
         lo_mdi = [r * math.exp(-s) for r, s in zip(abs_avg_mdi, stds_mdi)]
         hi_mdi = [r * math.exp(+s) for r, s in zip(abs_avg_mdi, stds_mdi)]
         line_mdi, = ax1.plot(Cx, abs_avg_mdi, 's-', label="MDI")
         ax1.fill_between(Cx, lo_mdi, hi_mdi, alpha=0.15, color=line_mdi.get_color())
         ax1.axhspan(abs_avg_bb84 * math.exp(-bb84_std),
                     abs_avg_bb84 * math.exp(+bb84_std), alpha=0.10, color='steelblue')
+    elif args.error == 'sigma':
+        lo_mdi = [r * (1 - math.exp(-s)) for r, s in zip(abs_avg_mdi, stds_mdi)]
+        hi_mdi = [r * (math.exp(s) - 1)  for r, s in zip(abs_avg_mdi, stds_mdi)]
+        yerr_mdi = [lo_mdi, hi_mdi]
+        ax1.errorbar(Cx, abs_avg_mdi, yerr=yerr_mdi, fmt='s-', label="MDI", capsize=3)
+        ax1.axhspan(abs_avg_bb84 * (1 - math.exp(-bb84_std)),
+                    abs_avg_bb84 * (math.exp(bb84_std) - 1), alpha=0.10, color='steelblue')
+    elif args.error == 'iqr':
+        yerr_mdi = [
+            [max(r - q, 0) for r, q in zip(abs_avg_mdi, abs_q25_mdi)],
+            [max(q - r, 0) for r, q in zip(abs_avg_mdi, abs_q75_mdi)],
+        ]
+        ax1.errorbar(Cx, abs_avg_mdi, yerr=yerr_mdi, fmt='s-', label="MDI", capsize=3)
+        ax1.axhspan(abs_q25_bb84, abs_q75_bb84, alpha=0.10, color='steelblue')
+    else:  # sem
+        yerr_mdi = [abs_sem_mdi, abs_sem_mdi]
+        ax1.errorbar(Cx, abs_avg_mdi, yerr=yerr_mdi, fmt='s-', label="MDI", capsize=3)
+        ax1.axhspan(abs_avg_bb84 - abs_sem_bb84, abs_avg_bb84 + abs_sem_bb84,
+                    alpha=0.10, color='steelblue')
 
     ax1.axhline(abs_avg_bb84, linestyle='--', color='steelblue', label="BB84 (reference)")
 
