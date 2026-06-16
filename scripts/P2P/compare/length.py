@@ -53,24 +53,18 @@ def print_run_summary(run_idx, keyA, keyB, keyRate, protocol):
         print(f"  {protocol} run {run_idx+1:>3}:  did not complete")
 
 
-def aggregate_summary(KeyListA, KeyListB, KeyRateList, protocol):
-    """Print aggregate metrics across all runs."""
-    qbers       = []
-    key_rates   = []
-    key_lengths = []
-
-    for i, (keyA, keyB) in enumerate(zip(KeyListA, KeyListB)):
-        q = qber(keyA, keyB)
-        if q is not None and keyA != "nan":
+def aggregate_summary(KeyListA, KeyListB, KeyRateList, QBERList):
+    qbers, key_rates, key_lengths = [], [], []
+    for i, (keyA, keyB, q) in enumerate(zip(KeyListA, KeyListB, QBERList)):
+        if q is not None:
             qbers.append(q)
+        if keyA != "nan":
             key_rates.append(KeyRateList[i])
             key_lengths.append(min(len(keyA), len(keyB)))
-
-    avg_qber     = sum(qbers) / len(qbers) if qbers else float('nan')
-    avg_kr       = sum(key_rates) / len(key_rates) if key_rates else float('nan')
-    avg_key_len  = sum(key_lengths) / len(key_lengths) if key_lengths else float('nan')
-
-    return len(qbers), avg_key_len, avg_qber, avg_kr, key_rates, qbers, key_lengths
+    avg_qber    = sum(qbers) / len(qbers)             if qbers      else float('nan')
+    avg_kr      = sum(key_rates) / len(key_rates)     if key_rates  else float('nan')
+    avg_key_len = sum(key_lengths) / len(key_lengths) if key_lengths else float('nan')
+    return len(key_rates), avg_key_len, avg_qber, avg_kr, key_rates, qbers, key_lengths
 
 
 def comparative_stats(stats1, stats2):
@@ -87,7 +81,7 @@ def comparative_stats(stats1, stats2):
 
 def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, initLoss=0, detEff=1, darkCount=0, nodeLossDb=0.0, sourceErrRate=0.0, dephasingRate=0.0, bsEff=1.0):
     # BB84 run ==================================================
-    KeyListA_bb84, KeyListB_bb84, KeyRateList_bb84 = run_BB84_sims(
+    KeyListA_bb84, KeyListB_bb84, KeyRateList_bb84, QBERList_bb84 = run_BB84_sims(
         runtimes      = runtimes,
         fibreLen      = fibre,
         photonCount   = photons,
@@ -103,7 +97,7 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, i
     )
 
     # MDI run ===================================================
-    KeyListA_mdi, KeyListB_mdi, KeyRateList_mdi = run_mdi_sims(
+    KeyListA_mdi, KeyListB_mdi, KeyRateList_mdi, QBERList_mdi = run_mdi_sims(
         runtimes      = runtimes,
         fibreLen      = fibre,
         photonCount   = photons,
@@ -120,8 +114,8 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, i
     )
 
     # Aggregate stats ===========================================
-    bb84_stats = aggregate_summary(KeyListA_bb84, KeyListB_bb84, KeyRateList_bb84, "BB84")
-    mdi_stats  = aggregate_summary(KeyListA_mdi,  KeyListB_mdi,  KeyRateList_mdi,  "MDI")
+    bb84_stats = aggregate_summary(KeyListA_bb84, KeyListB_bb84, KeyRateList_bb84, QBERList_bb84)
+    mdi_stats  = aggregate_summary(KeyListA_mdi,  KeyListB_mdi,  KeyRateList_mdi,  QBERList_mdi)
 
     return bb84_stats, mdi_stats
 
