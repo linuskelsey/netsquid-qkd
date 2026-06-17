@@ -45,11 +45,12 @@ Fixed N users (randomly placed in geographic space). Vary relay count K. Relay p
 
 | Item | Status |
 |------|--------|
-| Network topology generator: random user placement, per-K relay optimisation | planned |
-| BB84 trusted-node network simulator (N users, K trusted relays) | planned |
-| MDI-QKD network simulator (N users, K Charlie relays, passive optical routing) | planned |
-| Passive optical routing model: cross-cluster photon redirection via optical switch (insertion loss ~0.5–2 dB, timing compensation) | planned |
-| Key rate vs relay count K — both protocols | planned |
+| Network topology generator: random user placement, per-K relay optimisation (`network/topology.py`) | complete |
+| Network topology visualiser: MDI cluster / BB84 mesh side-by-side (`network/visualise_network.py`) | complete |
+| BB84 network simulator: all N(N-1)/2 direct pairs (`network/bb84_network.py`) | in progress |
+| MDI-QKD network simulator: nearest-relay routing, cross-cluster passive optical routing (`network/mdi_network.py`) | planned |
+| Passive optical routing model: cross-cluster photon redirection via optical switch (insertion loss ~0.5–2 dB) | planned |
+| Key rate vs relay count K — both protocols (`scripts/network/relay_sweep.py`) | planned |
 | Network success rate (QBER < 11%) vs relay count K | planned |
 
 ### Experiment 2 — User count sweep

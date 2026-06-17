@@ -16,6 +16,14 @@
 ### 3. Database Saving
 - [ ] Modify save path for figures auto-saved by `run_all.py`
 
+### 4. Network Simulation
+- [x] `network/topology.py` — user placement, k-means relay optimisation, BB84/MDI link distances
+- [x] `network/visualise_network.py` — side-by-side MDI cluster / BB84 mesh plot
+- [ ] `network/bb84_network.py` — run BB84 over all N(N-1)/2 direct pairs, return per-pair key rates
+- [ ] `network/mdi_network.py` — run MDI over all pairs via nearest relay, handle cross-cluster routing
+- [ ] `scripts/network/relay_sweep.py` — Exp 1: fixed N, vary K, plot key rate vs relay count
+- [ ] `scripts/network/user_sweep.py` — Exp 2: fixed K (from Exp 1 plateau), vary N, plot key rate vs user count
+
 ---
 
 ## Backlog
