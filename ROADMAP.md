@@ -24,6 +24,7 @@
 | Layer comparison script (`scripts/P2P/layers.py`) | complete |
 | Config presets unified (layer0–layer8, cumulative, industry-typical values) | complete |
 | Raw script config wiring | complete |
+| `--workers` flag on all compare scripts (currently hardcoded to 80% CPU) | planned |
 
 ## Data Persistence
 
@@ -52,6 +53,9 @@ Fixed N users (randomly placed in geographic space). Vary relay count K. Relay p
 | Passive optical routing model: cross-cluster photon redirection via optical switch (configurable insertion loss, default 1 dB) | complete |
 | Key rate vs relay count K — both protocols (`scripts/network/relay_sweep.py`) | complete |
 | Network success rate (QBER < 11%) vs relay count K | complete |
+| Multi-seed averaging (`--seeds N`): repeat sweep over N random placements, report mean ± std across seeds for statistically robust results | planned |
+| Checkpoint saving: persist intermediate results per K/N to JSON so long runs can recover from crash | planned |
+| End-of-sweep summary table: print formatted K/N × protocol × key rate × success rate × fibre km table to stdout | planned |
 
 ### Experiment 2 — User count sweep
 Fixed K relays (positions from Experiment 1 plateau). Vary N users. All N(N-1)/2 pairs simulated per N value; averaged over multiple random user placements (seeds) to yield statistics for an average N-user metropolitan network. Relay positions fixed; only user positions vary per seed.
@@ -64,24 +68,6 @@ Cost tracked per simulation: BB84 (N sources, N detectors, N(N-1)/2 fibre links)
 | Network success rate vs user count N | planned |
 | Cost tracking: total fibre (km), link count, component count per simulation | complete |
 | Cost-efficiency metric: key rate per unit cost vs N — both protocols | planned |
-
-### Extensions (nice to have)
-
-| Item | Status |
-|------|--------|
-| Trusted-node BB84 network: users connect to K trusted relay nodes (O(N) fibre, same infrastructure as MDI); relay holds key material and performs XOR combine; cross-relay pairs use relay-relay BB84 links; key rate bottlenecked by slowest link in chain | extension |
-| Trusted-node BB84 vs MDI-QKD vs direct-link BB84: three-way comparison of key rate, cost, and user scalability; isolates the cost of the MDI trust-removal guarantee | extension |
-| WDM multi-user MDI-QKD: multiple Alice-Bob pairs on separate wavelengths, MUX onto shared fibre, DEMUX at Charlie for per-channel BSM | extension |
-| Key rate vs WDM user count: MUX/DEMUX insertion loss (~1–3 dB per device) per channel | extension |
-| Quantum memory coherence time at WDM relay nodes: T1/T2 decoherence during inter-channel wait limits scalable user count | extension |
-| Key rate vs memory coherence time (T2 sweep) | extension |
-| Entanglement swapping at relay nodes (MDI-QKD, no trusted relay required) | extension |
-| Long-distance repeater chain: N-hop linear topology for range extension (BB84 and MDI-QKD) | extension |
-| Key rate vs number of repeater hops (sweep) | extension |
-| BB84 vs MDI-QKD repeater chain performance head-to-head | extension |
-| Fully connected BB84 (direct pairwise links, no relay) as additional baseline | extension |
-| Relay placement sensitivity: random vs optimal placement comparison | extension |
-| Cross-relay vs same-relay pair success rate comparison | extension |
 
 ## Analysis
 
@@ -102,3 +88,21 @@ Cost tracked per simulation: BB84 (N sources, N detectors, N(N-1)/2 fibre links)
 | Always-on min/max error bars on `layers.py` | complete |
 | Charlie placement sweep (asymmetric Alice-Charlie / Charlie-Bob links) | complete |
 | Script to compare effect of each layer of modelling parameter per-protocol | complete |
+
+### Extensions (nice to have)
+
+| Item | Status |
+|------|--------|
+| Trusted-node BB84 network: users connect to K trusted relay nodes (O(N) fibre, same infrastructure as MDI); relay holds key material and performs XOR combine; cross-relay pairs use relay-relay BB84 links; key rate bottlenecked by slowest link in chain | extension |
+| Trusted-node BB84 vs MDI-QKD vs direct-link BB84: three-way comparison of key rate, cost, and user scalability; isolates the cost of the MDI trust-removal guarantee | extension |
+| WDM multi-user MDI-QKD: multiple Alice-Bob pairs on separate wavelengths, MUX onto shared fibre, DEMUX at Charlie for per-channel BSM | extension |
+| Key rate vs WDM user count: MUX/DEMUX insertion loss (~1–3 dB per device) per channel | extension |
+| Quantum memory coherence time at WDM relay nodes: T1/T2 decoherence during inter-channel wait limits scalable user count | extension |
+| Key rate vs memory coherence time (T2 sweep) | extension |
+| Entanglement swapping at relay nodes (MDI-QKD, no trusted relay required) | extension |
+| Long-distance repeater chain: N-hop linear topology for range extension (BB84 and MDI-QKD) | extension |
+| Key rate vs number of repeater hops (sweep) | extension |
+| BB84 vs MDI-QKD repeater chain performance head-to-head | extension |
+| Fully connected BB84 (direct pairwise links, no relay) as additional baseline | extension |
+| Relay placement sensitivity: random vs optimal placement comparison | extension |
+| Cross-relay vs same-relay pair success rate comparison | extension |
