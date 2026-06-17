@@ -1,4 +1,5 @@
 import argparse
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -80,9 +81,13 @@ def main():
     parser.add_argument("--n",    type=int,   default=20,   help="Number of users")
     parser.add_argument("--k",    type=int,   default=3,    help="Number of relays (MDI)")
     parser.add_argument("--area", type=float, default=10.0, help="Area side length (km)")
-    parser.add_argument("--seed", type=int,   default=42)
+    parser.add_argument("--seed", type=int,   default=None, help="Random seed (random if omitted)")
     parser.add_argument("--save", type=str,   default=None, help="Save path (png/pdf)")
     args = parser.parse_args()
+
+    if args.seed is None:
+        args.seed = int.from_bytes(os.urandom(4), "big") % 100000
+        print(f"Seed: {args.seed}")
 
     topo = build_topology(args.n, args.k, area_km=args.area, seed=args.seed)
 

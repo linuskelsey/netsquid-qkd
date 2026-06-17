@@ -45,7 +45,7 @@ def main():
     args = parser.parse_args()
 
     if args.seed is None:
-        args.seed = int(np.random.randint(0, 100000))
+        args.seed = int.from_bytes(os.urandom(4), "big") % 100000
         print(f"Seed: {args.seed}")
 
     cfg      = load_config(args.config)
