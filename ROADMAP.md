@@ -68,6 +68,8 @@ Fixed K relays (positions from Experiment 1 plateau). Vary N users. Keygen event
 
 | Item | Status |
 |------|--------|
+| Trusted-node BB84 network: users connect to K trusted relay nodes (O(N) fibre, same infrastructure as MDI); relay holds key material and performs XOR combine; cross-relay pairs use relay-relay BB84 links; key rate bottlenecked by slowest link in chain | extension |
+| Trusted-node BB84 vs MDI-QKD vs direct-link BB84: three-way comparison of key rate, cost, and user scalability; isolates the cost of the MDI trust-removal guarantee | extension |
 | WDM multi-user MDI-QKD: multiple Alice-Bob pairs on separate wavelengths, MUX onto shared fibre, DEMUX at Charlie for per-channel BSM | extension |
 | Key rate vs WDM user count: MUX/DEMUX insertion loss (~1–3 dB per device) per channel | extension |
 | Quantum memory coherence time at WDM relay nodes: T1/T2 decoherence during inter-channel wait limits scalable user count | extension |
