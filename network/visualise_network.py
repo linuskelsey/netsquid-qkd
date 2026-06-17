@@ -37,7 +37,7 @@ def draw_mdi(ax, topo):
     for i in range(topo.N):
         c = _colour(int(topo.user_relay[i]))
         ax.scatter(*topo.user_pos[i], color=c, s=60, zorder=3)
-    ax.scatter(*topo.relay_pos.T, marker="*", s=300, color="black", zorder=4,
+    ax.scatter(*topo.relay_pos.T, marker="s", s=75, color="black", zorder=4,
                label="Charlie relay")
 
     for i in range(topo.N):
@@ -55,7 +55,7 @@ def draw_mdi(ax, topo):
     ax.set_title(f"MDI-QKD  (N={topo.N}, K={topo.K})")
     ax.set_xlabel("x (km)")
     ax.set_ylabel("y (km)")
-    ax.legend(loc="upper left", fontsize=8)
+    ax.legend(loc="upper right", fontsize=8)
     ax.set_aspect("equal")
 
 
@@ -70,7 +70,7 @@ def draw_bb84(ax, topo):
     ax.set_title(f"BB84  (N={topo.N}, {topo.N*(topo.N-1)//2} direct links)")
     ax.set_xlabel("x (km)")
     ax.set_ylabel("y (km)")
-    ax.legend(loc="upper left", fontsize=8)
+    ax.legend(loc="upper right", fontsize=8)
     ax.set_aspect("equal")
 
 
