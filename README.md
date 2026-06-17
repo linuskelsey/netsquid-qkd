@@ -11,16 +11,22 @@ UCL MSc Quantum Technologies Research Project — Linus Kelsey
 ```
 BB84/           BB84 Alice/Bob protocols and simulation runner
 MDI/            MDI-QKD Alice/Bob/Charlie protocols and simulation runner
-repeater/       (planned) Protocol-agnostic quantum repeater primitives
+network/        Multi-user network simulation
+  topology.py           User placement, k-means relay optimisation, BB84/MDI link distances
+  bb84_network.py       BB84 over all N(N-1)/2 direct pairs; per-pair and network-level metrics
+  mdi_network.py        MDI-QKD over all pairs via nearest relay; cross-cluster passive routing
+  visualise_network.py  Side-by-side MDI cluster / BB84 mesh topology plot
 lib/            Shared utilities (delay model, photon source, config loader, DB persistence)
-configs/        JSON parameter presets (layer0_ideal → layer8_bs_eff); memory + chain configs planned
+configs/        JSON parameter presets (layer0_ideal → layer8_bs_eff)
 scripts/
   P2P/
     raw/        Single-protocol run scripts
     compare/    Sweep scripts: key rate vs distance, loss, efficiency, dark count rate,
                 node loss, source error rate, dephasing rate, detector basis bias,
-                beam splitter efficiency; repeater sweeps planned
+                beam splitter efficiency, Charlie placement
     layers.py   Effect of each modelling layer per protocol
+    analyse.py  Replot any saved sweep from results.db without re-running
+  network/      (planned) Relay count sweep (Exp 1) and user count sweep (Exp 2)
 ```
 
 ## Running
@@ -87,6 +93,42 @@ litecli results.db
 # View schema without opening TUI
 sqlite3 results.db ".schema"
 ```
+
+## Network Simulations
+
+Visualise a network topology (MDI cluster assignment + BB84 direct mesh):
+
+```bash
+python network/visualise_network.py --n 20 --k 3 --area 10 --seed 42
+python network/visualise_network.py --n 20 --k 3 --save figures/topology.png
+```
+
+Run network simulations directly (used by sweep scripts):
+
+```python
+from network.topology import build_topology
+from network.bb84_network import run_bb84_network
+from network.mdi_network import run_mdi_network
+from lib.functions import load_config
+
+cfg  = load_config("configs/layer3_dark.json")
+topo = build_topology(N=10, K=3, area_km=10, seed=42)
+
+bb84 = run_bb84_network(topo, cfg, runtimes=20)
+mdi  = run_mdi_network(topo, cfg, runtimes=20)
+
+# bb84["avg_key_rate"], bb84["success_rate"], bb84["total_fibre_km"]
+# mdi["avg_key_rate"],  mdi["success_rate"],  mdi["total_fibre_km"]
+```
+
+Key network cost outputs:
+
+| Field | BB84 | MDI |
+|-------|------|-----|
+| `total_fibre_km` | Σ all N(N-1)/2 pair distances | Σ user-relay + relay-relay links |
+| `n_links` | N(N-1)/2 | N + K(K-1)/2 |
+
+See [NETWORK.md](NETWORK.md) for full experimental design and hypotheses.
 
 See [PARAMS.md](PARAMS.md) for config presets, simulation defaults, and realistic hardware parameter ranges.
 

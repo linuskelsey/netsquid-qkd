@@ -47,21 +47,22 @@ Fixed N users (randomly placed in geographic space). Vary relay count K. Relay p
 |------|--------|
 | Network topology generator: random user placement, per-K relay optimisation (`network/topology.py`) | complete |
 | Network topology visualiser: MDI cluster / BB84 mesh side-by-side (`network/visualise_network.py`) | complete |
-| BB84 network simulator: all N(N-1)/2 direct pairs (`network/bb84_network.py`) | in progress |
-| MDI-QKD network simulator: nearest-relay routing, cross-cluster passive optical routing (`network/mdi_network.py`) | planned |
-| Passive optical routing model: cross-cluster photon redirection via optical switch (insertion loss ~0.5–2 dB) | planned |
+| BB84 network simulator: all N(N-1)/2 direct pairs (`network/bb84_network.py`) | complete |
+| MDI-QKD network simulator: nearest-relay routing, cross-cluster passive optical routing (`network/mdi_network.py`) | complete |
+| Passive optical routing model: cross-cluster photon redirection via optical switch (configurable insertion loss, default 1 dB) | complete |
 | Key rate vs relay count K — both protocols (`scripts/network/relay_sweep.py`) | planned |
 | Network success rate (QBER < 11%) vs relay count K | planned |
 
 ### Experiment 2 — User count sweep
-Fixed K relays (positions from Experiment 1 plateau). Vary N users. Keygen events driven by Poisson process; two random available users selected per event, removed from pool during keygen, returned on completion. Aggregated over many random user placements of the same N.
+Fixed K relays (positions from Experiment 1 plateau). Vary N users. All N(N-1)/2 pairs simulated per N value; averaged over multiple random user placements (seeds) to yield statistics for an average N-user metropolitan network. Relay positions fixed; only user positions vary per seed.
+
+Cost tracked per simulation: BB84 (N sources, N detectors, N(N-1)/2 fibre links) vs MDI (N sources, 2K detectors, K beam splitters, K optical switches, N user-relay + K(K-1)/2 relay-relay fibre links). Total fibre computed from topology geometry.
 
 | Item | Status |
 |------|--------|
-| Poisson keygen event scheduler with user availability pool | planned |
-| Key rate vs user count N — both protocols | planned |
+| Key rate vs user count N — both protocols (`scripts/network/user_sweep.py`) | planned |
 | Network success rate vs user count N | planned |
-| Cost model: per-component hardware cost markers (source, detector, relay node, fiber/km, optical switch), bounded by industry estimates | planned |
+| Cost tracking: total fibre (km), link count, component count per simulation | complete |
 | Cost-efficiency metric: key rate per unit cost vs N — both protocols | planned |
 
 ### Extensions (nice to have)
