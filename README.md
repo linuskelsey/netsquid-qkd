@@ -28,7 +28,7 @@ scripts/
     analyse.py  Replot any saved sweep from results/results_P2P.db without re-running
   network/
     relay_sweep.py  Exp 1: fixed N users, vary K relays — key rate + success rate vs K
-    user_sweep.py   Exp 2: fixed K relays, vary N users — planned
+    user_sweep.py   Exp 2: fixed K relays (optimised at ref-N), vary N users — key rate vs N
 ```
 
 ## Running
@@ -130,6 +130,17 @@ Key network cost outputs:
 | `total_fibre_km` | Σ all N(N-1)/2 pair distances | Σ user-relay + relay-relay links |
 | `n_links` | N(N-1)/2 | N + K(K-1)/2 |
 | `switch_loss_db` | — | extra node loss (dB) for cross-cluster pairs (default 1.0) |
+
+Run Experiment 2 — user count sweep (fixed K relays, vary N):
+
+```bash
+python scripts/network/user_sweep.py --k 3 --n-min 4 --n-max 20 --n-step 2 --runtimes 20
+python scripts/network/user_sweep.py --k 3 --n-min 4 --n-max 20 --config configs/layer3_dark.json --save figures/user_sweep.png
+# --ref-n: N at which relay positions are optimised (default: n-max)
+python scripts/network/user_sweep.py --k 3 --n-min 4 --n-max 20 --ref-n 20
+```
+
+Relay positions are optimised once at `--ref-n` and held fixed across all N values. Both protocols re-run per N. Total fibre printed per row showing O(N²) BB84 vs O(N) MDI scaling.
 
 Run Experiment 1 — relay count sweep (fixed N, vary K):
 

@@ -14,9 +14,7 @@
 
 ### 3. Database Saving
 - [ ] Modify save path for figures auto-saved by `run_all.py`
-
-### 4. Network Simulation
-- [ ] `scripts/network/user_sweep.py` — Exp 2: fixed K (from Exp 1 plateau), vary N, plot key rate vs user count
+- [ ] Wire in .db saving to network simulations
 
 ---
 

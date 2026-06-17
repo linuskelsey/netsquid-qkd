@@ -64,8 +64,8 @@ Cost tracked per simulation: BB84 (N sources, N detectors, N(N-1)/2 fibre links)
 
 | Item | Status |
 |------|--------|
-| Key rate vs user count N — both protocols (`scripts/network/user_sweep.py`) | planned |
-| Network success rate vs user count N | planned |
+| Key rate vs user count N — both protocols (`scripts/network/user_sweep.py`) | complete |
+| Network success rate vs user count N | complete |
 | Cost tracking: total fibre (km), link count, component count per simulation | complete |
 | Cost-efficiency metric: key rate per unit cost vs N — both protocols | planned |
 
