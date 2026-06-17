@@ -20,7 +20,7 @@ import sqlite3
 import json
 from datetime import datetime
 
-DEFAULT_DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "results.db")
+DEFAULT_DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "results", "results_P2P.db")
 
 _CREATE_TABLE = """
 CREATE TABLE IF NOT EXISTS runs (
@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS runs (
 
 
 def init_db(path=DEFAULT_DB_PATH):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     conn = sqlite3.connect(path)
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute(_CREATE_TABLE)

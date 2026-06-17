@@ -25,7 +25,7 @@ scripts/
                 node loss, source error rate, dephasing rate, detector basis bias,
                 beam splitter efficiency, Charlie placement
     layers.py   Effect of each modelling layer per protocol
-    analyse.py  Replot any saved sweep from results.db without re-running
+    analyse.py  Replot any saved sweep from results/results_P2P.db without re-running
   network/
     relay_sweep.py  Exp 1: fixed N users, vary K relays — key rate + success rate vs K
     user_sweep.py   Exp 2: fixed K relays, vary N users — planned
@@ -80,7 +80,7 @@ python scripts/P2P/analyse.py --script length          # replot length sweep
 python scripts/P2P/analyse.py --script charlie_pos --error shade
 ```
 
-All comparison scripts and `layers.py` save results to `results.db` (repo root) by default:
+All comparison scripts and `layers.py` save results to `results/results_P2P.db` (repo root) by default:
 
 ```bash
 # Skip DB saving
@@ -90,10 +90,10 @@ python scripts/P2P/compare/length.py --no-save
 python scripts/P2P/compare/length.py --db /path/to/custom.db
 
 # Browse results interactively (requires: pip install litecli)
-litecli results.db
+litecli results/results_P2P.db
 
 # View schema without opening TUI
-sqlite3 results.db ".schema"
+sqlite3 results/results_P2P.db ".schema"
 ```
 
 ## Network Simulations

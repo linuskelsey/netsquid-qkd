@@ -30,7 +30,7 @@
 | Feature | Status |
 |---------|--------|
 | P2P results schema: 10-parameter point (incl. `charlie_pos`) → per-runtime key rates, QBERs, key lengths (`lib/db.py`) | complete |
-| DB replot script: `scripts/P2P/analyse.py` — reload any sweep from `results.db` without re-running | complete |
+| DB replot script: `scripts/P2P/analyse.py` — reload any sweep from `results/results_P2P.db` without re-running | complete |
 | Network results schema: separate schema for multi-hop/multi-user topology results | planned |
 | Query/load saved results for offline analysis and plotting (litecli / pandas / sqlite3) | complete |
 
