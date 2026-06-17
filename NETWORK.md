@@ -10,7 +10,7 @@ Compare BB84 and MDI-QKD on key rate, cost, and scalability across multi-user ne
 
 **Transport layer:** MDI-QKD uses K Charlie nodes (BSM only, untrusted). BB84 uses no relay nodes — instead each user pair is connected by a direct P2P fibre link (fully connected mesh, N(N-1)/2 links total). Relay nodes introduce unnecessary trust assumptions for BB84 and are not deployed in practice when direct links are available.
 
-**Cross-cluster routing (MDI):** When two users are homed to different Charlie nodes (C1, C2), C2 acts as a passive optical router — redirecting the photon toward C1 without measuring it (fibre switch / optical circulator). Quantum state is preserved. Extra cost: C2→C1 fibre loss plus switch insertion loss (~0.5–2 dB). Timing compensation: the user homed to C2 emits earlier to ensure simultaneous arrival at C1 for BSM.
+**Cross-cluster routing (MDI):** When two users are homed to different Charlie nodes (C1, C2), C2 acts as a passive optical router — redirecting the photon toward C1 without measuring it (fibre switch / optical circulator). Quantum state is preserved. Extra cost: C2→C1 fibre loss plus switch insertion loss (default 1.0 dB, configurable via `switch_loss_db`; realistic range 0.5–2 dB). Bob's effective link length includes the relay-relay hop; dephasing accumulates over the full path. Timing compensation is absorbed into the simulation's channel delay model.
 
 ## Experiments
 
@@ -24,7 +24,9 @@ Both experiments aggregate statistics across many random user placements of the 
 
 ## Scheduling
 
-Key generation events are driven by a Poisson process. On each firing, two users are selected uniformly at random from the available pool. Both are removed from the pool for the duration of their keygen event and returned on completion. No user participates in two simultaneous keygen events.
+All N(N-1)/2 user pairs are simulated for each network instance. This is equivalent to uniform-random pair selection (Poisson process, uniform pair weights) for the primary metric of average key rate per pair. Results are aggregated over multiple random user placements (seeds) per network size to yield statistics representative of an average metropolitan network.
+
+A Poisson event scheduler (pair selection with user availability pool) is deferred — it is relevant for network throughput and contention modelling but does not affect average key rate comparison.
 
 ## Metrics
 
@@ -47,7 +49,7 @@ Relay count comparison (cost vs performance) is a secondary analysis. Primary fo
 
 | | BB84 | MDI-QKD |
 |---|---|---|
-| Fibre links | N(N-1)/2 direct P2P links | ~N links (user → nearest Charlie) |
+| Fibre links | N(N-1)/2 direct P2P links | N user-relay + K(K-1)/2 relay-relay links |
 | Relay hardware | none | K Charlie nodes (untrusted) |
 | Security assumptions | none beyond endpoints | relay untrusted — MDI advantage |
 | Infrastructure scaling | O(N²) | O(N) |

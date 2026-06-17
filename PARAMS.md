@@ -54,3 +54,4 @@ Realistic ranges drawn from deployed QKD systems (Lo et al. 2012, Tang et al. 20
 | `source_error_rate` | ε_s | 0.001–0.02 | 0.005 | Well-calibrated polarisation source; Lo 2012 used 1.5% |
 | `dephasing_rate` | β | 1×10⁻⁵–1×10⁻³ /km | 1×10⁻⁴ /km ⁺ | SMF polarisation stability; literature rarely quoted explicitly |
 | `bs_eff` | η_bs | 0.90–0.99 | 0.97 | Commercial 50:50 BS; integrated photonic ~95% |
+| `switch_loss_db` (network only) | L_sw | 0.5–2.0 dB | 1.0 dB | Passive optical switch / circulator insertion loss at cross-cluster relay; passed to `mdi_network.run_mdi_network()` |

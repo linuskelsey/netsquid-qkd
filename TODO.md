@@ -16,7 +16,6 @@
 - [ ] Modify save path for figures auto-saved by `run_all.py`
 
 ### 4. Network Simulation
-- [ ] `scripts/network/relay_sweep.py` — Exp 1: fixed N, vary K, plot key rate vs relay count
 - [ ] `scripts/network/user_sweep.py` — Exp 2: fixed K (from Exp 1 plateau), vary N, plot key rate vs user count
 
 ---

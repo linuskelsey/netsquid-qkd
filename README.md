@@ -26,7 +26,9 @@ scripts/
                 beam splitter efficiency, Charlie placement
     layers.py   Effect of each modelling layer per protocol
     analyse.py  Replot any saved sweep from results.db without re-running
-  network/      (planned) Relay count sweep (Exp 1) and user count sweep (Exp 2)
+  network/
+    relay_sweep.py  Exp 1: fixed N users, vary K relays — key rate + success rate vs K
+    user_sweep.py   Exp 2: fixed K relays, vary N users — planned
 ```
 
 ## Running
@@ -127,6 +129,16 @@ Key network cost outputs:
 |-------|------|-----|
 | `total_fibre_km` | Σ all N(N-1)/2 pair distances | Σ user-relay + relay-relay links |
 | `n_links` | N(N-1)/2 | N + K(K-1)/2 |
+| `switch_loss_db` | — | extra node loss (dB) for cross-cluster pairs (default 1.0) |
+
+Run Experiment 1 — relay count sweep (fixed N, vary K):
+
+```bash
+python scripts/network/relay_sweep.py --n 20 --k-min 1 --k-max 8 --runtimes 20
+python scripts/network/relay_sweep.py --n 20 --k-min 1 --k-max 8 --config configs/layer3_dark.json --save figures/relay_sweep.png
+```
+
+BB84 is run once (relay-independent) and reused across all K values. MDI re-runs per K with re-optimised relay positions. Produces two figures: key rate + success rate vs K, and a topology visualisation at the midpoint K.
 
 See [NETWORK.md](NETWORK.md) for full experimental design and hypotheses.
 

@@ -50,8 +50,8 @@ Fixed N users (randomly placed in geographic space). Vary relay count K. Relay p
 | BB84 network simulator: all N(N-1)/2 direct pairs (`network/bb84_network.py`) | complete |
 | MDI-QKD network simulator: nearest-relay routing, cross-cluster passive optical routing (`network/mdi_network.py`) | complete |
 | Passive optical routing model: cross-cluster photon redirection via optical switch (configurable insertion loss, default 1 dB) | complete |
-| Key rate vs relay count K — both protocols (`scripts/network/relay_sweep.py`) | planned |
-| Network success rate (QBER < 11%) vs relay count K | planned |
+| Key rate vs relay count K — both protocols (`scripts/network/relay_sweep.py`) | complete |
+| Network success rate (QBER < 11%) vs relay count K | complete |
 
 ### Experiment 2 — User count sweep
 Fixed K relays (positions from Experiment 1 plateau). Vary N users. All N(N-1)/2 pairs simulated per N value; averaged over multiple random user placements (seeds) to yield statistics for an average N-user metropolitan network. Relay positions fixed; only user positions vary per seed.
