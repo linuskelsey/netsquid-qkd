@@ -37,8 +37,9 @@ def draw_mdi(ax, topo):
     for i in range(topo.N):
         c = _colour(int(topo.user_relay[i]))
         ax.scatter(*topo.user_pos[i], color=c, s=60, zorder=3)
-    ax.scatter(*topo.relay_pos.T, marker="s", s=75, color="black", zorder=4,
-               label="Charlie relay")
+    for k in range(topo.K):
+        ax.scatter(*topo.relay_pos[k], marker="s", s=75, color=_colour(k), zorder=4)
+    ax.scatter([], [], marker="s", s=75, color="grey", label="Relay")
 
     for i in range(topo.N):
         r = int(topo.user_relay[i])
