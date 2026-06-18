@@ -30,13 +30,13 @@
 
 ## Data Persistence
 
+DB layer removed for redesign. P2P and network schemas will be rebuilt together with a shared structure.
+
 | Feature | Status |
 |---------|--------|
-| P2P results schema: 10-parameter point (incl. `charlie_pos`) → per-runtime key rates, QBERs, key lengths (`lib/db.py`) | complete |
-| DB replot script: `scripts/P2P/analyse.py` — reload any sweep from `results/results_P2P.db` without re-running | complete |
-| Network results schema: separate schema for multi-hop/multi-user topology results | planned |
-| `scripts/network/analyse.py`: replot any saved network sweep (relay/user) from DB without re-running — mirrors `scripts/P2P/analyse.py` | planned |
-| Query/load saved results for offline analysis and plotting (litecli / pandas / sqlite3) | complete |
+| P2P results DB (`lib/db.py`, `scripts/P2P/analyse.py`) | removed — to be redesigned |
+| Network results DB | planned (design pending) |
+| `scripts/network/analyse.py`: replot any saved network sweep without re-running | planned (design pending) |
 
 ---
 

@@ -23,7 +23,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirna
 from BB84.BB84_run import run_BB84_sims
 from MDI.mdiRun import run_mdi_sims
 from lib.functions import load_config, config_arg_parser
-from lib.db import init_db, save_sweep_point, DEFAULT_DB_PATH
 
 import math
 import statistics
@@ -130,8 +129,6 @@ if __name__ == "__main__":
     parser.add_argument("--node-loss",  type=float, default=None, dest="node_loss",  help="Receiver node insertion loss (dB)")
     parser.add_argument("--source-err", type=float, default=None, dest="source_err", help="Source bit error rate [0-1]")
     parser.add_argument("--workers",    type=int,   default=None, help="Worker processes (default: 80%% of CPU cores)")
-    parser.add_argument("--no-save",  action="store_true", help="Skip saving results to DB")
-    parser.add_argument("--db",       type=str, default=DEFAULT_DB_PATH, help="Path to results SQLite DB")
     parser.add_argument("--error",    choices=["bars", "shade", "sigma", "iqr", "sem"], default="bars",
                         help="Error display: bars=min/max whiskers (default), shade=±1 std dev band")
     parser.add_argument("--output-dir", type=str, default=None, help="Directory to save figure into (skips interactive display)")
@@ -146,7 +143,6 @@ if __name__ == "__main__":
 
     print(f"Sweep: distance [1-100 km]  |  Fixed: α={cfg['fibre_loss_db_per_km']} dB/km  η_d={cfg['detector_efficiency']}  d_c={cfg['dark_count_rate']} cps")
 
-    db_conn = None if args.no_save else init_db(args.db)
 
     Dx = [1,5,10,20,30,40,50,60,70,80,90,100]
 
@@ -195,26 +191,6 @@ if __name__ == "__main__":
             q25s.append(float(np.percentile(nz, 25)) if nz else float('nan'))
             q75s.append(float(np.percentile(nz, 75)) if nz else float('nan'))
             sems.append(statistics.stdev(nz) / math.sqrt(len(nz)) if len(nz) > 1 else 0.0)
-
-        if db_conn is not None:
-            params = {
-                "fibre_len":  d,
-                "fibre_loss": cfg["fibre_loss_db_per_km"],
-                "det_eff":    cfg["detector_efficiency"],
-                "dark_count": cfg["dark_count_rate"],
-                "init_loss":  cfg["init_loss"],
-                "node_loss":  cfg["node_loss_db"],
-                "source_err": cfg["source_error_rate"],
-                "dephasing":  cfg["dephasing_rate"],
-                "bs_eff":     cfg["bs_eff"],
-            }
-            save_sweep_point(db_conn, "BB84", params, bb84[4], bb84[5], bb84[6],
-                             script="length", runtimes=args.runtimes, photons=1024)
-            save_sweep_point(db_conn, "MDI",  params, mdi[4],  mdi[5],  mdi[6],
-                             script="length", runtimes=args.runtimes, photons=1024)
-
-    if db_conn is not None:
-        db_conn.close()
 
     # Store absolute rates before normalising
     abs_rates_bb84 = [r / 1000 for r in rates_bb84]  # convert to kbps

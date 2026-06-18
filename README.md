@@ -72,30 +72,6 @@ python MDI/mdiRun.py   --config configs/layer2_eff.json --det-eff-x 0.7
 python scripts/P2P/compare/length.py --config configs/layer3_dark.json --fibre 30
 ```
 
-Replot any saved sweep without re-running simulations:
-
-```bash
-python scripts/P2P/analyse.py --list                   # show what's in the DB
-python scripts/P2P/analyse.py --script length          # replot length sweep
-python scripts/P2P/analyse.py --script charlie_pos --error shade
-```
-
-All comparison scripts and `layers.py` save results to `results/results_P2P.db` (repo root) by default:
-
-```bash
-# Skip DB saving
-python scripts/P2P/compare/length.py --no-save
-
-# Use a custom DB path
-python scripts/P2P/compare/length.py --db /path/to/custom.db
-
-# Browse results interactively (requires: pip install litecli)
-litecli results/results_P2P.db
-
-# View schema without opening TUI
-sqlite3 results/results_P2P.db ".schema"
-```
-
 ## Network Simulations
 
 Visualise a network topology (MDI cluster assignment + BB84 direct mesh):

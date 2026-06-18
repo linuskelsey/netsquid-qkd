@@ -4,8 +4,7 @@ By default saves figures to figures/P2P/ in the project root.
 Pass --show to open interactive plot windows instead.
 
 Usage:
-    python scripts/P2P/compare/run_all.py [--runtimes N] [--no-save] [--db PATH]
-                                          [--output-dir PATH] [--show]
+    python scripts/P2P/compare/run_all.py [--runtimes N] [--output-dir PATH] [--show]
 """
 
 import argparse
@@ -30,8 +29,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--runtimes",   type=int,  default=100)
     parser.add_argument("--workers",    type=int,  default=None, help="Worker processes per script (default: 80%% of CPU cores)")
-    parser.add_argument("--no-save",    action="store_true", help="Skip saving results to DB")
-    parser.add_argument("--db",         type=str,  default=None, help="Path to results SQLite DB")
     parser.add_argument("--error",      choices=["bars", "shade", "sigma", "iqr", "sem"], default="bars",
                         help="Error display: bars=min/max whiskers (default), shade=±1σ log-space band, "
                              "sigma=±1σ whiskers, iqr=IQR 25–75th percentile, sem=±1 SEM")
@@ -54,10 +51,6 @@ if __name__ == "__main__":
     processes = []
     for i, script in enumerate(SCRIPTS, 1):
         cmd = [sys.executable, os.path.join(here, script), "--runtimes", str(args.runtimes)]
-        if args.no_save:
-            cmd.append("--no-save")
-        if args.db is not None:
-            cmd += ["--db", args.db]
         if args.workers is not None:
             cmd += ["--workers", str(args.workers)]
         cmd += ["--error", args.error]
