@@ -16,7 +16,7 @@ network/        Multi-user network simulation
   bb84_network.py       BB84 over all N(N-1)/2 direct pairs; per-pair and network-level metrics
   mdi_network.py        MDI-QKD over all pairs via nearest relay; cross-cluster passive routing
   visualise_network.py  Side-by-side MDI cluster / BB84 mesh topology plot
-lib/            Shared utilities (delay model, photon source, config loader, DB persistence)
+lib/            Shared utilities (delay model, photon source, config loader)
 configs/        JSON parameter presets (layer0_ideal → layer8_bs_eff)
 scripts/
   P2P/
@@ -25,7 +25,6 @@ scripts/
                 node loss, source error rate, dephasing rate, detector basis bias,
                 beam splitter efficiency, Charlie placement
     layers.py   Effect of each modelling layer per protocol
-    analyse.py  Replot any saved sweep from results/results_P2P.db without re-running
   network/
     relay_sweep.py  Exp 1: fixed N users, vary K relays — key rate + success rate vs K
     user_sweep.py   Exp 2: fixed K relays (optimised at ref-N), vary N users — key rate vs N
@@ -68,6 +67,9 @@ python scripts/P2P/compare/length.py --error shade
 python BB84/BB84_run.py --config configs/layer2_eff.json --det-eff-x 0.7
 python MDI/mdiRun.py   --config configs/layer2_eff.json --det-eff-x 0.7
 
+# Limit worker processes (default: 80% of CPU cores)
+python scripts/P2P/compare/length.py --workers 4
+
 # Config preset + CLI override (CLI takes precedence)
 python scripts/P2P/compare/length.py --config configs/layer3_dark.json --fibre 30
 ```
@@ -84,13 +86,15 @@ python network/visualise_network.py --n 20 --k 3 --save figures/topology.png
 Run network simulations directly (used by sweep scripts):
 
 ```python
-from network.topology import build_topology
+from network.topology import place_users, optimise_relays, Topology
 from network.bb84_network import run_bb84_network
 from network.mdi_network import run_mdi_network
 from lib.functions import load_config
 
-cfg  = load_config("configs/layer3_dark.json")
-topo = build_topology(N=10, K=3, area_km=10, seed=42)
+cfg       = load_config("configs/layer3_dark.json")
+user_pos  = place_users(N=10, area_km=10, seed=42)
+relay_pos = optimise_relays(user_pos, K=3, seed=42)
+topo      = Topology(user_pos, relay_pos)
 
 bb84 = run_bb84_network(topo, cfg, runtimes=20)
 mdi  = run_mdi_network(topo, cfg, runtimes=20)
