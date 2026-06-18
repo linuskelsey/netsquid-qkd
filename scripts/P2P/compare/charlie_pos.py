@@ -21,7 +21,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirna
 from BB84.BB84_run import run_BB84_sims
 from MDI.mdiRun import run_mdi_sims
 from lib.functions import load_config, config_arg_parser
-from lib.db import init_db, save_sweep_point, DEFAULT_DB_PATH
 
 import matplotlib.pyplot as plt
 
@@ -49,16 +48,12 @@ if __name__ == "__main__":
     parser.add_argument("--error",    choices=["bars", "shade", "sigma", "iqr", "sem"], default="bars",
                         help="Error display: bars=min/max whiskers (default), shade=±1σ log-space band, "
                              "sigma=±1σ whiskers, iqr=IQR 25–75th percentile, sem=±1 SEM")
-    parser.add_argument("--no-save",  action="store_true", help="Skip saving results to DB")
-    parser.add_argument("--db",       type=str, default=DEFAULT_DB_PATH, help="Path to results SQLite DB")
     parser.add_argument("--output-dir", type=str, default=None, help="Directory to save figure into (skips interactive display)")
     args = parser.parse_args()
     cfg  = load_config(args.config)
 
     print(f"Sweep: Charlie position [0.1–0.9]  |  Fixed: L={args.fibre} km  "
           f"α={cfg['fibre_loss_db_per_km']} dB/km  η_d={cfg['detector_efficiency']}  d_c={cfg['dark_count_rate']} cps")
-
-    db_conn = None if args.no_save else init_db(args.db)
 
     # BB84 — run once; rate is independent of Charlie position
     KA_bb84, KB_bb84, KR_bb84, KQ_bb84 = run_BB84_sims(
@@ -110,28 +105,6 @@ if __name__ == "__main__":
         q25s_mdi.append(q25)
         q75s_mdi.append(q75)
         sems_mdi.append(sem)
-
-        if db_conn is not None:
-            params = {
-                "fibre_len":   args.fibre,
-                "fibre_loss":  cfg["fibre_loss_db_per_km"],
-                "det_eff":     cfg["detector_efficiency"],
-                "dark_count":  cfg["dark_count_rate"],
-                "init_loss":   cfg["init_loss"],
-                "node_loss":   cfg["node_loss_db"],
-                "source_err":  cfg["source_error_rate"],
-                "dephasing":   cfg["dephasing_rate"],
-                "bs_eff":      cfg["bs_eff"],
-                "charlie_pos": cp,
-            }
-            # BB84 saved at each sweep point so analyse.py can reconstruct the flat reference line
-            save_sweep_point(db_conn, "BB84", params, bb84_rates, KQ_bb84, [],
-                             script="charlie_pos", runtimes=args.runtimes, photons=1024)
-            save_sweep_point(db_conn, "MDI",  params, mdi_rates,  KQ_mdi,  [],
-                             script="charlie_pos", runtimes=args.runtimes, photons=1024)
-
-    if db_conn is not None:
-        db_conn.close()
 
     # Convert to kbps
     abs_avg_mdi  = [r / 1000 for r in avgs_mdi]

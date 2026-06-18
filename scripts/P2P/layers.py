@@ -22,7 +22,6 @@ sys.path.insert(0, ROOT)
 from BB84.BB84_run import run_BB84_sims
 from MDI.mdiRun import run_mdi_sims
 from lib.functions import load_config
-from lib.db import init_db, save_sweep_point, DEFAULT_DB_PATH
 
 LAYERS = [
     ("layer0_ideal.json",      r"Layer 0: Ideal",                       "Layer 0: Ideal"),
@@ -51,7 +50,7 @@ def aggregate(KeyListA, KeyListB, KeyRateList, QBERList):
     return avg, rates, qbers, lengths
 
 
-def run_layer_bb84(cfg, runtimes, db_conn=None, layer_name=""):
+def run_layer_bb84(cfg, runtimes):
     rates, mins, maxs = [], [], []
     for d in Dx:
         KA, KB, KR, KQ = run_BB84_sims(
@@ -73,25 +72,11 @@ def run_layer_bb84(cfg, runtimes, db_conn=None, layer_name=""):
         nz = [r for r in raw_rates if r > 0]
         mins.append(min(nz) if nz else float('nan'))
         maxs.append(max(raw_rates) if raw_rates else float('nan'))
-        if db_conn is not None:
-            params = {
-                "fibre_len":  d,
-                "fibre_loss": cfg["fibre_loss_db_per_km"],
-                "det_eff":    cfg["detector_efficiency"],
-                "dark_count": cfg["dark_count_rate"],
-                "init_loss":  cfg["init_loss"],
-                "node_loss":  cfg["node_loss_db"],
-                "source_err": cfg["source_error_rate"],
-                "dephasing":  cfg["dephasing_rate"],
-                "bs_eff":     cfg["bs_eff"],
-            }
-            save_sweep_point(db_conn, "BB84", params, raw_rates, raw_qbers, raw_lengths,
-                             script=f"layers/{layer_name}", runtimes=runtimes, photons=1024)
     k = 1000
     return [r / k for r in rates], [r / k for r in mins], [r / k for r in maxs]
 
 
-def run_layer_mdi(cfg, runtimes, db_conn=None, layer_name=""):
+def run_layer_mdi(cfg, runtimes):
     rates, mins, maxs = [], [], []
     for d in Dx:
         KA, KB, KR, KQ = run_mdi_sims(
@@ -114,20 +99,6 @@ def run_layer_mdi(cfg, runtimes, db_conn=None, layer_name=""):
         nz = [r for r in raw_rates if r > 0]
         mins.append(min(nz) if nz else float('nan'))
         maxs.append(max(raw_rates) if raw_rates else float('nan'))
-        if db_conn is not None:
-            params = {
-                "fibre_len":  d,
-                "fibre_loss": cfg["fibre_loss_db_per_km"],
-                "det_eff":    cfg["detector_efficiency"],
-                "dark_count": cfg["dark_count_rate"],
-                "init_loss":  cfg["init_loss"],
-                "node_loss":  cfg["node_loss_db"],
-                "source_err": cfg["source_error_rate"],
-                "dephasing":  cfg["dephasing_rate"],
-                "bs_eff":     cfg["bs_eff"],
-            }
-            save_sweep_point(db_conn, "MDI", params, raw_rates, raw_qbers, raw_lengths,
-                             script=f"layers/{layer_name}", runtimes=runtimes, photons=1024)
     k = 1000
     return [r / k for r in rates], [r / k for r in mins], [r / k for r in maxs]
 
@@ -137,14 +108,10 @@ if __name__ == "__main__":
     parser.add_argument("--runtimes",  type=int, default=100)
     parser.add_argument("--protocol",  choices=["bb84", "mdi", "both"], default="both",
                         help="Protocol(s) to run: bb84, mdi, or both (default: both)")
-    parser.add_argument("--no-save",  action="store_true", help="Skip saving results to DB")
-    parser.add_argument("--db",       type=str, default=DEFAULT_DB_PATH, help="Path to results SQLite DB")
     args = parser.parse_args()
 
     run_bb84 = args.protocol in ("bb84", "both")
     run_mdi  = args.protocol in ("mdi",  "both")
-
-    db_conn = None if args.no_save else init_db(args.db)
 
     if run_bb84:
         colours_bb84 = plt.cm.viridis(np.linspace(0.0, 0.85, 8))
@@ -152,7 +119,7 @@ if __name__ == "__main__":
         for i, (cfg_file, label, label_plain) in enumerate(LAYERS[:8]):
             cfg = load_config(os.path.join(ROOT, "configs", cfg_file))
             print(f"BB84 {label_plain}...")
-            rates, mins, maxs = run_layer_bb84(cfg, args.runtimes, db_conn=db_conn, layer_name=cfg_file.replace(".json", ""))
+            rates, mins, maxs = run_layer_bb84(cfg, args.runtimes)
             yerr = [
                 [max(r - m, 0) for r, m in zip(rates, mins)],
                 [max(m - r, 0) for r, m in zip(rates, maxs)],
@@ -171,7 +138,7 @@ if __name__ == "__main__":
         for i, (cfg_file, label, label_plain) in enumerate(LAYERS):
             cfg = load_config(os.path.join(ROOT, "configs", cfg_file))
             print(f"MDI {label_plain}...")
-            rates, mins, maxs = run_layer_mdi(cfg, args.runtimes, db_conn=db_conn, layer_name=cfg_file.replace(".json", ""))
+            rates, mins, maxs = run_layer_mdi(cfg, args.runtimes)
             yerr = [
                 [max(r - m, 0) for r, m in zip(rates, mins)],
                 [max(m - r, 0) for r, m in zip(rates, maxs)],
@@ -183,8 +150,5 @@ if __name__ == "__main__":
         ax_mdi.grid(True, alpha=0.3)
         ax_mdi.legend(fontsize=8)
         ax_mdi.set_title("Key rate vs distance: MDI-QKD — cumulative modelling layers")
-
-    if db_conn is not None:
-        db_conn.close()
 
     plt.show()
