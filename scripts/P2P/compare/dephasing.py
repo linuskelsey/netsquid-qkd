@@ -8,6 +8,7 @@ Usage:
     python scripts/compare/dephasing.py [--config PATH] [--runtimes N] [--fibre F]
                                         [--loss F] [--det-eff F] [--dark-count N]
                                         [--init-loss F] [--node-loss F] [--source-err F]
+                                        [--workers N]
 
 Defaults (no --config):
     dephasing_rate          swept 0-0.01 /km  (sweep axis — config value ignored)

@@ -9,6 +9,7 @@ Usage:
     python scripts/compare/bs_eff.py [--config PATH] [--runtimes N] [--fibre F]
                                      [--loss F] [--det-eff F] [--dark-count N]
                                      [--init-loss F] [--node-loss F] [--source-err F]
+                                     [--workers N]
 
 Defaults (no --config):
     bs_eff                  swept 1.0->0.5  (sweep axis — config value ignored)

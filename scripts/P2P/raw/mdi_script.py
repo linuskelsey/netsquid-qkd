@@ -6,6 +6,7 @@ Executes the MDI-QKD NetSquid simulation and prints per-run and aggregate metric
 Usage:
     python scripts/raw/mdi_script.py [--config PATH] [--runtimes N] [--fibre F]
                                      [--loss F] [--det-eff F] [--dark-count N] [--init-loss F]
+                                     [--workers N]
 
 Defaults (no --config):
     fibre_loss_db_per_km    0.2  dB/km
@@ -84,6 +85,7 @@ if __name__ == "__main__":
     parser.add_argument("--source-err",     type=float, default=None, dest="source_err",     help="Source bit error rate [0-1]")
     parser.add_argument("--dephasing-rate", type=float, default=None, dest="dephasing_rate", help="Dephasing rate per km")
     parser.add_argument("--bs-eff",         type=float, default=None, dest="bs_eff",         help="Beam splitter efficiency at relay [0-1]")
+    parser.add_argument("--workers",        type=int,   default=None,                        help="Worker processes (default: 80%% of CPU cores)")
     args = parser.parse_args()
     cfg  = load_config(args.config)
     if args.loss is not None:           cfg["fibre_loss_db_per_km"] = args.loss
@@ -122,6 +124,7 @@ if __name__ == "__main__":
         sourceErrRate = cfg["source_error_rate"],
         dephasingRate = cfg["dephasing_rate"],
         bsEff         = cfg["bs_eff"],
+        workers       = args.workers,
     )
 
     print("  Per-run results:")

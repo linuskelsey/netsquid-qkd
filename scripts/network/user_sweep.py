@@ -44,6 +44,7 @@ def main():
     parser.add_argument("--config",   type=str,   default=None, help="Path to JSON config")
     parser.add_argument("--error",    type=str,   default="bars", choices=["bars", "shade"])
     parser.add_argument("--save",     type=str,   default=None, help="Save path for results figure")
+    parser.add_argument("--workers",  type=int,   default=None, help="Worker processes (default: 80%% of CPU cores)")
     args = parser.parse_args()
 
     if args.seed is None:
@@ -72,8 +73,8 @@ def main():
         topo_bb84 = Topology(user_pos)
         topo_mdi  = Topology(user_pos, relay_pos)
 
-        bb84_res = run_bb84_network(topo_bb84, cfg, runtimes=args.runtimes)
-        mdi_res  = run_mdi_network(topo_mdi,  cfg, runtimes=args.runtimes)
+        bb84_res = run_bb84_network(topo_bb84, cfg, runtimes=args.runtimes, workers=args.workers)
+        mdi_res  = run_mdi_network(topo_mdi,  cfg, runtimes=args.runtimes, workers=args.workers)
 
         bp = _pair_avgs(bb84_res["pair_rates"])
         mp = _pair_avgs(mdi_res["pair_rates"])

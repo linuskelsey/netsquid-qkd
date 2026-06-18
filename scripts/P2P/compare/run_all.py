@@ -4,7 +4,7 @@ By default saves figures to figures/P2P/ in the project root.
 Pass --show to open interactive plot windows instead.
 
 Usage:
-    python scripts/P2P/compare/run_all.py [--runtimes N] [--output-dir PATH] [--show]
+    python scripts/P2P/compare/run_all.py [--runtimes N] [--workers N] [--output-dir PATH] [--show]
 """
 
 import argparse

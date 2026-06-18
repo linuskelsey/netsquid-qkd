@@ -8,6 +8,7 @@ Usage:
     python scripts/compare/basis_bias.py [--config PATH] [--runtimes N] [--fibre F]
                                          [--loss F] [--det-eff-z F] [--dark-count N]
                                          [--init-loss F] [--node-loss F] [--source-err F]
+                                         [--workers N]
 
 Defaults (no --config):
     detector_eff_x          swept 1.0->0.5  (sweep axis)

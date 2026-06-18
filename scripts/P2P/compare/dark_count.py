@@ -7,6 +7,7 @@ Note: dark_count_rate in --config is ignored; d_c is the sweep axis.
 Usage:
     python scripts/compare/dark_count.py [--config PATH] [--runtimes N] [--fibre F]
                                          [--loss F] [--det-eff F] [--init-loss F]
+                                         [--workers N]
 
 Defaults (no --config):
     dark_count_rate         swept 0-250 cps  (sweep axis — config value ignored)
@@ -113,6 +114,7 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, i
         sourceErrRate = sourceErrRate,
         dephasingRate = dephasingRate,
         bsEff         = bsEff,
+        workers       = workers,
     )
 
     # Aggregate stats ===========================================

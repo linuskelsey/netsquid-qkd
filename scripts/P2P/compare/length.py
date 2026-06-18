@@ -6,6 +6,7 @@ Sweeps Alice-Bob separation (1-100 km). Both protocols run with identical physic
 Usage:
     python scripts/compare/length.py [--config PATH] [--runtimes N]
                                      [--loss F] [--det-eff F] [--dark-count N] [--init-loss F]
+                                     [--workers N]
 
 Defaults (no --config):
     fibre_loss_db_per_km    0.2  dB/km  — pass --config configs/layer0_ideal.json for idealised run
@@ -111,6 +112,7 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, i
         sourceErrRate = sourceErrRate,
         dephasingRate = dephasingRate,
         bsEff         = bsEff,
+        workers       = workers,
     )
 
     # Aggregate stats ===========================================

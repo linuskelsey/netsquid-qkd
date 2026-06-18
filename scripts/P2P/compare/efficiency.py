@@ -7,6 +7,7 @@ Note: detector_efficiency in --config is ignored; η_d is the sweep axis.
 Usage:
     python scripts/compare/efficiency.py [--config PATH] [--runtimes N] [--fibre F]
                                          [--loss F] [--dark-count N] [--init-loss F]
+                                         [--workers N]
 
 Defaults (no --config):
     detector_efficiency     swept 1.0->0.5  (sweep axis — config value ignored)
@@ -113,6 +114,7 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, i
         sourceErrRate = sourceErrRate,
         dephasingRate = dephasingRate,
         bsEff         = bsEff,
+        workers       = workers,
     )
 
     # Aggregate stats ===========================================

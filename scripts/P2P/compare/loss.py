@@ -7,6 +7,7 @@ Note: fibre_loss_db_per_km in --config is ignored; α is the sweep axis.
 Usage:
     python scripts/compare/loss.py [--config PATH] [--runtimes N] [--fibre F]
                                    [--det-eff F] [--dark-count N] [--init-loss F]
+                                   [--workers N]
 
 Defaults (no --config):
     fibre_loss_db_per_km    swept 0-0.3 dB/km  (sweep axis — config value ignored)
@@ -113,6 +114,7 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, i
         sourceErrRate = sourceErrRate,
         dephasingRate = dephasingRate,
         bsEff         = bsEff,
+        workers       = workers,
     )
 
     # Aggregate stats ===========================================

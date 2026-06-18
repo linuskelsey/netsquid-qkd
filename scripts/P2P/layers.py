@@ -6,7 +6,7 @@ Each layer adds one physical parameter at its industry-typical value to the prev
 BB84 shows layers 0–7; MDI shows layers 0–8 (layer 8 adds beam splitter efficiency).
 
 Usage:
-    python scripts/compare/layers.py [--runtimes N]
+    python scripts/compare/layers.py [--runtimes N] [--protocol {bb84,mdi,both}] [--workers N]
 """
 
 import sys

@@ -7,7 +7,7 @@ Note: source_error_rate in --config is ignored; ε_s is the sweep axis.
 Usage:
     python scripts/compare/source_err.py [--config PATH] [--runtimes N] [--fibre F]
                                          [--loss F] [--det-eff F] [--dark-count N]
-                                         [--init-loss F] [--node-loss F]
+                                         [--init-loss F] [--node-loss F] [--workers N]
 
 Defaults (no --config):
     source_error_rate       swept 0-10%  (sweep axis — config value ignored)
