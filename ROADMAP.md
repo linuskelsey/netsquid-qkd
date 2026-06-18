@@ -25,6 +25,7 @@
 | Config presets unified (layer0–layer8, cumulative, industry-typical values) | complete |
 | Raw script config wiring | complete |
 | `--workers` flag on all compare scripts (currently hardcoded to 80% CPU) | planned |
+| `--compare-configs` flag on all compare scripts: run same sweep under 2–3 config presets, overlay on one figure | planned |
 
 ## Data Persistence
 
@@ -33,6 +34,7 @@
 | P2P results schema: 10-parameter point (incl. `charlie_pos`) → per-runtime key rates, QBERs, key lengths (`lib/db.py`) | complete |
 | DB replot script: `scripts/P2P/analyse.py` — reload any sweep from `results/results_P2P.db` without re-running | complete |
 | Network results schema: separate schema for multi-hop/multi-user topology results | planned |
+| `scripts/network/analyse.py`: replot any saved network sweep (relay/user) from DB without re-running — mirrors `scripts/P2P/analyse.py` | planned |
 | Query/load saved results for offline analysis and plotting (litecli / pandas / sqlite3) | complete |
 
 ---
@@ -88,6 +90,10 @@ Cost tracked per simulation: BB84 (N sources, N detectors, N(N-1)/2 fibre links)
 | Always-on min/max error bars on `layers.py` | complete |
 | Charlie placement sweep (asymmetric Alice-Charlie / Charlie-Bob links) | complete |
 | Script to compare effect of each layer of modelling parameter per-protocol | complete |
+| Finite-key corrections: block-size-dependent key rate using composable security bound; `photons` per run sets block size `n`; quantifies departure from asymptotic regime at low photon counts and short distances | planned |
+| Analytical key rate overlay: plot closed-form Shor-Preskill (BB84) and Ma et al. 2012 (MDI-QKD) formula on sweep figures as validation reference; mismatch flags simulation error | planned |
+| QBER decomposition by error source: track separate contributions from dark counts, dephasing, source errors, and basis bias per simulation point; identify dominant noise mechanism per parameter regime | planned |
+| Parameter sensitivity ranking: compute d(key_rate)/d(param) at operating point for each physical parameter; produce ranked bar chart identifying which hardware spec drives performance most | planned |
 
 ### Extensions (nice to have)
 
@@ -95,6 +101,7 @@ Cost tracked per simulation: BB84 (N sources, N detectors, N(N-1)/2 fibre links)
 |------|--------|
 | Trusted-node BB84 network: users connect to K trusted relay nodes (O(N) fibre, same infrastructure as MDI); relay holds key material and performs XOR combine; cross-relay pairs use relay-relay BB84 links; key rate bottlenecked by slowest link in chain | extension |
 | Trusted-node BB84 vs MDI-QKD vs direct-link BB84: three-way comparison of key rate, cost, and user scalability; isolates the cost of the MDI trust-removal guarantee | extension |
+| Decoy-state key rate formula: vacuum + weak decoy correction for PNS-attack resistance; relevant if source model is relaxed from ideal single-photon to weak coherent pulse (WCP) | extension |
 | WDM multi-user MDI-QKD: multiple Alice-Bob pairs on separate wavelengths, MUX onto shared fibre, DEMUX at Charlie for per-channel BSM | extension |
 | Key rate vs WDM user count: MUX/DEMUX insertion loss (~1–3 dB per device) per channel | extension |
 | Quantum memory coherence time at WDM relay nodes: T1/T2 decoherence during inter-channel wait limits scalable user count | extension |
