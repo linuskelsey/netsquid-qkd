@@ -51,7 +51,7 @@ def aggregate(KeyListA, KeyListB, KeyRateList, QBERList):
     return avg, rates, qbers, lengths
 
 
-def run_layer_bb84(cfg, runtimes, db_conn=None, layer_name=""):
+def run_layer_bb84(cfg, runtimes, db_conn=None, layer_name="", workers=None):
     rates, mins, maxs = [], [], []
     for d in Dx:
         KA, KB, KR, KQ = run_BB84_sims(
@@ -67,6 +67,7 @@ def run_layer_bb84(cfg, runtimes, db_conn=None, layer_name=""):
             nodeLossDb    = cfg["node_loss_db"],
             sourceErrRate = cfg["source_error_rate"],
             dephasingRate = cfg["dephasing_rate"],
+            workers       = workers,
         )
         avg, raw_rates, raw_qbers, raw_lengths = aggregate(KA, KB, KR, KQ)
         rates.append(avg)
@@ -91,7 +92,7 @@ def run_layer_bb84(cfg, runtimes, db_conn=None, layer_name=""):
     return [r / k for r in rates], [r / k for r in mins], [r / k for r in maxs]
 
 
-def run_layer_mdi(cfg, runtimes, db_conn=None, layer_name=""):
+def run_layer_mdi(cfg, runtimes, db_conn=None, layer_name="", workers=None):
     rates, mins, maxs = [], [], []
     for d in Dx:
         KA, KB, KR, KQ = run_mdi_sims(
@@ -108,6 +109,7 @@ def run_layer_mdi(cfg, runtimes, db_conn=None, layer_name=""):
             sourceErrRate = cfg["source_error_rate"],
             dephasingRate = cfg["dephasing_rate"],
             bsEff         = cfg["bs_eff"],
+            workers       = workers,
         )
         avg, raw_rates, raw_qbers, raw_lengths = aggregate(KA, KB, KR, KQ)
         rates.append(avg)
@@ -137,6 +139,7 @@ if __name__ == "__main__":
     parser.add_argument("--runtimes",  type=int, default=100)
     parser.add_argument("--protocol",  choices=["bb84", "mdi", "both"], default="both",
                         help="Protocol(s) to run: bb84, mdi, or both (default: both)")
+    parser.add_argument("--workers",  type=int, default=None, help="Worker processes (default: 80%% of CPU cores)")
     parser.add_argument("--no-save",  action="store_true", help="Skip saving results to DB")
     parser.add_argument("--db",       type=str, default=DEFAULT_DB_PATH, help="Path to results SQLite DB")
     args = parser.parse_args()
@@ -152,7 +155,7 @@ if __name__ == "__main__":
         for i, (cfg_file, label, label_plain) in enumerate(LAYERS[:8]):
             cfg = load_config(os.path.join(ROOT, "configs", cfg_file))
             print(f"BB84 {label_plain}...")
-            rates, mins, maxs = run_layer_bb84(cfg, args.runtimes, db_conn=db_conn, layer_name=cfg_file.replace(".json", ""))
+            rates, mins, maxs = run_layer_bb84(cfg, args.runtimes, db_conn=db_conn, layer_name=cfg_file.replace(".json", ""), workers=args.workers)
             yerr = [
                 [max(r - m, 0) for r, m in zip(rates, mins)],
                 [max(m - r, 0) for r, m in zip(rates, maxs)],
@@ -171,7 +174,7 @@ if __name__ == "__main__":
         for i, (cfg_file, label, label_plain) in enumerate(LAYERS):
             cfg = load_config(os.path.join(ROOT, "configs", cfg_file))
             print(f"MDI {label_plain}...")
-            rates, mins, maxs = run_layer_mdi(cfg, args.runtimes, db_conn=db_conn, layer_name=cfg_file.replace(".json", ""))
+            rates, mins, maxs = run_layer_mdi(cfg, args.runtimes, db_conn=db_conn, layer_name=cfg_file.replace(".json", ""), workers=args.workers)
             yerr = [
                 [max(r - m, 0) for r, m in zip(rates, mins)],
                 [max(m - r, 0) for r, m in zip(rates, maxs)],

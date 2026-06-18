@@ -81,7 +81,7 @@ def comparative_stats(stats1, stats2):
     return
 
 
-def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, initLoss=0, detEff=1, darkCount=0, nodeLossDb=0.0, sourceErrRate=0.0, dephasingRate=0.0, bsEff=1.0):
+def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, initLoss=0, detEff=1, darkCount=0, nodeLossDb=0.0, sourceErrRate=0.0, dephasingRate=0.0, bsEff=1.0, workers=None):
     # BB84 run ==================================================
     KeyListA_bb84, KeyListB_bb84, KeyRateList_bb84, QBERList_bb84 = run_BB84_sims(
         runtimes      = runtimes,
@@ -96,6 +96,7 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, i
         nodeLossDb    = nodeLossDb,
         sourceErrRate = sourceErrRate,
         dephasingRate = dephasingRate,
+        workers       = workers,
     )
 
     # MDI run ===================================================
@@ -130,6 +131,7 @@ if __name__ == "__main__":
     parser.add_argument("--init-loss",  type=float, default=None, dest="init_loss",  help="Insertion loss, linear fraction [0-1] (e.g. 0.1 = 10%%)")
     parser.add_argument("--node-loss",  type=float, default=None, dest="node_loss",  help="Receiver node insertion loss (dB)")
     parser.add_argument("--source-err", type=float, default=None, dest="source_err", help="Source bit error rate [0-1]")
+    parser.add_argument("--workers",    type=int,   default=None, help="Worker processes (default: 80%% of CPU cores)")
     parser.add_argument("--no-save",  action="store_true", help="Skip saving results to DB")
     parser.add_argument("--db",       type=str, default=DEFAULT_DB_PATH, help="Path to results SQLite DB")
     parser.add_argument("--error",    choices=["bars", "shade", "sigma", "iqr", "sem"], default="bars",
@@ -175,7 +177,8 @@ if __name__ == "__main__":
                          lenLoss=l, initLoss=cfg["init_loss"],
                          detEff=cfg["detector_efficiency"], darkCount=cfg["dark_count_rate"],
                          nodeLossDb=cfg["node_loss_db"], sourceErrRate=cfg["source_error_rate"],
-                         dephasingRate=cfg["dephasing_rate"], bsEff=cfg["bs_eff"])
+                         dephasingRate=cfg["dephasing_rate"], bsEff=cfg["bs_eff"],
+                         workers=args.workers)
 
         lengths_bb84.append(bb84[1])
         qbers_bb84.append(bb84[2])

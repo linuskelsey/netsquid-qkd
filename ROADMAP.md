@@ -26,6 +26,7 @@
 | Raw script config wiring | complete |
 | `--workers` flag on all compare scripts (currently hardcoded to 80% CPU) | planned |
 | `--compare-configs` flag on all compare scripts: run same sweep under 2–3 config presets, overlay on one figure | planned |
+| Interactive TUI launcher (`scripts/tui.py`): arrow-key menus for P2P or network path, full parameter setup, assembles and optionally runs the target script; optionally saves config JSON | planned |
 
 ## Data Persistence
 

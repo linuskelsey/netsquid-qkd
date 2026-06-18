@@ -29,6 +29,7 @@ SCRIPTS = [
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--runtimes",   type=int,  default=100)
+    parser.add_argument("--workers",    type=int,  default=None, help="Worker processes per script (default: 80%% of CPU cores)")
     parser.add_argument("--no-save",    action="store_true", help="Skip saving results to DB")
     parser.add_argument("--db",         type=str,  default=None, help="Path to results SQLite DB")
     parser.add_argument("--error",      choices=["bars", "shade", "sigma", "iqr", "sem"], default="bars",
@@ -57,6 +58,8 @@ if __name__ == "__main__":
             cmd.append("--no-save")
         if args.db is not None:
             cmd += ["--db", args.db]
+        if args.workers is not None:
+            cmd += ["--workers", str(args.workers)]
         cmd += ["--error", args.error]
         if output_dir is not None:
             cmd += ["--output-dir", output_dir]

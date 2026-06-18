@@ -49,6 +49,7 @@ if __name__ == "__main__":
     parser.add_argument("--error",    choices=["bars", "shade", "sigma", "iqr", "sem"], default="bars",
                         help="Error display: bars=min/max whiskers (default), shade=±1σ log-space band, "
                              "sigma=±1σ whiskers, iqr=IQR 25–75th percentile, sem=±1 SEM")
+    parser.add_argument("--workers",   type=int,   default=None, help="Worker processes (default: 80%% of CPU cores)")
     parser.add_argument("--no-save",  action="store_true", help="Skip saving results to DB")
     parser.add_argument("--db",       type=str, default=DEFAULT_DB_PATH, help="Path to results SQLite DB")
     parser.add_argument("--output-dir", type=str, default=None, help="Directory to save figure into (skips interactive display)")
@@ -74,6 +75,7 @@ if __name__ == "__main__":
         nodeLossDb    = cfg["node_loss_db"],
         sourceErrRate = cfg["source_error_rate"],
         dephasingRate = cfg["dephasing_rate"],
+        workers       = args.workers,
     )
     bb84_avg, bb84_min, bb84_max, bb84_std, bb84_q25, bb84_q75, bb84_sem, bb84_rates = aggregate(KR_bb84)
 
@@ -101,6 +103,7 @@ if __name__ == "__main__":
             dephasingRate = cfg["dephasing_rate"],
             bsEff         = cfg["bs_eff"],
             charliePos    = cp,
+            workers       = args.workers,
         )
         avg, mn, mx, std, q25, q75, sem, mdi_rates = aggregate(KR_mdi)
         avgs_mdi.append(avg)

@@ -61,7 +61,7 @@ def aggregate_summary(KeyListA, KeyListB, KeyRateList, QBERList):
     return len(key_rates), avg_key_len, avg_qber, avg_kr, key_rates, qbers, key_lengths
 
 
-def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, initLoss=0, detEff=1, darkCount=0, nodeLossDb=0.0, sourceErrRate=0.0, dephasingRate=0.0, bsEff=1.0):
+def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, initLoss=0, detEff=1, darkCount=0, nodeLossDb=0.0, sourceErrRate=0.0, dephasingRate=0.0, bsEff=1.0, workers=None):
     KeyListA_bb84, KeyListB_bb84, KeyRateList_bb84, QBERList_bb84 = run_BB84_sims(
         runtimes      = runtimes,
         fibreLen      = fibre,
@@ -75,6 +75,7 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, i
         nodeLossDb    = nodeLossDb,
         sourceErrRate = sourceErrRate,
         dephasingRate = dephasingRate,
+        workers       = workers,
     )
     KeyListA_mdi, KeyListB_mdi, KeyRateList_mdi, QBERList_mdi = run_mdi_sims(
         runtimes      = runtimes,
@@ -90,6 +91,7 @@ def main(runtimes=10, photons=1024, fibre=100, freq=1e7, speed=0.8, lenLoss=0, i
         sourceErrRate = sourceErrRate,
         dephasingRate = dephasingRate,
         bsEff         = bsEff,
+        workers       = workers,
     )
     bb84_stats = aggregate_summary(KeyListA_bb84, KeyListB_bb84, KeyRateList_bb84, QBERList_bb84)
     mdi_stats  = aggregate_summary(KeyListA_mdi,  KeyListB_mdi,  KeyRateList_mdi,  QBERList_mdi)
@@ -105,6 +107,7 @@ if __name__ == "__main__":
     parser.add_argument("--dark-count", type=int,   default=None, dest="dark_count", help="Dark count rate (cps)")
     parser.add_argument("--init-loss",  type=float, default=None, dest="init_loss",  help="Insertion loss, linear fraction [0-1]")
     parser.add_argument("--node-loss",  type=float, default=None, dest="node_loss",  help="Receiver node insertion loss (dB)")
+    parser.add_argument("--workers",    type=int,   default=None, help="Worker processes (default: 80%% of CPU cores)")
     parser.add_argument("--no-save",  action="store_true", help="Skip saving results to DB")
     parser.add_argument("--db",       type=str, default=DEFAULT_DB_PATH, help="Path to results SQLite DB")
     parser.add_argument("--error",    choices=["bars", "shade", "sigma", "iqr", "sem"], default="bars",
@@ -146,7 +149,8 @@ if __name__ == "__main__":
                          lenLoss=cfg["fibre_loss_db_per_km"], initLoss=cfg["init_loss"],
                          detEff=cfg["detector_efficiency"], darkCount=cfg["dark_count_rate"],
                          nodeLossDb=cfg["node_loss_db"], sourceErrRate=se,
-                         dephasingRate=cfg["dephasing_rate"], bsEff=cfg["bs_eff"])
+                         dephasingRate=cfg["dephasing_rate"], bsEff=cfg["bs_eff"],
+                         workers=args.workers)
         rates_bb84.append(bb84[3])
         rates_mdi.append(mdi[3])
 
