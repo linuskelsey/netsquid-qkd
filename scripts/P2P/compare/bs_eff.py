@@ -185,47 +185,36 @@ if __name__ == "__main__":
     abs_sems_mdi  = [r / 1000 for r in sems_mdi]
     abs_maxs_mdi  = [r / 1000 for r in maxs_mdi]
 
+    # BB84 — always dashed + shade (flat reference, unaffected by bs_eff)
+    lo_bb84 = [r * math.exp(-s) for r, s in zip(abs_rates_bb84, stds_bb84)]
+    hi_bb84 = [r * math.exp(+s) for r, s in zip(abs_rates_bb84, stds_bb84)]
+    ax1.plot(BSx, abs_rates_bb84, '--', color="#377eb8", lw=1.5, label="BB84 (unaffected)")
+    ax1.fill_between(BSx, lo_bb84, hi_bb84, alpha=0.15, color="#377eb8")
+
+    # MDI — error style controlled by --error flag
     if args.error in ('bars', 'sigma', 'iqr', 'sem'):
         if args.error == 'bars':
-            yerr_bb84 = [
-                [max(r - m, 0) for r, m in zip(abs_rates_bb84, abs_mins_bb84)],
-                [max(m - r, 0) for r, m in zip(abs_rates_bb84, abs_maxs_bb84)],
-            ]
             yerr_mdi = [
                 [max(r - m, 0) for r, m in zip(abs_rates_mdi, abs_mins_mdi)],
                 [max(m - r, 0) for r, m in zip(abs_rates_mdi, abs_maxs_mdi)],
             ]
         elif args.error == 'sigma':
-            yerr_bb84 = [
-                [r * (1 - math.exp(-s)) for r, s in zip(abs_rates_bb84, stds_bb84)],
-                [r * (math.exp(s) - 1)  for r, s in zip(abs_rates_bb84, stds_bb84)],
-            ]
             yerr_mdi = [
                 [r * (1 - math.exp(-s)) for r, s in zip(abs_rates_mdi, stds_mdi)],
                 [r * (math.exp(s) - 1)  for r, s in zip(abs_rates_mdi, stds_mdi)],
             ]
         elif args.error == 'iqr':
-            yerr_bb84 = [
-                [max(r - q25, 0) for r, q25 in zip(abs_rates_bb84, abs_q25s_bb84)],
-                [max(q75 - r, 0) for r, q75 in zip(abs_rates_bb84, abs_q75s_bb84)],
-            ]
             yerr_mdi = [
                 [max(r - q25, 0) for r, q25 in zip(abs_rates_mdi, abs_q25s_mdi)],
                 [max(q75 - r, 0) for r, q75 in zip(abs_rates_mdi, abs_q75s_mdi)],
             ]
-        elif args.error == 'sem':
-            yerr_bb84 = [abs_sems_bb84, abs_sems_bb84]
-            yerr_mdi  = [abs_sems_mdi,  abs_sems_mdi]
-        ax1.errorbar(BSx, abs_rates_bb84, yerr=yerr_bb84, fmt='o-', label="BB84 (unaffected)", capsize=3)
-        ax1.errorbar(BSx, abs_rates_mdi,  yerr=yerr_mdi,  fmt='s-', label="MDI",               capsize=3)
-    else:
-        line1, = ax1.plot(BSx, abs_rates_bb84, 'o-', label="BB84 (unaffected)")
-        line2, = ax1.plot(BSx, abs_rates_mdi,  's-', label="MDI")
-        lo1 = [r * math.exp(-s) for r, s in zip(abs_rates_bb84, stds_bb84)]
-        hi1 = [r * math.exp(+s) for r, s in zip(abs_rates_bb84, stds_bb84)]
-        lo2 = [r * math.exp(-s) for r, s in zip(abs_rates_mdi,  stds_mdi)]
-        hi2 = [r * math.exp(+s) for r, s in zip(abs_rates_mdi,  stds_mdi)]
-        ax1.fill_between(BSx, lo1, hi1, alpha=0.15, color=line1.get_color())
+        else:  # sem
+            yerr_mdi = [abs_sems_mdi, abs_sems_mdi]
+        ax1.errorbar(BSx, abs_rates_mdi, yerr=yerr_mdi, fmt='s-', label="MDI", capsize=3)
+    else:  # shade
+        line2, = ax1.plot(BSx, abs_rates_mdi, 's-', label="MDI")
+        lo2 = [r * math.exp(-s) for r, s in zip(abs_rates_mdi, stds_mdi)]
+        hi2 = [r * math.exp(+s) for r, s in zip(abs_rates_mdi, stds_mdi)]
         ax1.fill_between(BSx, lo2, hi2, alpha=0.15, color=line2.get_color())
     ax1.set_xlabel(r"Beam splitter efficiency $\eta_{bs}$")
     ax1.set_ylabel("Absolute secure key rate (kbps)")

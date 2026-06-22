@@ -145,13 +145,14 @@ def main():
     # --- Figure 1: key rate vs N ---
     fig, ax1 = plt.subplots(figsize=(8, 5))
 
-    ax1.plot(N_arr, b_mean, '--', color="#377eb8", lw=1.5, label="BB84")
-    ax1.fill_between(N_arr, b_mean - b_std, b_mean + b_std, alpha=0.2, color="#377eb8")
-
     if args.error == "bars":
+        ax1.errorbar(N_arr, b_mean, yerr=b_std, label="BB84", color="#377eb8",
+                     linestyle="--", capsize=4, lw=1.5)
         ax1.errorbar(N_arr, m_mean, yerr=m_std, label="MDI", color="#e41a1c",
                      marker="o", capsize=4, lw=1.5)
     else:
+        ax1.plot(N_arr, b_mean, '--', color="#377eb8", lw=1.5, label="BB84")
+        ax1.fill_between(N_arr, b_mean - b_std, b_mean + b_std, alpha=0.2, color="#377eb8")
         ax1.plot(N_arr, m_mean, color="#e41a1c", marker="o", lw=1.5, label="MDI")
         ax1.fill_between(N_arr, m_mean - m_std, m_mean + m_std, alpha=0.2, color="#e41a1c")
 
