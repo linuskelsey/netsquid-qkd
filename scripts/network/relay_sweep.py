@@ -1,7 +1,29 @@
 """
 Experiment 1 — relay count sweep.
-Fixed N users, vary K relays. Plots avg key rate and success rate vs K for BB84 and MDI-QKD.
-Also saves a topology visualisation at the midpoint K.
+
+Fixed N users, vary relay count K. Plots average key rate vs K for BB84 and MDI-QKD.
+Error bars show std across Monte Carlo runs (--seeds 1) or across random topologies (--seeds N).
+Topology visualisation only produced when --seeds 1.
+
+Usage:
+    python scripts/network/relay_sweep.py [options]
+
+Options:
+    --n INT          Number of users (default: 20)
+    --k-min INT      Min relay count (default: 1)
+    --k-max INT      Max relay count (default: 8)
+    --area FLOAT     Area side length in km (default: 10.0)
+    --seed INT       Base random seed; random if omitted
+    --seeds INT      Random topologies to average over (default: 1)
+    --runtimes INT   Monte Carlo runs per pair (default: 20)
+    --config PATH    JSON config preset
+    --error          Error style: bars (default) or shade
+    --workers INT    Worker processes (default: 80% of CPU cores)
+    --save PATH      Save figure to file instead of displaying
+
+Examples:
+    python scripts/network/relay_sweep.py --n 20 --k-max 6 --runtimes 20
+    python scripts/network/relay_sweep.py --seeds 5 --seed 42 --save results/relay.png
 """
 import argparse
 import sys

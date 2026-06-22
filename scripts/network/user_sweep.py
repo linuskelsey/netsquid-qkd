@@ -1,8 +1,32 @@
 """
 Experiment 2 — user count sweep.
-Fixed K relays (positions optimised at ref-N), vary user count N.
-Plots avg key rate vs N for BB84 and MDI-QKD.
-Also saves a topology visualisation at the midpoint N.
+
+Fixed K relays (positions optimised at ref-N), vary user count N. Plots average key rate vs N
+for BB84 and MDI-QKD. Relay positions are re-optimised per seed when --seeds > 1.
+Error bars show std across Monte Carlo runs (--seeds 1) or across random topologies (--seeds N).
+Topology visualisation only produced when --seeds 1.
+
+Usage:
+    python scripts/network/user_sweep.py [options]
+
+Options:
+    --k INT          Number of relays fixed for sweep (default: 3)
+    --ref-n INT      N used to optimise relay positions (default: n-max)
+    --n-min INT      Min user count (default: 4)
+    --n-max INT      Max user count (default: 20)
+    --n-step INT     User count step size (default: 2)
+    --area FLOAT     Area side length in km (default: 10.0)
+    --seed INT       Base random seed; random if omitted
+    --seeds INT      Random topologies to average over (default: 1)
+    --runtimes INT   Monte Carlo runs per pair (default: 20)
+    --config PATH    JSON config preset
+    --error          Error style: bars (default) or shade
+    --workers INT    Worker processes (default: 80% of CPU cores)
+    --save PATH      Save figure to file instead of displaying
+
+Examples:
+    python scripts/network/user_sweep.py --k 3 --n-max 20 --runtimes 20
+    python scripts/network/user_sweep.py --seeds 5 --seed 42 --save results/user.png
 """
 import argparse
 import os
