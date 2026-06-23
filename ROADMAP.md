@@ -138,3 +138,11 @@ DB layer removed for redesign. P2P and network schemas will be rebuilt together 
 | Fully connected BB84 (direct pairwise links, no relay) as additional baseline |
 | Relay placement sensitivity: random vs optimal placement comparison |
 | Cross-relay vs same-relay pair success rate comparison |
+
+---
+
+## Open Questions
+
+| Question |
+|----------|
+| **Missing lower error bars at high distance/noise:** at near-cutoff distances, lower IQR/min whiskers are absent on MDI plots. Failed runs are excluded before aggregation, so the surviving runs cluster near the QBER threshold with near-zero spread below the median. Unclear whether this reflects genuine distribution shape or an artefact of the cutoff filtering — worth checking whether including failed runs (as zero key rate) changes the picture. |
