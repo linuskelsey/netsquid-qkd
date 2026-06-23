@@ -14,7 +14,7 @@ DEFAULTS = {
     "dark_count_rate": 100,
     "node_loss_db": 2.0,           # receiver-side insertion loss in dB (connectors, coupling at Bob/Charlie)
     "source_error_rate": 0.005,
-    "basis_bias": 0.5,
+    "det_eff_x": 0.85,
     "dephasing_rate": 0.0001,
     "bs_eff": 0.97,
 }

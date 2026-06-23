@@ -1,6 +1,6 @@
 {
     "layer": 4,
-    "description": "Layer 3 + TX-side insertion loss. L_i = 0.10 (10% — source-to-fibre coupling and connector at transmitter).",
+    "description": "Layer 3 + TX-side insertion loss. L_i = 0.10 (10% \u2014 source-to-fibre coupling and connector at transmitter).",
     "fibre_loss_db_per_km": 0.2,
     "init_loss": 0.1,
     "detector_efficiency": 0.65,
@@ -8,5 +8,6 @@
     "node_loss_db": 0.0,
     "source_error_rate": 0.0,
     "dephasing_rate": 0.0,
+    "det_eff_x": 1.0,
     "bs_eff": 1.0
 }

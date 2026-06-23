@@ -1,6 +1,6 @@
 {
-    "layer": 7,
-    "description": "Layer 6 + fibre dephasing. \u03b2 = 1e-4 /km (SMF polarisation stability, uncompensated).",
+    "layer": 8,
+    "description": "Layer 7 (dephasing) + X-basis detector bias. η_X = 0.85 (slight polarisation misalignment in X basis, both protocols).",
     "fibre_loss_db_per_km": 0.2,
     "init_loss": 0.1,
     "detector_efficiency": 0.65,
@@ -8,6 +8,6 @@
     "node_loss_db": 2.0,
     "source_error_rate": 0.005,
     "dephasing_rate": 0.0001,
-    "det_eff_x": 1.0,
+    "det_eff_x": 0.85,
     "bs_eff": 1.0
 }
