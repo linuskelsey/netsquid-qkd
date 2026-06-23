@@ -24,6 +24,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirna
 from BB84.BB84_run import run_BB84_sims
 from MDI.mdiRun import run_mdi_sims
 from lib.functions import load_config, config_arg_parser
+import time
+from lib.progress import Progress
 
 import math
 import statistics
@@ -143,10 +145,15 @@ if __name__ == "__main__":
     if args.node_loss is not None:   cfg["node_loss_db"]         = args.node_loss
     if args.source_err is not None:  cfg["source_error_rate"]    = args.source_err
 
+    print()
     print(f"Sweep: distance [1-100 km]  |  Fixed: α={cfg['fibre_loss_db_per_km']} dB/km  η_d={cfg['detector_efficiency']}  d_c={cfg['dark_count_rate']} cps")
 
 
     Dx = [1,5,10,20,30,40,50,60,70,80,90,100]
+
+    total_start = time.time()
+    prog = Progress(len(Dx))
+    step = 0
 
     lengths_bb84 = []
     lengths_mdi  = []
@@ -168,6 +175,7 @@ if __name__ == "__main__":
     sems_mdi     = []
 
     for d in Dx:
+        prog.update(step, f"Distance: {d}/{Dx[-1]} km  BB84+MDI running...")
         bb84, mdi = main(runtimes=args.runtimes, fibre=d,
                          lenLoss=cfg["fibre_loss_db_per_km"], initLoss=cfg["init_loss"],
                          detEff=cfg["detector_efficiency"], darkCount=cfg["dark_count_rate"],
@@ -193,6 +201,12 @@ if __name__ == "__main__":
             q25s.append(float(np.percentile(nz, 25)) if nz else float('nan'))
             q75s.append(float(np.percentile(nz, 75)) if nz else float('nan'))
             sems.append(statistics.stdev(nz) / math.sqrt(len(nz)) if len(nz) > 1 else 0.0)
+        step += 1
+        prog.update(step, f"Distance: {d}/{Dx[-1]} km  BB84 {bb84[3]/1000:.2f} | MDI {mdi[3]/1000:.2f} kbps")
+
+    prog.stop()
+    m, s = divmod(int(time.time() - total_start), 60)
+    print(f"✓ complete  total {m}m {s:02d}s")
 
     # Store absolute rates before normalising
     abs_rates_bb84 = [r / 1000 for r in rates_bb84]  # convert to kbps

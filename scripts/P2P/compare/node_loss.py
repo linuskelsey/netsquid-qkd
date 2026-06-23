@@ -29,6 +29,8 @@ sys.path.append("MDI/")
 from BB84.BB84_run import run_BB84_sims
 from MDI.mdiRun import run_mdi_sims
 from lib.functions import load_config, config_arg_parser
+import time
+from lib.progress import Progress
 
 import matplotlib.pyplot as plt
 import math
@@ -118,11 +120,16 @@ if __name__ == "__main__":
     if args.init_loss is not None:   cfg["init_loss"]            = args.init_loss
     if args.source_err is not None:  cfg["source_error_rate"]    = args.source_err
 
+    print()
     if args.config is not None:
         print(f"Note: node_loss_db from config ignored — L_node is the sweep axis")
     print(f"Sweep: L_node [0-6 dB]  |  Fixed: L={args.fibre} km  α={cfg['fibre_loss_db_per_km']} dB/km  η_d={cfg['detector_efficiency']}")
 
     NLx = [0, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 6.0]
+
+    total_start = time.time()
+    prog = Progress(len(NLx))
+    step = 0
 
     rates_bb84 = []
     rates_mdi  = []
@@ -140,6 +147,7 @@ if __name__ == "__main__":
     sems_mdi   = []
 
     for nl in NLx:
+        prog.update(step, f"Node loss: {nl}/{NLx[-1]} dB  BB84+MDI running...")
         bb84, mdi = main(runtimes=args.runtimes, fibre=args.fibre,
                          lenLoss=cfg["fibre_loss_db_per_km"], initLoss=cfg["init_loss"],
                          detEff=cfg["detector_efficiency"], darkCount=cfg["dark_count_rate"],
@@ -159,6 +167,12 @@ if __name__ == "__main__":
             q25s.append(float(np.percentile(nz, 25)) if nz else float('nan'))
             q75s.append(float(np.percentile(nz, 75)) if nz else float('nan'))
             sems.append(statistics.stdev(nz) / math.sqrt(len(nz)) if len(nz) > 1 else 0.0)
+        step += 1
+        prog.update(step, f"Node loss: {nl}/{NLx[-1]} dB  BB84 {bb84[3]/1000:.2f} | MDI {mdi[3]/1000:.2f} kbps")
+
+    prog.stop()
+    m, s = divmod(int(time.time() - total_start), 60)
+    print(f"✓ complete  total {m}m {s:02d}s")
 
     abs_rates_bb84 = [r / 1000 for r in rates_bb84]
     abs_rates_mdi  = [r / 1000 for r in rates_mdi]

@@ -21,6 +21,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirna
 from BB84.BB84_run import run_BB84_sims
 from MDI.mdiRun import run_mdi_sims
 from lib.functions import load_config, config_arg_parser
+import time
+from lib.progress import Progress
 
 import matplotlib.pyplot as plt
 
@@ -53,9 +55,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
     cfg  = load_config(args.config)
 
+    print()
     print(f"Sweep: Charlie position [0.1–0.9]  |  Fixed: L={args.fibre} km  "
           f"α={cfg['fibre_loss_db_per_km']} dB/km  η_d={cfg['detector_efficiency']}  d_c={cfg['dark_count_rate']} cps")
 
+    total_start = time.time()
+    prog = Progress(1 + len(Cx))
+    step = 0
+
+    prog.update(step, "BB84 reference running...")
     # BB84 — run once; rate is independent of Charlie position
     KA_bb84, KB_bb84, KR_bb84, KQ_bb84 = run_BB84_sims(
         runtimes      = args.runtimes,
@@ -73,6 +81,8 @@ if __name__ == "__main__":
         workers       = args.workers,
     )
     bb84_avg, bb84_min, bb84_max, bb84_std, bb84_q25, bb84_q75, bb84_sem, bb84_rates = aggregate(KR_bb84)
+    step = 1
+    prog.update(step, f"BB84 {bb84_avg/1000:.2f} kbps  MDI running...")
 
     avgs_mdi  = []
     mins_mdi  = []
@@ -83,6 +93,7 @@ if __name__ == "__main__":
     sems_mdi  = []
 
     for cp in Cx:
+        prog.update(step, f"Charlie pos: {cp}/{Cx[-1]}  MDI running...")
         _, _, KR_mdi, KQ_mdi = run_mdi_sims(
             runtimes      = args.runtimes,
             fibreLen      = args.fibre,
@@ -108,6 +119,12 @@ if __name__ == "__main__":
         q25s_mdi.append(q25)
         q75s_mdi.append(q75)
         sems_mdi.append(sem)
+        step += 1
+        prog.update(step, f"Charlie pos: {cp}/{Cx[-1]}  MDI {avg/1000:.2f} kbps")
+
+    prog.stop()
+    m, s = divmod(int(time.time() - total_start), 60)
+    print(f"✓ complete  total {m}m {s:02d}s")
 
     # Convert to kbps
     abs_avg_mdi  = [r / 1000 for r in avgs_mdi]

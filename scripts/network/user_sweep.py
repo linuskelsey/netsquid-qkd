@@ -98,7 +98,7 @@ def main():
     total_start = time.time()
 
     for s_idx, seed in enumerate(seeds):
-        print(f"--- Seed {s_idx+1}/{args.seeds}  (seed={seed}) ---")
+        print(f"\n--- Seed {s_idx+1}/{args.seeds}  (seed={seed}) ---")
         seed_start = time.time()
         prog = Progress(seed_total)
         step = 0
