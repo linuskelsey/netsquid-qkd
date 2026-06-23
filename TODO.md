@@ -13,7 +13,6 @@
 - [ ] Add legend entries and source citations for each literature curve
 
 ### 3. Database Saving
-- [ ] Modify save path for figures auto-saved by `run_all.py`
 - [ ] Wire in .db saving to network simulations
 
 ---

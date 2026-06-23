@@ -18,16 +18,16 @@
 | Feature | Status |
 |---------|--------|
 | JSON config presets + CLI overrides | complete |
-| Multiprocessing (runtimes split across cores) | complete |
+| Multiprocessing: P2P scripts split runtimes across cores; network scripts split pairs across cores (one pool per protocol call) | complete |
 | Compare scripts: length, loss, efficiency, dark count, node loss, source error, dephasing, basis bias, beam splitter efficiency, Charlie placement (`scripts/P2P/compare/`) | complete |
-| Run-all parallel launcher (`scripts/P2P/compare/run_all.py`) | complete |
+| Run-all parallel launcher (`scripts/P2P/compare/run_all.py`): all 10 compare scripts in parallel; auto-saves to timestamped `docs/figures/<Month>/<YYYYMMDD> - P2P parameters/all parameters/` | complete |
 | Layer comparison script (`scripts/P2P/layers.py`) | complete |
 | Config presets unified (layer0–layer8, cumulative, industry-typical values) | complete |
 | Raw script config wiring | complete |
 | `--workers` flag on all compare scripts (currently hardcoded to 80% CPU) | complete |
 | `--compare-configs` flag on all compare scripts: run same sweep under 2–3 config presets, overlay on one figure | planned |
 | Interactive TUI launcher (`scripts/tui.py`): arrow-key menus for P2P or network path, full parameter setup, assembles and optionally runs the target script; optionally saves config JSON | planned |
-| Timing wrapper + progress indicator: elapsed wall-clock time printed at end of every script run (total, and per-sweep-point for network scripts); compact inline progress line e.g. `37% complete (seed 4/10, relay 5/6)` updated after each sweep point | planned |
+| Timing wrapper + progress indicator: animated braille spinner with elapsed time and per-step label; `✓ complete  total Xm Ys` at end; seed headers and completion lines for network scripts (`lib/progress.py`) | complete |
 
 ## Data Persistence
 
@@ -57,7 +57,7 @@ Fixed N users (randomly placed in geographic space). Vary relay count K. Relay p
 | Passive optical routing model: cross-cluster photon redirection via optical switch (configurable insertion loss, default 1 dB) | complete |
 | Key rate vs relay count K — both protocols (`scripts/network/relay_sweep.py`) | complete |
 | Network success rate (QBER < 11%) vs relay count K | complete |
-| Multi-seed averaging (`--seeds N`): repeat sweep over N random placements, report mean ± std across seeds for statistically robust results | planned |
+| Multi-seed averaging (`--seeds N`): repeat sweep over N random placements, report mean ± std across seeds for statistically robust results | complete |
 | Checkpoint saving: persist intermediate results per K/N to JSON so long runs can recover from crash | planned |
 | End-of-sweep summary table: print formatted K/N × protocol × key rate × success rate × fibre km table to stdout | planned |
 
@@ -71,6 +71,7 @@ Cost tracked per simulation: BB84 (N sources, N detectors, N(N-1)/2 fibre links)
 | Key rate vs user count N — both protocols (`scripts/network/user_sweep.py`) | complete |
 | Network success rate vs user count N | complete |
 | Cost tracking: total fibre (km), link count, component count per simulation | complete |
+| Multi-seed averaging (`--seeds N`): relay positions re-optimised per seed; mean ± std across seeds reported | complete |
 | Cost-efficiency metric: key rate per unit cost vs N — both protocols | planned |
 
 ## Analysis
