@@ -21,7 +21,7 @@ def _mdi_fibre_cost(topo):
     return user_relay_km + relay_relay_km
 
 
-def run_mdi_network(topo, cfg, runtimes=10, workers=None, switch_loss_db=SWITCH_LOSS_DB):
+def run_mdi_network(topo, cfg, runtimes=10, workers=None, switch_loss_db=SWITCH_LOSS_DB, verbose=False):
     """
     Run MDI-QKD over all N(N-1)/2 pairs in topo.
 
@@ -41,7 +41,8 @@ def run_mdi_network(topo, cfg, runtimes=10, workers=None, switch_loss_db=SWITCH_
     pairs   = topo.all_pairs()
     n_pairs = len(pairs)
 
-    print(f"MDI network: {topo.N} users, {topo.K} relays, {n_pairs} pairs")
+    if verbose:
+        print(f"MDI network: {topo.N} users, {topo.K} relays, {n_pairs} pairs")
 
     for idx, (i, j) in enumerate(pairs):
         alice_km, bob_km, charlie_idx, cross_cluster = topo.mdi_link(i, j)
@@ -65,8 +66,9 @@ def run_mdi_network(topo, cfg, runtimes=10, workers=None, switch_loss_db=SWITCH_
         )
         pair_rates[(i, j)] = rates
         pair_qbers[(i, j)] = qbers
-        tag = " [cross]" if cross_cluster else ""
-        print(f"  [{idx+1}/{n_pairs}] pair ({i},{j}): {total_km:.2f} km, charlie={charlie_idx}{tag}")
+        if verbose:
+            tag = " [cross]" if cross_cluster else ""
+            print(f"  [{idx+1}/{n_pairs}] pair ({i},{j}): {total_km:.2f} km, charlie={charlie_idx}{tag}")
 
     all_valid  = [r for rates in pair_rates.values() for r in rates if r != "nan"]
     total_runs = sum(len(rates) for rates in pair_rates.values())

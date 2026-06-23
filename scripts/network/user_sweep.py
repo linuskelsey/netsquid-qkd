@@ -21,7 +21,7 @@ Options:
     --runtimes INT   Monte Carlo runs per pair (default: 20)
     --config PATH    JSON config preset
     --error          Error style: bars (default) or shade
-    --workers INT    Worker processes (default: 80% of CPU cores)
+    --workers INT    Worker processes (default: 80% of CPU cores; use nproc in command line to see maximum)
     --save PATH      Save figure to file instead of displaying
 
 Examples:
@@ -39,7 +39,9 @@ _network = os.path.join(_root, "network")
 sys.path.insert(0, _root)
 sys.path.insert(0, _network)
 
+import time
 from lib.functions import load_config
+from lib.progress import Progress
 from topology import place_users, optimise_relays, Topology
 from bb84_network import run_bb84_network
 from mdi_network import run_mdi_network
@@ -74,7 +76,6 @@ def main():
 
     if args.seed is None:
         args.seed = int.from_bytes(os.urandom(4), "big") % 100000
-        print(f"Seed: {args.seed}")
 
     cfg      = load_config(args.config)
     N_values = list(range(args.n_min, args.n_max + 1, args.n_step))
@@ -93,17 +94,23 @@ def main():
     bb84_fibre_per_seed = {N: [] for N in N_values}
     mdi_fibre_per_seed  = {N: [] for N in N_values}
 
+    seed_total  = len(N_values)
+    total_start = time.time()
+
     for s_idx, seed in enumerate(seeds):
-        print(f"\n--- Seed {s_idx + 1}/{args.seeds}  (seed={seed}) ---")
-        print(f"  Optimising {args.k} relay positions at N={ref_n}...")
+        print(f"--- Seed {s_idx+1}/{args.seeds}  (seed={seed}) ---")
+        seed_start = time.time()
+        prog = Progress(seed_total)
+        step = 0
         ref_pos   = place_users(ref_n, area_km=args.area, seed=seed)
         relay_pos = optimise_relays(ref_pos, args.k, seed=seed)
 
         for N in N_values:
             if N < args.k:
-                print(f"  N={N} < K={args.k} — skipping")
+                step += 1
                 continue
 
+            prog.update(step, f"User count: {N}/{N_values[-1]}  Both protocols running...")
             user_pos  = place_users(N, area_km=args.area, seed=seed)
             topo_bb84 = Topology(user_pos)
             topo_mdi  = Topology(user_pos, relay_pos)
@@ -121,8 +128,15 @@ def main():
             bb84_fibre_per_seed[N].append(bb84_res["total_fibre_km"])
             mdi_fibre_per_seed[N].append(mdi_res["total_fibre_km"])
 
-            print(f"  N={N:3d}  BB84 {bb84_per_seed[N][-1]:.1f} bps ({bb84_ok_per_seed[N][-1]:.1f}% ok, {bb84_fibre_per_seed[N][-1]:.1f} km) | "
-                  f"MDI {mdi_per_seed[N][-1]:.1f} bps ({mdi_ok_per_seed[N][-1]:.1f}% ok, {mdi_fibre_per_seed[N][-1]:.1f} km)")
+            step += 1
+            prog.update(step, f"User count: {N}/{N_values[-1]}  BB84 {bb84_per_seed[N][-1]/1000:.2f} | MDI {mdi_per_seed[N][-1]/1000:.2f} kbps")
+
+        prog.stop()
+        m, s = divmod(int(time.time() - seed_start), 60)
+        print(f"✓ Seed {s_idx+1}/{args.seeds} complete  {m}m {s:02d}s")
+
+    m, s = divmod(int(time.time() - total_start), 60)
+    print(f"✓ complete  total {m}m {s:02d}s")
 
     N_arr_final = [N for N in N_values if bb84_per_seed[N]]
     bb84_means  = [np.mean(bb84_per_seed[N])      for N in N_arr_final]

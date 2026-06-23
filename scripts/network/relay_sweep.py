@@ -36,7 +36,9 @@ _network = os.path.join(_root, "network")
 sys.path.insert(0, _root)
 sys.path.insert(0, _network)
 
+import time
 from lib.functions import load_config
+from lib.progress import Progress
 from topology import place_users, optimise_relays, Topology
 from bb84_network import run_bb84_network
 from mdi_network import run_mdi_network
@@ -70,7 +72,6 @@ def main():
 
     if args.seed is None:
         args.seed = int.from_bytes(os.urandom(4), "big") % 100000
-        print(f"Seed: {args.seed}")
 
     cfg      = load_config(args.config)
     K_values = list(range(args.k_min, args.k_max + 1))
@@ -86,11 +87,17 @@ def main():
     mdi_per_seed     = {K: [] for K in K_values}
     mdi_ok_per_seed  = {K: [] for K in K_values}
 
+    seed_total  = 1 + len(K_values)
+    total_start = time.time()
+
     for s_idx, seed in enumerate(seeds):
-        print(f"\n--- Seed {s_idx + 1}/{args.seeds}  (seed={seed}) ---")
+        print(f"--- Seed {s_idx+1}/{args.seeds}  (seed={seed}) ---")
+        seed_start = time.time()
+        prog = Progress(seed_total)
+        step = 0
         user_pos = place_users(args.n, area_km=args.area, seed=seed)
 
-        print("  Running BB84 (relay-independent)...")
+        prog.update(step, f"BB84 reference running...")
         topo_bb84  = Topology(user_pos)
         bb84_res   = run_bb84_network(topo_bb84, cfg, runtimes=args.runtimes, workers=args.workers)
         bp         = _pair_avgs(bb84_res["pair_rates"])
@@ -98,8 +105,11 @@ def main():
         _s_bb84_ok = bb84_res["success_rate"] * 100
         bb84_per_seed.append(_s_bb84)
         bb84_ok_per_seed.append(_s_bb84_ok)
+        step += 1
+        prog.update(step, f"BB84 {_s_bb84/1000:.2f} kbps  ({_s_bb84_ok:.0f}% ok)")
 
         for K in K_values:
+            prog.update(step, f"Relay count: {K}/{K_values[-1]}  MDI running...")
             relay_pos  = optimise_relays(user_pos, K, seed=seed)
             topo       = Topology(user_pos, relay_pos)
             mdi_res    = run_mdi_network(topo, cfg, runtimes=args.runtimes, workers=args.workers)
@@ -108,9 +118,15 @@ def main():
             _s_mdi_ok  = mdi_res["success_rate"] * 100
             mdi_per_seed[K].append(_s_mdi)
             mdi_ok_per_seed[K].append(_s_mdi_ok)
+            step += 1
+            prog.update(step, f"Relay count: {K}/{K_values[-1]}  BB84 {_s_bb84/1000:.2f} | MDI {_s_mdi/1000:.2f} kbps")
 
-            print(f"  K={K:2d}  BB84 {_s_bb84:.1f} bps ({_s_bb84_ok:.1f}% ok) | "
-                  f"MDI {_s_mdi:.1f} bps ({_s_mdi_ok:.1f}% ok)")
+        prog.stop()
+        m, s = divmod(int(time.time() - seed_start), 60)
+        print(f"✓ Seed {s_idx+1}/{args.seeds} complete  {m}m {s:02d}s")
+
+    m, s = divmod(int(time.time() - total_start), 60)
+    print(f"✓ complete  total {m}m {s:02d}s")
 
     bb84_means = [np.mean(bb84_per_seed)] * len(K_values)
     bb84_stds  = [np.std(bb84_per_seed)]  * len(K_values)

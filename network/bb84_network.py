@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from BB84.BB84_run import run_BB84_sims
 
 
-def run_bb84_network(topo, cfg, runtimes=10, workers=None):
+def run_bb84_network(topo, cfg, runtimes=10, workers=None, verbose=False):
     """
     Run BB84 over all N(N-1)/2 direct pairs in topo.
 
@@ -21,7 +21,8 @@ def run_bb84_network(topo, cfg, runtimes=10, workers=None):
     pairs  = topo.all_pairs()
     n_pairs = len(pairs)
 
-    print(f"BB84 network: {topo.N} users, {n_pairs} pairs")
+    if verbose:
+        print(f"BB84 network: {topo.N} users, {n_pairs} pairs")
 
     for idx, (i, j) in enumerate(pairs):
         fibre_len = topo.bb84_link(i, j)
@@ -39,7 +40,8 @@ def run_bb84_network(topo, cfg, runtimes=10, workers=None):
         )
         pair_rates[(i, j)] = rates
         pair_qbers[(i, j)] = qbers
-        print(f"  [{idx+1}/{n_pairs}] pair ({i},{j}): {fibre_len:.2f} km")
+        if verbose:
+            print(f"  [{idx+1}/{n_pairs}] pair ({i},{j}): {fibre_len:.2f} km")
 
     all_valid  = [r for rates in pair_rates.values() for r in rates if r != "nan"]
     total_runs = sum(len(rates) for rates in pair_rates.values())
