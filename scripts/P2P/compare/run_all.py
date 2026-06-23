@@ -1,16 +1,50 @@
 """
-Run all P2P compare scripts in parallel.
-By default saves figures to figures/P2P/ in the project root.
-Pass --show to open interactive plot windows instead.
+Run all P2P parameter comparison scripts in parallel.
+
+Figures are saved to a timestamped directory under docs/figures/ by default:
+
+    docs/figures/<Month>/<YYYYMMDD> - P2P parameters/all parameters/<script>.png
+
+The month folder is created if it does not exist. The day folder is created if it
+does not exist. A fresh 'all parameters' subfolder is created inside the day folder.
+Pass --output-dir to override the save location, or --show to display interactively.
 
 Usage:
-    python scripts/P2P/compare/run_all.py [--runtimes N] [--workers N] [--output-dir PATH] [--show]
+    python scripts/P2P/compare/run_all.py [options]
+
+Options:
+    --runtimes INT   Monte Carlo runs per sweep point (default: 100)
+    --workers INT    Worker processes per script (default: 80% of CPU cores)
+    --error STR      Error display style: bars (default), shade, sigma, iqr, sem
+    --output-dir PATH  Override save directory (disables auto timestamped path)
+    --show           Open interactive plot windows instead of saving to disk
+    --config PATH    JSON config preset passed to every script
+
+Sweeps run:
+    length.py       Key rate vs distance (1-100 km)
+    loss.py         Key rate vs fibre attenuation (0-0.3 dB/km)
+    efficiency.py   Key rate vs detector efficiency (1.0->0.15)
+    dark_count.py   Key rate vs dark count rate (0-250 cps)
+    node_loss.py    Key rate vs node/connector loss (0-6 dB)
+    source_err.py   Key rate vs source error rate (0-4%)
+    dephasing.py    Key rate vs fibre dephasing rate (0-0.003 /km)
+    basis_bias.py   Key rate vs X-basis detector bias (1.0->0.5)
+    bs_eff.py       Key rate vs beam splitter efficiency (1.0->0.8)
+    charlie_pos.py  MDI key rate vs Charlie position (0.1-0.9)
+
+Examples:
+    python scripts/P2P/compare/run_all.py
+    python scripts/P2P/compare/run_all.py --runtimes 20 --workers 7
+    python scripts/P2P/compare/run_all.py --error shade --config configs/layer5_realistic.json
+    python scripts/P2P/compare/run_all.py --output-dir results/p2p --runtimes 50
+    python scripts/P2P/compare/run_all.py --show
 """
 
 import argparse
 import subprocess
 import sys
 import os
+from datetime import datetime
 
 SCRIPTS = [
     "length.py",
@@ -26,23 +60,26 @@ SCRIPTS = [
 ]
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="Run all P2P parameter comparison scripts")
     parser.add_argument("--runtimes",   type=int,  default=100)
     parser.add_argument("--workers",    type=int,  default=None, help="Worker processes per script (default: 80%% of CPU cores)")
-    parser.add_argument("--error",      choices=["bars", "shade", "sigma", "iqr", "sem"], default="bars",
-                        help="Error display: bars=min/max whiskers (default), shade=±1σ log-space band, "
-                             "sigma=±1σ whiskers, iqr=IQR 25–75th percentile, sem=±1 SEM")
-    parser.add_argument("--output-dir", type=str,  default=None,
-                        help="Directory to write figures (default: <project_root>/figures/P2P)")
-    parser.add_argument("--show",       action="store_true",
-                        help="Open interactive plot windows instead of saving to disk")
+    parser.add_argument("--error",      choices=["bars", "shade", "sigma", "iqr", "sem"], default="bars")
+    parser.add_argument("--output-dir", type=str,  default=None, help="Override save directory")
+    parser.add_argument("--show",       action="store_true", help="Display plots interactively instead of saving")
+    parser.add_argument("--config",     type=str,  default=None, help="JSON config preset")
     args = parser.parse_args()
 
     here         = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(os.path.dirname(os.path.dirname(here)))
 
     if not args.show:
-        output_dir = args.output_dir or os.path.join(project_root, "figures", "P2P")
+        if args.output_dir:
+            output_dir = args.output_dir
+        else:
+            now        = datetime.now()
+            month_dir  = os.path.join(project_root, "docs", "figures", now.strftime("%B"))
+            day_dir    = os.path.join(month_dir, f"{now.strftime('%Y%m%d')} - P2P parameters")
+            output_dir = os.path.join(day_dir, "all parameters")
         os.makedirs(output_dir, exist_ok=True)
         print(f"Figures will be saved to: {output_dir}")
     else:
@@ -54,6 +91,8 @@ if __name__ == "__main__":
         if args.workers is not None:
             cmd += ["--workers", str(args.workers)]
         cmd += ["--error", args.error]
+        if args.config is not None:
+            cmd += ["--config", args.config]
         if output_dir is not None:
             cmd += ["--output-dir", output_dir]
         print(f"[{i}/{len(SCRIPTS)}] Starting {script}  (runtimes={args.runtimes})")
