@@ -116,15 +116,37 @@ DB layer removed for redesign. P2P and network schemas will be rebuilt together 
 | Item |
 |------|
 | IQR error mode on network scripts: `--error iqr` shows Q1/Q3 band (shaded) instead of ±1σ; more robust to outlier seeds; add to `relay_sweep.py` and `user_sweep.py` alongside existing `bars`/`shade` options |
+| Validate k-means + centroid as optimal MDI relay placement: benchmark against alternatives (random placement, grid, ILP-optimal); confirm or replace as the canonical topology strategy |
+| Monte Carlo sample count scaling: for key rates of order 10^-x, use 10^(x+1) samples; smallest observed rates ~10^-2 → target 1000 runs per point where feasible; audit all scripts and increase run counts accordingly |
+| Isolated parameter script (`scripts/P2P/isolate.py`): complement to `layers.py`; each curve = all-ideal config except one realistic parameter; overlay all isolated curves on one figure to compare each parameter's independent impact on key rate |
 | Finite-key corrections: block-size-dependent key rate using composable security bound; `photons` per run sets block size `n`; quantifies departure from asymptotic regime at low photon counts and short distances |
 | Analytical key rate overlay: plot closed-form Shor-Preskill (BB84) and Ma et al. 2012 (MDI-QKD) formula on sweep figures as validation reference; mismatch flags simulation error |
 | QBER decomposition by error source: track separate contributions from dark counts, dephasing, source errors, and basis bias per simulation point; identify dominant noise mechanism per parameter regime |
 | Parameter sensitivity ranking: compute d(key_rate)/d(param) at operating point for each physical parameter; produce ranked bar chart identifying which hardware spec drives performance most |
 
+### Project Report
+
+| Item |
+|------|
+| Justify every methodology decision in thesis: multi-seeding rationale (statistical robustness, seed count choice), k-means relay placement, Monte Carlo run counts, QBER cutoff threshold, config layer choices — each needs a cited or argued justification |
+| MDI vs BB84 deployment recommendations section: use security level taxonomy (L0–L5) to frame when MDI is the right choice despite key rate being always worse; argument centres on trust assumptions, not raw performance |
+| Explain MDI network-scale key rate gap (~10× vs ~3× at P2P) in results/discussion: investigate candidate causes (relay routing overhead, BSM success rate compounding, passive optical insertion loss, increased hop distances at network scale) and present supported explanation |
+
+---
+
+## Open Questions
+
+| Question |
+|----------|
+| **MDI network-scale key rate gap:** MDI is ~10× worse than BB84 at network scale but only ~3× worse at P2P. Candidate causes: relay routing adds hops (longer effective distances), BSM success rate (~50%) compounds across more links, passive optical switch insertion loss, cross-cluster pairs routed through more nodes. Needs targeted experiment to isolate dominant factor. See also Project Report item. |
+| **Missing lower error bars at high distance/noise:** at near-cutoff distances, lower IQR/min whiskers are absent on MDI plots. Failed runs are excluded before aggregation, so the surviving runs cluster near the QBER threshold with near-zero spread below the median. Unclear whether this reflects genuine distribution shape or an artefact of the cutoff filtering — worth checking whether including failed runs (as zero key rate) changes the picture. |
+
 ### Extensions
 
 | Item |
 |------|
+| Security level taxonomy: define deployment tiers L0–L5 by trust assumption (L0: trust all components except links = ideal QKD; ... L5: trust nothing = device-independent QKD); map BB84 and MDI-QKD to appropriate levels; use as framework for recommendations on when MDI is warranted despite key rate deficit |
+| MDI deployment on existing network infrastructure: scoping exercise — if fibre topology is fixed (no relay placement freedom), how does MDI performance change? Assess feasibility and cost delta vs greenfield deployment; flag as potential standalone research project |
 | Trusted-node BB84 network: users connect to K trusted relay nodes (O(N) fibre, same infrastructure as MDI); relay holds key material and performs XOR combine; cross-relay pairs use relay-relay BB84 links; key rate bottlenecked by slowest link in chain |
 | Trusted-node BB84 vs MDI-QKD vs direct-link BB84: three-way comparison of key rate, cost, and user scalability; isolates the cost of the MDI trust-removal guarantee |
 | Decoy-state key rate formula: vacuum + weak decoy correction for PNS-attack resistance; relevant if source model is relaxed from ideal single-photon to weak coherent pulse (WCP) |
@@ -139,11 +161,3 @@ DB layer removed for redesign. P2P and network schemas will be rebuilt together 
 | Fully connected BB84 (direct pairwise links, no relay) as additional baseline |
 | Relay placement sensitivity: random vs optimal placement comparison |
 | Cross-relay vs same-relay pair success rate comparison |
-
----
-
-## Open Questions
-
-| Question |
-|----------|
-| **Missing lower error bars at high distance/noise:** at near-cutoff distances, lower IQR/min whiskers are absent on MDI plots. Failed runs are excluded before aggregation, so the surviving runs cluster near the QBER threshold with near-zero spread below the median. Unclear whether this reflects genuine distribution shape or an artefact of the cutoff filtering — worth checking whether including failed runs (as zero key rate) changes the picture. |
