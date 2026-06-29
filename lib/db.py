@@ -14,6 +14,7 @@ def init_db(path=DEFAULT_DB_PATH):
             row_id          INTEGER PRIMARY KEY AUTOINCREMENT,
             run_id          TEXT    NOT NULL,
             run_timestamp   TEXT    NOT NULL,
+            net_run_id      TEXT,
             protocol        TEXT    NOT NULL,
             fibre_len       REAL    NOT NULL,
             photon_count    INTEGER NOT NULL,
@@ -38,6 +39,30 @@ def init_db(path=DEFAULT_DB_PATH):
             status          TEXT    NOT NULL
         )
     """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS network_results (
+            row_id               INTEGER PRIMARY KEY AUTOINCREMENT,
+            net_run_id           TEXT    NOT NULL,
+            run_timestamp        TEXT    NOT NULL,
+            experiment           TEXT,
+            protocol             TEXT    NOT NULL,
+            n_users              INTEGER NOT NULL,
+            k_relays             INTEGER,
+            area_km              REAL,
+            seed                 INTEGER,
+            runtimes             INTEGER NOT NULL,
+            config_preset        TEXT,
+            n_pairs              INTEGER NOT NULL,
+            total_fibre_km       REAL,
+            avg_pair_distance_km REAL,
+            cross_relay_ratio    REAL,
+            avg_key_rate         REAL,
+            std_key_rate         REAL,
+            success_rate         REAL,
+            min_key_rate         REAL,
+            max_key_rate         REAL
+        )
+    """)
     conn.commit()
     return conn
 
@@ -46,7 +71,7 @@ def new_run_id():
     return str(uuid.uuid4())
 
 
-def insert_p2p_rows(conn, run_id, run_timestamp, params, key_lens, key_rate_list, qber_list):
+def insert_p2p_rows(conn, run_id, run_timestamp, params, key_lens, key_rate_list, qber_list, net_run_id=None):
     rows = []
     for kl, kr, qb in zip(key_lens, key_rate_list, qber_list):
         if kr != "nan":
@@ -57,7 +82,7 @@ def insert_p2p_rows(conn, run_id, run_timestamp, params, key_lens, key_rate_list
             status, key_rate, qber, key_len = "timeout", None, None, None
 
         rows.append((
-            run_id, run_timestamp,
+            run_id, run_timestamp, net_run_id,
             params["protocol"],     params["fibre_len"],     params["photon_count"],
             params["source_freq"],  params["q_speed"],       params["q_delay"],
             params["len_loss"],     params["init_loss"],     params["detector_eff_z"],
@@ -70,12 +95,32 @@ def insert_p2p_rows(conn, run_id, run_timestamp, params, key_lens, key_rate_list
 
     conn.executemany("""
         INSERT INTO p2p_results (
-            run_id, run_timestamp,
+            run_id, run_timestamp, net_run_id,
             protocol, fibre_len, photon_count, source_freq, q_speed, q_delay,
             len_loss, init_loss, detector_eff_z, detector_eff_x, dark_count,
             node_loss_db, source_err_rate, dephasing_rate, runtimes, config_preset,
             bs_eff, charlie_pos,
             key_rate, qber, key_len, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, rows)
+    conn.commit()
+
+
+def insert_network_row(conn, net_run_id, run_timestamp, experiment, protocol,
+                       n_users, k_relays, area_km, seed, runtimes, config_preset,
+                       n_pairs, total_fibre_km, avg_pair_distance_km, cross_relay_ratio,
+                       avg_key_rate, std_key_rate, success_rate, min_key_rate, max_key_rate):
+    conn.execute("""
+        INSERT INTO network_results (
+            net_run_id, run_timestamp, experiment, protocol,
+            n_users, k_relays, area_km, seed, runtimes, config_preset,
+            n_pairs, total_fibre_km, avg_pair_distance_km, cross_relay_ratio,
+            avg_key_rate, std_key_rate, success_rate, min_key_rate, max_key_rate
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        net_run_id, run_timestamp, experiment, protocol,
+        n_users, k_relays, area_km, seed, runtimes, config_preset,
+        n_pairs, total_fibre_km, avg_pair_distance_km, cross_relay_ratio,
+        avg_key_rate, std_key_rate, success_rate, min_key_rate, max_key_rate,
+    ))
     conn.commit()
