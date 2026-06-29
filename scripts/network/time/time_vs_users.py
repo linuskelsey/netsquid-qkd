@@ -186,24 +186,31 @@ def main():
         print(f"{N:>4}  {N*(N-1)//2:>6}  {bb84_mean[i]:>11.3f}  {bb84_cpu_mean[i]:>10.1f}  {mdi_str}")
 
     # ── Extrapolation to N=100 ────────────────────────────────────────────────
-    pairs_100 = 100 * 99 // 2   # 4950
-    tpp_bb84  = float(np.mean(bb84_mean))
-    tpp_mdi   = float(np.mean(mdi_mean)) if mdi_mean.size else tpp_bb84
+    pairs_100      = 100 * 99 // 2   # 4950
+    sweep_points   = 10              # data points per protocol (e.g. detector efficiency)
+    sweep_seeds    = 10
+    sweep_runtimes = 100             # runtimes/pair/seed → 1000 effective per data point
 
-    # one full network call at N=100 (all pairs × runtimes)
+    tpp_bb84 = float(np.mean(bb84_mean))
+    tpp_mdi  = float(np.mean(mdi_mean)) if mdi_mean.size else tpp_bb84
+
+    # single network call at N=100 (as measured with args.runtimes)
     one_bb84_seq = tpp_bb84 * pairs_100 * args.runtimes
     one_mdi_seq  = tpp_mdi  * pairs_100 * args.runtimes
     one_bb84_par = one_bb84_seq / n_workers_display
     one_mdi_par  = one_mdi_seq  / n_workers_display
 
-    # 10-point relay sweep (10 K values, 1 seed)
-    sweep_bb84_par = one_bb84_par * 10
-    sweep_mdi_par  = one_mdi_par  * 10
+    # device-param sweep: 10 pts × both protocols × 10 seeds × 100 runtimes
+    bb84_pt_par    = tpp_bb84 * pairs_100 * sweep_runtimes / n_workers_display
+    mdi_pt_par     = tpp_mdi  * pairs_100 * sweep_runtimes / n_workers_display
+    sweep_total    = (bb84_pt_par + mdi_pt_par) * sweep_points * sweep_seeds
 
-    print(f"\n── Extrapolation: N=100, {pairs_100} pairs, {args.runtimes} runtimes/pair ──")
-    print(f"  Single run  BB84: seq {_fmt(one_bb84_seq)}  par {_fmt(one_bb84_par)}  ({n_workers_display} workers)")
-    print(f"  Single run  MDI:  seq {_fmt(one_mdi_seq)}  par {_fmt(one_mdi_par)}  ({n_workers_display} workers)")
-    print(f"  10-pt sweep BB84: {_fmt(sweep_bb84_par)}  |  MDI: {_fmt(sweep_mdi_par)}  (parallel, 1 seed)")
+    print(f"\n── Extrapolation: N=100, {pairs_100} pairs ──")
+    print(f"  Single run (×{args.runtimes} runtimes)  BB84: seq {_fmt(one_bb84_seq)}  par {_fmt(one_bb84_par)}  ({n_workers_display} workers)")
+    print(f"  Single run (×{args.runtimes} runtimes)  MDI:  seq {_fmt(one_mdi_seq)}  par {_fmt(one_mdi_par)}  ({n_workers_display} workers)")
+    print(f"\n── Device-param sweep  ({sweep_points} pts × both protocols × {sweep_seeds} seeds × {sweep_runtimes} runtimes = {sweep_runtimes * sweep_seeds} effective) ──")
+    print(f"  BB84 per data point: {_fmt(bb84_pt_par)}  |  MDI per data point: {_fmt(mdi_pt_par)}  ({n_workers_display} workers)")
+    print(f"  Total sweep:         {_fmt(sweep_total)}")
 
     # ── Plot ──────────────────────────────────────────────────────────────────
     fig, (ax1, ax_cpu) = plt.subplots(
