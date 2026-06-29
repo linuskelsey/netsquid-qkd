@@ -48,6 +48,7 @@ sys.path.insert(0, ROOT)
 from BB84.BB84_run import run_BB84_sims
 from MDI.mdiRun import run_mdi_sims
 from lib.functions import load_config
+from lib.db import DEFAULT_DB_PATH
 
 LAYERS = [
     ("layer0_ideal.json",       "Layer 0: Ideal"),
@@ -77,7 +78,7 @@ def aggregate(KeyListA, KeyListB, KeyRateList, QBERList):
     return avg, rates, qbers, lengths
 
 
-def run_layer_bb84(cfg, runtimes, workers=None):
+def run_layer_bb84(cfg, runtimes, workers=None, db_path=DEFAULT_DB_PATH):
     rates, mins, maxs = [], [], []
     for d in Dx:
         KA, KB, KR, KQ = run_BB84_sims(
@@ -95,6 +96,7 @@ def run_layer_bb84(cfg, runtimes, workers=None):
             sourceErrRate = cfg["source_error_rate"],
             dephasingRate = cfg["dephasing_rate"],
             workers       = workers,
+            db_path       = db_path,
         )
         avg, raw_rates, raw_qbers, raw_lengths = aggregate(KA, KB, KR, KQ)
         rates.append(avg)
@@ -105,7 +107,7 @@ def run_layer_bb84(cfg, runtimes, workers=None):
     return [r / k for r in rates], [r / k for r in mins], [r / k for r in maxs]
 
 
-def run_layer_mdi(cfg, runtimes, workers=None):
+def run_layer_mdi(cfg, runtimes, workers=None, db_path=DEFAULT_DB_PATH):
     rates, mins, maxs = [], [], []
     for d in Dx:
         KA, KB, KR, KQ = run_mdi_sims(
@@ -124,6 +126,7 @@ def run_layer_mdi(cfg, runtimes, workers=None):
             dephasingRate = cfg["dephasing_rate"],
             bsEff         = cfg["bs_eff"],
             workers       = workers,
+            db_path       = db_path,
         )
         avg, raw_rates, raw_qbers, raw_lengths = aggregate(KA, KB, KR, KQ)
         rates.append(avg)
@@ -139,6 +142,7 @@ if __name__ == "__main__":
     parser.add_argument("--runtimes",  type=int, default=100)
     parser.add_argument("--protocol",  choices=["bb84", "mdi", "both"], default="both",
                         help="Protocol(s) to run: bb84, mdi, or both (default: both)")
+    parser.add_argument("--no-db",    action="store_true", help="Disable DB writing")
     parser.add_argument("--workers",  type=int, default=None, help="Worker processes (default: 80%% of CPU cores)")
     args = parser.parse_args()
 
@@ -151,7 +155,7 @@ if __name__ == "__main__":
         for i, (cfg_file, label) in enumerate(LAYERS[:9]):
             cfg = load_config(os.path.join(ROOT, "configs", cfg_file))
             print(f"BB84 {label}...")
-            rates, mins, maxs = run_layer_bb84(cfg, args.runtimes, workers=args.workers)
+            rates, mins, maxs = run_layer_bb84(cfg, args.runtimes, workers=args.workers, db_path=None if args.no_db else DEFAULT_DB_PATH)
             yerr = [
                 [max(r - m, 0) for r, m in zip(rates, mins)],
                 [max(m - r, 0) for r, m in zip(rates, maxs)],
@@ -170,7 +174,7 @@ if __name__ == "__main__":
         for i, (cfg_file, label) in enumerate(LAYERS):
             cfg = load_config(os.path.join(ROOT, "configs", cfg_file))
             print(f"MDI {label}...")
-            rates, mins, maxs = run_layer_mdi(cfg, args.runtimes, workers=args.workers)
+            rates, mins, maxs = run_layer_mdi(cfg, args.runtimes, workers=args.workers, db_path=None if args.no_db else DEFAULT_DB_PATH)
             yerr = [
                 [max(r - m, 0) for r, m in zip(rates, mins)],
                 [max(m - r, 0) for r, m in zip(rates, maxs)],

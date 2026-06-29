@@ -23,6 +23,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
 from MDI.mdiRun import run_mdi_sims
+from lib.db import DEFAULT_DB_PATH
 from lib.functions import load_config, config_arg_parser
 
 
@@ -85,6 +86,7 @@ if __name__ == "__main__":
     parser.add_argument("--source-err",     type=float, default=None, dest="source_err",     help="Source bit error rate [0-1]")
     parser.add_argument("--dephasing-rate", type=float, default=None, dest="dephasing_rate", help="Dephasing rate per km")
     parser.add_argument("--bs-eff",         type=float, default=None, dest="bs_eff",         help="Beam splitter efficiency at relay [0-1]")
+    parser.add_argument("--no-db",          action="store_true", help="Disable DB writing")
     parser.add_argument("--workers",        type=int,   default=None,                        help="Worker processes (default: 80%% of CPU cores)")
     args = parser.parse_args()
     cfg  = load_config(args.config)
@@ -125,6 +127,7 @@ if __name__ == "__main__":
         dephasingRate = cfg["dephasing_rate"],
         bsEff         = cfg["bs_eff"],
         workers       = args.workers,
+        db_path       = None if args.no_db else DEFAULT_DB_PATH,
     )
 
     print("  Per-run results:")

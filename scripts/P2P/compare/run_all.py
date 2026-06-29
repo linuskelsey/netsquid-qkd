@@ -67,6 +67,7 @@ if __name__ == "__main__":
     parser.add_argument("--output-dir", type=str,  default=None, help="Override save directory")
     parser.add_argument("--show",       action="store_true", help="Display plots interactively instead of saving")
     parser.add_argument("--config",     type=str,  default=None, help="JSON config preset")
+    parser.add_argument("--no-db",      action="store_true", help="Disable DB writing")
     args = parser.parse_args()
 
     here         = os.path.dirname(os.path.abspath(__file__))
@@ -95,6 +96,8 @@ if __name__ == "__main__":
             cmd += ["--config", args.config]
         if output_dir is not None:
             cmd += ["--output-dir", output_dir]
+        if args.no_db:
+            cmd += ["--no-db"]
         print(f"[{i}/{len(SCRIPTS)}] Starting {script}  (runtimes={args.runtimes})")
         p = subprocess.Popen(cmd)
         processes.append(p)

@@ -21,6 +21,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirna
 from BB84.BB84_run import run_BB84_sims
 from MDI.mdiRun import run_mdi_sims
 from lib.functions import load_config, config_arg_parser
+from lib.db import DEFAULT_DB_PATH
 import time
 from lib.progress import Progress
 
@@ -50,6 +51,7 @@ if __name__ == "__main__":
     parser.add_argument("--error",    choices=["bars", "shade", "sigma", "iqr", "sem"], default="bars",
                         help="Error display: bars=min/max whiskers (default), shade=±1σ log-space band, "
                              "sigma=±1σ whiskers, iqr=IQR 25–75th percentile, sem=±1 SEM")
+    parser.add_argument("--no-db",     action="store_true", help="Disable DB writing")
     parser.add_argument("--workers",   type=int,   default=None, help="Worker processes (default: 80%% of CPU cores)")
     parser.add_argument("--output-dir", type=str, default=None, help="Directory to save figure into (skips interactive display)")
     args = parser.parse_args()
@@ -79,6 +81,7 @@ if __name__ == "__main__":
         sourceErrRate = cfg["source_error_rate"],
         dephasingRate = cfg["dephasing_rate"],
         workers       = args.workers,
+        db_path       = None if args.no_db else DEFAULT_DB_PATH,
     )
     bb84_avg, bb84_min, bb84_max, bb84_std, bb84_q25, bb84_q75, bb84_sem, bb84_rates = aggregate(KR_bb84)
     step = 1
@@ -110,6 +113,7 @@ if __name__ == "__main__":
             bsEff         = cfg["bs_eff"],
             charliePos    = cp,
             workers       = args.workers,
+            db_path       = None if args.no_db else DEFAULT_DB_PATH,
         )
         avg, mn, mx, std, q25, q75, sem, mdi_rates = aggregate(KR_mdi)
         avgs_mdi.append(avg)
