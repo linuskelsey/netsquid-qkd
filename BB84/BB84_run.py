@@ -14,7 +14,7 @@ _repo_root = os.path.dirname(_this_dir)
 sys.path.insert(0, _this_dir)   # BB84_Alice, BB84_Bob
 sys.path.insert(0, _repo_root)  # lib.functions
 from lib.functions import HybridDelayModel, load_config, config_arg_parser
-from lib.db import init_db, insert_p2p_rows, new_run_id
+from lib.db import init_db, insert_p2p_rows, new_run_id, DEFAULT_DB_PATH
 from datetime import datetime
 
 from BB84_Alice import AliceProtocol
@@ -118,7 +118,7 @@ def run_BB84_sims(runtimes=10,
                   sourceErrRate=0.0,
                   dephasingRate=0.0,
                   workers=None,
-                  db_path=None,
+                  db_path=DEFAULT_DB_PATH,
                   config_preset=None):
 
     run_id        = new_run_id()

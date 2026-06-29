@@ -13,7 +13,7 @@ _repo_root = os.path.dirname(_this_dir)
 sys.path.insert(0, _this_dir)   # mdiEndUser, mdiRelayNode
 sys.path.insert(0, _repo_root)  # lib.functions
 from lib.functions import HybridDelayModel, load_config, config_arg_parser
-from lib.db import init_db, insert_p2p_rows, new_run_id
+from lib.db import init_db, insert_p2p_rows, new_run_id, DEFAULT_DB_PATH
 from datetime import datetime
 
 from mdiEndUser import EndNodeProtocol
@@ -151,7 +151,7 @@ def run_mdi_sims(runtimes=10,
                  bsEff=1.0,
                  charliePos=0.5,
                  workers=None,
-                 db_path=None,
+                 db_path=DEFAULT_DB_PATH,
                  config_preset=None):
 
     run_id        = new_run_id()
