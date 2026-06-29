@@ -119,9 +119,15 @@ def main():
             topo_mdi  = Topology(user_pos, relay_pos)
 
             bb84_res = run_bb84_network(topo_bb84, cfg, runtimes=args.runtimes, workers=args.workers,
-                              p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH)
+                              p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
+                              net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
+                              experiment="user_sweep", seed=seed, area_km=args.area,
+                              config_preset=args.config)
             mdi_res  = run_mdi_network(topo_mdi,  cfg, runtimes=args.runtimes, workers=args.workers,
-                                       p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH)
+                                       p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
+                                       net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
+                                       experiment="user_sweep", seed=seed, area_km=args.area,
+                                       config_preset=args.config)
 
             bp = _pair_avgs(bb84_res["pair_rates"])
             mp = _pair_avgs(mdi_res["pair_rates"])

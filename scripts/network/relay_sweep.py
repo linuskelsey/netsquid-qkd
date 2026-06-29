@@ -103,7 +103,10 @@ def main():
         prog.update(step, f"BB84 reference running...")
         topo_bb84  = Topology(user_pos)
         bb84_res   = run_bb84_network(topo_bb84, cfg, runtimes=args.runtimes, workers=args.workers,
-                              p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH)
+                              p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
+                              net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
+                              experiment="relay_sweep", seed=seed, area_km=args.area,
+                              config_preset=args.config)
         bp         = _pair_avgs(bb84_res["pair_rates"])
         _s_bb84    = np.mean(bp) if bp else 0.0
         _s_bb84_ok = bb84_res["success_rate"] * 100
@@ -117,7 +120,10 @@ def main():
             relay_pos  = optimise_relays(user_pos, K, seed=seed)
             topo       = Topology(user_pos, relay_pos)
             mdi_res    = run_mdi_network(topo, cfg, runtimes=args.runtimes, workers=args.workers,
-                             p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH)
+                             p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
+                             net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
+                             experiment="relay_sweep", seed=seed, area_km=args.area,
+                             config_preset=args.config)
             mp         = _pair_avgs(mdi_res["pair_rates"])
             _s_mdi     = np.mean(mp) if mp else 0.0
             _s_mdi_ok  = mdi_res["success_rate"] * 100
