@@ -210,15 +210,16 @@ def main():
     tpp_bb84 = float(np.mean(bb84_mean))
     tpp_mdi  = float(np.mean(mdi_mean)) if mdi_mean.size else tpp_bb84
 
-    # single network call at N=100 (as measured with args.runtimes)
-    one_bb84_seq = tpp_bb84 * pairs_100 * args.runtimes
-    one_mdi_seq  = tpp_mdi  * pairs_100 * args.runtimes
-    one_bb84_par = one_bb84_seq / n_workers_display
-    one_mdi_par  = one_mdi_seq  / n_workers_display
+    # tpp already reflects parallel speedup (measured with n_workers_display workers)
+    # true sequential = tpp × workers; true parallel = tpp × new_pairs × new_runtimes
+    one_bb84_seq = tpp_bb84 * pairs_100 * args.runtimes * n_workers_display
+    one_mdi_seq  = tpp_mdi  * pairs_100 * args.runtimes * n_workers_display
+    one_bb84_par = tpp_bb84 * pairs_100 * args.runtimes
+    one_mdi_par  = tpp_mdi  * pairs_100 * args.runtimes
 
     # device-param sweep: 10 pts × both protocols × 10 seeds × 100 runtimes
-    bb84_pt_par = tpp_bb84 * pairs_100 * sweep_runtimes / n_workers_display
-    mdi_pt_par  = tpp_mdi  * pairs_100 * sweep_runtimes / n_workers_display
+    bb84_pt_par = tpp_bb84 * pairs_100 * sweep_runtimes
+    mdi_pt_par  = tpp_mdi  * pairs_100 * sweep_runtimes
     sweep_total = (bb84_pt_par + mdi_pt_par) * sweep_points * sweep_seeds
 
     print(f"\n── Extrapolation: N=100, {pairs_100} pairs ──")
