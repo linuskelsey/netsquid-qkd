@@ -13,6 +13,8 @@ _repo_root = os.path.dirname(_this_dir)
 sys.path.insert(0, _this_dir)   # mdiEndUser, mdiRelayNode
 sys.path.insert(0, _repo_root)  # lib.functions
 from lib.functions import HybridDelayModel, load_config, config_arg_parser
+from lib.db import init_db, insert_p2p_rows, new_run_id
+from datetime import datetime
 
 from mdiEndUser import EndNodeProtocol
 from mdiRelayNode import RelayNodeProtocol
@@ -148,7 +150,12 @@ def run_mdi_sims(runtimes=10,
                  dephasingRate=0.0,
                  bsEff=1.0,
                  charliePos=0.5,
-                 workers=None):
+                 workers=None,
+                 db_path=None,
+                 config_preset=None):
+
+    run_id        = new_run_id()
+    run_timestamp = datetime.now().isoformat()
 
     n = max(1, int(os.cpu_count() * 0.8)) if workers is None else workers
     n = min(n, runtimes)
@@ -168,6 +175,20 @@ def run_mdi_sims(runtimes=10,
         KeyListB.extend(kB)
         KeyRateList.extend(kR)
         QBERList.extend(kQ)
+
+    if db_path is not None:
+        params = {
+            "protocol": "MDI", "fibre_len": fibreLen, "photon_count": photonCount,
+            "source_freq": sourceFreq, "q_speed": qSpeed, "q_delay": qDelay,
+            "len_loss": lenLoss, "init_loss": initLoss, "detector_eff_z": detectorEffZ,
+            "detector_eff_x": detectorEffX, "dark_count": darkCount, "node_loss_db": nodeLossDb,
+            "source_err_rate": sourceErrRate, "dephasing_rate": dephasingRate,
+            "runtimes": runtimes, "config_preset": config_preset,
+            "bs_eff": bsEff, "charlie_pos": charliePos,
+        }
+        conn = init_db(db_path)
+        insert_p2p_rows(conn, run_id, run_timestamp, params, KeyListA, KeyRateList, QBERList)
+        conn.close()
 
     return KeyListA, KeyListB, KeyRateList, QBERList
 
