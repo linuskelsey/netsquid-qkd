@@ -16,7 +16,9 @@ network/        Multi-user network simulation
   bb84_network.py       BB84 over all N(N-1)/2 direct pairs; per-pair and network-level metrics
   mdi_network.py        MDI-QKD over all pairs via nearest relay; cross-cluster passive routing
   visualise_network.py  Side-by-side MDI cluster / BB84 mesh topology plot
-lib/            Shared utilities (delay model, photon source, config loader)
+lib/            Shared utilities (delay model, photon source, config loader, DB layer)
+  db.py                 SQLite persistence: p2p_results and network_results tables
+data/           SQLite database (git-ignored; created on first run)
 configs/        JSON parameter presets (layer0_ideal → layer8_bs_eff)
 scripts/
   P2P/
@@ -26,8 +28,11 @@ scripts/
                 beam splitter efficiency, Charlie placement
     layers.py   Effect of each modelling layer per protocol
   network/
-    relay_sweep.py  Exp 1: fixed N users, vary K relays — key rate + success rate vs K
-    user_sweep.py   Exp 2: fixed K relays (optimised at ref-N), vary N users — key rate vs N
+    relay_sweep.py       Exp 1: fixed N users, vary K relays — key rate + success rate vs K
+    user_sweep.py        Exp 2: fixed K relays (optimised at ref-N), vary N users — key rate vs N
+    time/
+      time_vs_area.py    Wall-clock runtime vs network area at fixed N and K
+      time_vs_users.py   Wall-clock runtime vs user count N at fixed K
 ```
 
 ## Running
@@ -69,6 +74,9 @@ python MDI/mdiRun.py   --config configs/layer2_eff.json --det-eff-x 0.7
 
 # Limit worker processes (default: 80% of CPU cores)
 python scripts/P2P/compare/length.py --workers 4
+
+# Disable DB writing (all scripts write to data/results.db by default)
+python scripts/P2P/compare/length.py --no-db
 
 # Config preset + CLI override (CLI takes precedence)
 python scripts/P2P/compare/length.py --config configs/layer3_dark.json --fibre 30
@@ -127,6 +135,11 @@ Run Experiment 1 — relay count sweep (fixed N, vary K):
 ```bash
 python scripts/network/relay_sweep.py --n 20 --k-min 1 --k-max 8 --runtimes 20
 python scripts/network/relay_sweep.py --n 20 --k-min 1 --k-max 8 --config configs/layer3_dark.json --save figures/relay_sweep.png
+
+# DB control: suppress P2P pair rows, network summary rows, or both
+python scripts/network/relay_sweep.py --no-p2p-db
+python scripts/network/relay_sweep.py --no-net-db
+python scripts/network/relay_sweep.py --no-p2p-db --no-net-db
 ```
 
 BB84 is run once (relay-independent) and reused across all K values. MDI re-runs per K with re-optimised relay positions. Produces two figures: key rate + success rate vs K, and a topology visualisation at the midpoint K.
@@ -135,10 +148,13 @@ See [NETWORK.md](NETWORK.md) for full experimental design and hypotheses.
 
 See [PARAMS.md](PARAMS.md) for config presets, simulation defaults, and realistic hardware parameter ranges.
 
+See [DATA.md](DATA.md) for database schema and example queries.
+
 ## Dependencies
 
 - [NetSquid](https://netsquid.org) (requires registration)
 - NumPy, Matplotlib
+- SQLite3 (stdlib)
 
 ## Status and Roadmap
 

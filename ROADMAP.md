@@ -30,6 +30,8 @@
 | Raw script config wiring |
 | `--workers` flag on all compare scripts |
 | Timing wrapper + progress indicator: animated braille spinner with elapsed time and per-step label; `✓ complete  total Xm Ys` at end; seed headers and completion lines for network scripts (`lib/progress.py`) |
+| Timing scripts: wall-clock time vs network area (`scripts/network/time/time_vs_area.py`) and vs user count (`scripts/network/time/time_vs_users.py`) |
+| Data persistence: SQLite DB (`lib/db.py`, `data/results.db`); `p2p_results` table written by all P2P scripts; `network_results` table written by network sweep scripts; `--no-db` / `--no-p2p-db` / `--no-net-db` opt-out flags; schema documented in `DATA.md` |
 
 ### Network Scale Modelling
 
@@ -85,16 +87,12 @@
 |---------|
 | `--compare-configs` flag on all compare scripts: run same sweep under 2–3 config presets, overlay on one figure |
 | Interactive TUI launcher (`scripts/tui.py`): arrow-key menus for P2P or network path, full parameter setup, assembles and optionally runs the target script; optionally saves config JSON |
-| Timing data extraction: extend `lib/progress.py` to record per-step and total wall-clock times; write to a sidecar JSON (`<output_stem>_timing.json`) alongside every script run; enables runtime profiling, Monte Carlo scaling estimates, and cost modelling |
 
 ### Data Persistence
 
-DB layer removed for redesign. P2P and network schemas will be rebuilt together with a shared structure.
-
 | Feature |
 |---------|
-| P2P results DB (`lib/db.py`, `scripts/P2P/analyse.py`) — removed, to be redesigned |
-| Network results DB — design pending |
+| `scripts/P2P/analyse.py`: replot any saved P2P sweep without re-running — design pending |
 | `scripts/network/analyse.py`: replot any saved network sweep without re-running — design pending |
 
 ### Network Scale Modelling
@@ -145,6 +143,7 @@ DB layer removed for redesign. P2P and network schemas will be rebuilt together 
 ### Extensions
 
 | Item |
+| Timing data extraction: extend `lib/progress.py` to record per-step and total wall-clock times; write to a sidecar JSON (`<output_stem>_timing.json`) alongside every script run; enables runtime profiling, Monte Carlo scaling estimates, and cost modelling |
 |------|
 | Security level taxonomy: define deployment tiers L0–L5 by trust assumption (L0: trust all components except links = ideal QKD; ... L5: trust nothing = device-independent QKD); map BB84 and MDI-QKD to appropriate levels; use as framework for recommendations on when MDI is warranted despite key rate deficit |
 | MDI deployment on existing network infrastructure: scoping exercise — if fibre topology is fixed (no relay placement freedom), how does MDI performance change? Assess feasibility and cost delta vs greenfield deployment; flag as potential standalone research project |

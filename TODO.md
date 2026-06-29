@@ -12,9 +12,6 @@
 - [ ] Overlay literature data points on `layers.py` plots (scatter markers, distinct style from simulation lines)
 - [ ] Add legend entries and source citations for each literature curve
 
-### 3. Database Saving
-- [ ] Wire in .db saving to network simulations
-
 ---
 
 ## Backlog
