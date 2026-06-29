@@ -10,6 +10,7 @@ docs/netsquid
 
 # latex
 *.tex
+docs/latex_slides
 
 # merge script
 merge-all.sh
