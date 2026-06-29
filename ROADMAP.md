@@ -85,6 +85,7 @@
 |---------|
 | `--compare-configs` flag on all compare scripts: run same sweep under 2–3 config presets, overlay on one figure |
 | Interactive TUI launcher (`scripts/tui.py`): arrow-key menus for P2P or network path, full parameter setup, assembles and optionally runs the target script; optionally saves config JSON |
+| Timing data extraction: extend `lib/progress.py` to record per-step and total wall-clock times; write to a sidecar JSON (`<output_stem>_timing.json`) alongside every script run; enables runtime profiling, Monte Carlo scaling estimates, and cost modelling |
 
 ### Data Persistence
 
@@ -138,7 +139,7 @@ DB layer removed for redesign. P2P and network schemas will be rebuilt together 
 
 | Question |
 |----------|
-| **MDI network-scale key rate gap:** MDI is ~10× worse than BB84 at network scale but only ~3× worse at P2P. Candidate causes: relay routing adds hops (longer effective distances), BSM success rate (~50%) compounds across more links, passive optical switch insertion loss, cross-cluster pairs routed through more nodes. Needs targeted experiment to isolate dominant factor. See also Project Report item. |
+| **MDI network-scale key rate gap:** MDI is ~10× worse than BB84 at network scale but only approx. 3× worse at P2P. Candidate causes: relay routing adds hops (longer effective distances), BSM success rate (approx. 50%) compounds across more links, passive optical switch insertion loss, cross-cluster pairs routed through more nodes. Needs targeted experiment to isolate dominant factor. See also Project Report item. |
 | **Missing lower error bars at high distance/noise:** at near-cutoff distances, lower IQR/min whiskers are absent on MDI plots. Failed runs are excluded before aggregation, so the surviving runs cluster near the QBER threshold with near-zero spread below the median. Unclear whether this reflects genuine distribution shape or an artefact of the cutoff filtering — worth checking whether including failed runs (as zero key rate) changes the picture. |
 
 ### Extensions
