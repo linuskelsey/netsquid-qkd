@@ -186,8 +186,9 @@ def run_mdi_sims(runtimes=10,
             "runtimes": runtimes, "config_preset": config_preset,
             "bs_eff": bsEff, "charlie_pos": charliePos,
         }
+        key_lens = [len(a) if a != "nan" else None for a in KeyListA]
         conn = init_db(db_path)
-        insert_p2p_rows(conn, run_id, run_timestamp, params, KeyListA, KeyRateList, QBERList)
+        insert_p2p_rows(conn, run_id, run_timestamp, params, key_lens, KeyRateList, QBERList)
         conn.close()
 
     return KeyListA, KeyListB, KeyRateList, QBERList

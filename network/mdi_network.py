@@ -1,8 +1,10 @@
 import sys
 import os
 from multiprocessing import get_context
+from datetime import datetime
 import numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from lib.db import init_db, insert_p2p_rows, new_run_id, DEFAULT_DB_PATH
 
 SWITCH_LOSS_DB = 1.0  # insertion loss for cross-cluster passive optical router
 
@@ -28,10 +30,11 @@ def _mdi_pair_task(args):
         lenLoss, initLoss, detectorEffZ, None,
         darkCount, nodeLossDb, sourceErrRate, dephasingRate, bsEff, charlie_pos,
     ))
-    return (i, j), kR, kQ
+    kL = [len(a) if a != "nan" else None for a in kA]
+    return (i, j), kR, kQ, kL
 
 
-def run_mdi_network(topo, cfg, runtimes=10, workers=None, switch_loss_db=SWITCH_LOSS_DB, verbose=False):
+def run_mdi_network(topo, cfg, runtimes=10, workers=None, switch_loss_db=SWITCH_LOSS_DB, verbose=False, p2p_db_path=DEFAULT_DB_PATH):
     """
     Run MDI-QKD over all N(N-1)/2 pairs in topo.
 
@@ -68,14 +71,32 @@ def run_mdi_network(topo, cfg, runtimes=10, workers=None, switch_loss_db=SWITCH_
             cfg["dephasing_rate"], cfg["bs_eff"],
         ))
 
+    run_timestamp = datetime.now().isoformat()
+
     with get_context('spawn').Pool(n_workers) as pool:
         raw = pool.map(_mdi_pair_task, tasks)
 
     pair_rates = {}
     pair_qbers = {}
-    for (i, j), kR, kQ in raw:
+    for (i, j), kR, kQ, kL in raw:
         pair_rates[(i, j)] = kR
         pair_qbers[(i, j)] = kQ
+
+    if p2p_db_path is not None:
+        conn = init_db(p2p_db_path)
+        for task_args, (_, kR, kQ, kL) in zip(tasks, raw):
+            i, j, total_km, charlie_pos, _, _, _, _, _, node_loss, _, _, _ = task_args
+            params = {
+                "protocol": "MDI", "fibre_len": total_km, "photon_count": 1024,
+                "source_freq": 1e7, "q_speed": 0.8, "q_delay": 0,
+                "len_loss": cfg["fibre_loss_db_per_km"], "init_loss": cfg["init_loss"],
+                "detector_eff_z": cfg["detector_efficiency"], "detector_eff_x": None,
+                "dark_count": cfg["dark_count_rate"], "node_loss_db": node_loss,
+                "source_err_rate": cfg["source_error_rate"], "dephasing_rate": cfg["dephasing_rate"],
+                "runtimes": runtimes, "bs_eff": cfg["bs_eff"], "charlie_pos": charlie_pos,
+            }
+            insert_p2p_rows(conn, new_run_id(), run_timestamp, params, kL, kR, kQ)
+        conn.close()
 
     if verbose:
         for idx, (i, j) in enumerate(pairs):

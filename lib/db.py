@@ -46,11 +46,11 @@ def new_run_id():
     return str(uuid.uuid4())
 
 
-def insert_p2p_rows(conn, run_id, run_timestamp, params, key_lists_a, key_rate_list, qber_list):
+def insert_p2p_rows(conn, run_id, run_timestamp, params, key_lens, key_rate_list, qber_list):
     rows = []
-    for keyA, kr, qb in zip(key_lists_a, key_rate_list, qber_list):
+    for kl, kr, qb in zip(key_lens, key_rate_list, qber_list):
         if kr != "nan":
-            status, key_rate, qber, key_len = "success", kr, qb, len(keyA)
+            status, key_rate, qber, key_len = "success", kr, qb, kl
         elif qb is not None:
             status, key_rate, qber, key_len = "qber_cutoff", None, qb, None
         else:

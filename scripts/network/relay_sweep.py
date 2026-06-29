@@ -38,6 +38,7 @@ sys.path.insert(0, _network)
 
 import time
 from lib.functions import load_config
+from lib.db import DEFAULT_DB_PATH
 from lib.progress import Progress
 from topology import place_users, optimise_relays, Topology
 from bb84_network import run_bb84_network
@@ -67,6 +68,8 @@ def main():
     parser.add_argument("--config",   type=str,   default=None, help="Path to JSON config")
     parser.add_argument("--error",    type=str,   default="bars", choices=["bars", "shade"])
     parser.add_argument("--save",     type=str,   default=None, help="Save path for results figure")
+    parser.add_argument("--no-p2p-db", action="store_true", help="Disable P2P DB writing")
+    parser.add_argument("--no-net-db", action="store_true", help="Disable network DB writing")
     parser.add_argument("--workers",  type=int,   default=None, help="Worker processes (default: 80%% of CPU cores)")
     args = parser.parse_args()
 
@@ -99,7 +102,8 @@ def main():
 
         prog.update(step, f"BB84 reference running...")
         topo_bb84  = Topology(user_pos)
-        bb84_res   = run_bb84_network(topo_bb84, cfg, runtimes=args.runtimes, workers=args.workers)
+        bb84_res   = run_bb84_network(topo_bb84, cfg, runtimes=args.runtimes, workers=args.workers,
+                              p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH)
         bp         = _pair_avgs(bb84_res["pair_rates"])
         _s_bb84    = np.mean(bp) if bp else 0.0
         _s_bb84_ok = bb84_res["success_rate"] * 100
@@ -112,7 +116,8 @@ def main():
             prog.update(step, f"Relay count: {K}/{K_values[-1]}  MDI running...")
             relay_pos  = optimise_relays(user_pos, K, seed=seed)
             topo       = Topology(user_pos, relay_pos)
-            mdi_res    = run_mdi_network(topo, cfg, runtimes=args.runtimes, workers=args.workers)
+            mdi_res    = run_mdi_network(topo, cfg, runtimes=args.runtimes, workers=args.workers,
+                             p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH)
             mp         = _pair_avgs(mdi_res["pair_rates"])
             _s_mdi     = np.mean(mp) if mp else 0.0
             _s_mdi_ok  = mdi_res["success_rate"] * 100
