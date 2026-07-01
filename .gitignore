@@ -11,6 +11,7 @@ docs/netsquid
 # latex
 *.tex
 docs/latex_slides
+docs/case-study-tex
 
 # merge script
 merge-all.sh
