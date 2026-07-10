@@ -72,7 +72,7 @@
 | Key rate vs beam splitter efficiency (MDI only) |
 | Realistic hardware regime shading on all sweep plots |
 | QBER threshold cutoffs (11% hard cutoff, both protocols) |
-| Per-point error bars on compare scripts (`--error bars` min/max whiskers, `--error shade` ±1σ band) |
+| Per-point error bars on all P2P compare scripts: `--error bars` (min/max whiskers), `shade` (±1σ band), `sigma` (log-space ±1σ error bars), `iqr` (Q1/Q3 whiskers), `sem` (standard error of mean) |
 | Always-on min/max error bars on `layers.py` |
 | Charlie placement sweep (asymmetric Alice-Charlie / Charlie-Bob links) |
 | Script to compare effect of each layer of modelling parameter per-protocol |
@@ -90,10 +90,55 @@
 
 ### Data Persistence
 
-| Feature |
-|---------|
-| `scripts/P2P/analyse.py`: replot any saved P2P sweep without re-running — design pending |
-| `scripts/network/analyse.py`: replot any saved network sweep without re-running — design pending |
+#### `scripts/analyse/` — Interactive TUI (`tui.py` + `db.py`, ~400 lines total)
+
+Reconstruct any P2P or network figure from `results.db` without re-running simulations.
+
+**Stack:** Textual (TUI), matplotlib (plot window, same pattern as sweep scripts), pandas, `lib/functions.py:DEFAULTS`
+
+**Files:**
+- `db.py` (~120 lines): column metadata + DEFAULTS mapping, `count_p2p`, `query_p2p`, `query_network`, `list_distinct`
+- `tui.py` (~280 lines): Textual app, two tabs (P2P / Network), reactive status bar
+
+**P2P tab controls:**
+- Sweep: radio select any of the 10 sweepable columns
+- Fixed params: all 10 columns shown; swept column grays out; `bs_eff` grays when BB84-only; defaults from `DEFAULTS` except `fibre_len` → 25 km
+- Protocol: BB84 / MDI checkboxes
+- Error mode: bars / shade / sigma / iqr / sem (same 5 modes as compare scripts, same plot logic)
+- Plot button: opens matplotlib window in daemon thread; user saves via toolbar
+
+**Fixed param defaults (P2P):**
+
+| DB column | Default |
+|---|---|
+| `fibre_len` | 25 km (hardcoded) |
+| `len_loss` | `DEFAULTS["fibre_loss_db_per_km"]` = 0.2 |
+| `init_loss` | `DEFAULTS["init_loss"]` = 0.1 |
+| `detector_eff_z` | `DEFAULTS["detector_efficiency"]` = 0.65 |
+| `dark_count` | `DEFAULTS["dark_count_rate"]` = 100 |
+| `node_loss_db` | `DEFAULTS["node_loss_db"]` = 2.0 |
+| `source_err_rate` | `DEFAULTS["source_error_rate"]` = 0.005 |
+| `detector_eff_x` | `DEFAULTS["det_eff_x"]` = 0.85 |
+| `dephasing_rate` | `DEFAULTS["dephasing_rate"]` = 0.0001 |
+| `bs_eff` | `DEFAULTS["bs_eff"]` = 0.97 |
+
+**Network tab controls:**
+- X axis: `k_relays` / `n_users` (auto-sets experiment)
+- Y axis: `avg_key_rate` / `success_rate` / `min_key_rate` / `max_key_rate`
+- Fixed params: complement of X axis, `area_km`, `seed` (blank = aggregate all seeds)
+- Protocol + error mode same as P2P tab
+
+**Reactivity:** any control change → debounced 300 ms → `COUNT(*)` query → status bar updates (`filtered: N / 2,270,000 rows  Q: Xs`)
+
+**Error mode → plot logic:**
+
+| Mode | Aggregation | matplotlib call |
+|---|---|---|
+| `bars` | min/max | `errorbar(yerr=[lower, upper])` |
+| `sigma` | log-space ±1σ | `errorbar(yerr=[r·(1−e⁻ˢ), r·(eˢ−1)])` |
+| `iqr` | Q25/Q75 | `errorbar(yerr=[r−q25, q75−r])` |
+| `sem` | std/√n | `errorbar(yerr=sem)` |
+| `shade` | log-space ±1σ band | `plot` + `fill_between` |
 
 ### Network Scale Modelling
 

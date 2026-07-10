@@ -12,6 +12,15 @@
 - [ ] Overlay literature data points on `layers.py` plots (scatter markers, distinct style from simulation lines)
 - [ ] Add legend entries and source citations for each literature curve
 
+### 3. `scripts/analyse/` — Interactive DB Replot TUI
+
+- [ ] Create `scripts/analyse/db.py`: column metadata dict, `count_p2p`, `query_p2p`, `query_network`, `list_distinct`
+- [ ] Create `scripts/analyse/tui.py`: Textual app, P2P tab (sweep radio, fixed param inputs, protocol checkboxes, error mode radio, Plot button)
+- [ ] Add Network tab (x/y axis selectors, experiment radio, fixed params, Plot button)
+- [ ] Wire Plot button → daemon thread → matplotlib window (same pattern as sweep scripts)
+- [ ] Debounced live row count in status bar on any control change
+- [ ] Reset to Defaults button
+
 ---
 
 ## Backlog
