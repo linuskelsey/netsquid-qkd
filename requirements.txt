@@ -1,6 +1,8 @@
 numpy
 matplotlib
 psutil
+pandas
+textual
 
 # NetSquid requires free registration at https://netsquid.org before install:
 # pip install netsquid --extra-index-url https://<user>:<password>@pypi.netsquid.org
