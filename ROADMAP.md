@@ -155,6 +155,12 @@ Reconstruct any P2P or network figure from `results.db` without re-running simul
 |------|
 | Cost-efficiency metric: key rate per unit cost vs N — both protocols |
 
+#### Experiment 3 — Real-world topology case studies
+
+| Item |
+|------|
+| Simulate specific named QKD network topologies as dissertation case studies: fix node positions to match real geography, run both protocols, compare against random-topology results. Candidate networks: BT QKD network (UK), Berrevoets et al. topology, Tokyo QKD network, Belgian QKD network (TBC) |
+
 ### Analysis
 
 | Item |
