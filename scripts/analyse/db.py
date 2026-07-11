@@ -284,8 +284,9 @@ def query_network(x_col, y_col, fixed_dict, protocols):
 
         xs, means, stds, mins, maxs, q25s, q75s, sems, ns = [], [], [], [], [], [], [], [], []
         for x_val in sorted(groups):
-            ys = groups[x_val]
-            n  = len(ys)
+            ys     = groups[x_val]
+            n      = len(ys)
+            log_ys = [math.log(y) for y in ys if y > 0]
             xs.append(x_val)
             means.append(sum(ys) / n)
             stds.append(statistics.stdev(ys) if n > 1 else 0.0)
@@ -296,7 +297,14 @@ def query_network(x_col, y_col, fixed_dict, protocols):
             sems.append(statistics.stdev(ys) / math.sqrt(n) if n > 1 else 0.0)
             ns.append(n)
 
-        result[proto] = dict(x=xs, mean=means, std=stds, min=mins,
+        # std_log computed separately as log-space std across seeds (for shade/sigma modes)
+        std_logs = [
+            statistics.stdev([math.log(y) for y in groups[xv] if y > 0])
+            if len([y for y in groups[xv] if y > 0]) > 1 else 0.0
+            for xv in xs
+        ]
+
+        result[proto] = dict(x=xs, mean=means, std=stds, std_log=std_logs, min=mins,
                              max=maxs, q25=q25s, q75=q75s, sem=sems, n=ns)
     conn.close()
     return result
