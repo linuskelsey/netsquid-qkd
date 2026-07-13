@@ -34,7 +34,7 @@ Defaults used when no `--config` and no CLI flag is given:
 | `initLoss` | 0.10 | TX-side insertion loss, linear fraction [0–1] (e.g. 0.1 = 10%) |
 | `nodeLossDb` | 2.0 dB | RX-side node/connector loss in dB (Bob for BB84, Charlie for MDI) |
 | `sourceErrRate` | 0.005 | Source bit error rate ε_s |
-| `runtimes` | 100 | Monte Carlo repetitions per sweep point |
+| `runtimes` | 100 (P2P scripts) / 20 (network scripts) | Monte Carlo repetitions per sweep point |
 | `photons` | 1024 | Photons per run |
 | `charliePos` | 0.5 | Relay position as fraction of total link from Alice (MDI only; 0.5 = symmetric midpoint) |
 | `workers` | 80% of CPU cores | Parallel worker processes (passed to run functions directly) |

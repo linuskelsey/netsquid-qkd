@@ -77,6 +77,17 @@
 | Charlie placement sweep (asymmetric Alice-Charlie / Charlie-Bob links) |
 | Script to compare effect of each layer of modelling parameter per-protocol |
 
+### DB Reconstruction CLI (`scripts/analyse/`)
+
+Reconstruct any P2P or network figure from `results.db` without re-running simulations.
+
+| Item |
+|------|
+| `db.py` (~370 lines): column metadata, `DEFAULTS` mapping, `count_p2p`, `query_p2p`, `query_network`, `list_distinct`; inlines `lib/functions.py` defaults to avoid netsquid import |
+| `p2p.py`: CLI script — `--sweep`, `--error`, 10 fixed-param flags; figure matches compare scripts exactly (dual y-axis, log-space ±1σ shade, regime shading, LaTeX title, 3-line format) |
+| `network.py`: CLI script — `--x`, `--y`, `--error`, `--n-users`, `--k-relays`, `--area`, `--seed`; figure matches relay_sweep/user_sweep exactly (dual y-axis ghost lines, BB84 dashed+shaded, MDI solid+marker); BB84 flat line for `--x k_relays` (NULL x column); optional MDI topology figure when `--seed` set |
+| MC run count annotation in title: `n=X MC runs/point` = `sum(runtimes × n_pairs)` across contributing seeds per x point |
+
 ---
 
 ## Planned
@@ -87,58 +98,6 @@
 |---------|
 | `--compare-configs` flag on all compare scripts: run same sweep under 2–3 config presets, overlay on one figure |
 | Interactive TUI launcher (`scripts/tui.py`): arrow-key menus for P2P or network path, full parameter setup, assembles and optionally runs the target script; optionally saves config JSON |
-
-### Data Persistence
-
-#### `scripts/analyse/` — Interactive TUI (`tui.py` + `db.py`, ~400 lines total)
-
-Reconstruct any P2P or network figure from `results.db` without re-running simulations.
-
-**Stack:** Textual (TUI), matplotlib (plot window, same pattern as sweep scripts), pandas, `lib/functions.py:DEFAULTS`
-
-**Files:**
-- `db.py` (~120 lines): column metadata + DEFAULTS mapping, `count_p2p`, `query_p2p`, `query_network`, `list_distinct`
-- `tui.py` (~280 lines): Textual app, two tabs (P2P / Network), reactive status bar
-
-**P2P tab controls:**
-- Sweep: radio select any of the 10 sweepable columns
-- Fixed params: all 10 columns shown; swept column grays out; `bs_eff` grays when BB84-only; defaults from `DEFAULTS` except `fibre_len` → 25 km
-- Protocol: BB84 / MDI checkboxes
-- Error mode: bars / shade / sigma / iqr / sem (same 5 modes as compare scripts, same plot logic)
-- Plot button: opens matplotlib window in daemon thread; user saves via toolbar
-
-**Fixed param defaults (P2P):**
-
-| DB column | Default |
-|---|---|
-| `fibre_len` | 25 km (hardcoded) |
-| `len_loss` | `DEFAULTS["fibre_loss_db_per_km"]` = 0.2 |
-| `init_loss` | `DEFAULTS["init_loss"]` = 0.1 |
-| `detector_eff_z` | `DEFAULTS["detector_efficiency"]` = 0.65 |
-| `dark_count` | `DEFAULTS["dark_count_rate"]` = 100 |
-| `node_loss_db` | `DEFAULTS["node_loss_db"]` = 2.0 |
-| `source_err_rate` | `DEFAULTS["source_error_rate"]` = 0.005 |
-| `detector_eff_x` | `DEFAULTS["det_eff_x"]` = 0.85 |
-| `dephasing_rate` | `DEFAULTS["dephasing_rate"]` = 0.0001 |
-| `bs_eff` | `DEFAULTS["bs_eff"]` = 0.97 |
-
-**Network tab controls:**
-- X axis: `k_relays` / `n_users` (auto-sets experiment)
-- Y axis: `avg_key_rate` / `success_rate` / `min_key_rate` / `max_key_rate`
-- Fixed params: complement of X axis, `area_km`, `seed` (blank = aggregate all seeds)
-- Protocol + error mode same as P2P tab
-
-**Reactivity:** any control change → debounced 300 ms → `COUNT(*)` query → status bar updates (`filtered: N / 2,270,000 rows  Q: Xs`)
-
-**Error mode → plot logic:**
-
-| Mode | Aggregation | matplotlib call |
-|---|---|---|
-| `bars` | min/max | `errorbar(yerr=[lower, upper])` |
-| `sigma` | log-space ±1σ | `errorbar(yerr=[r·(1−e⁻ˢ), r·(eˢ−1)])` |
-| `iqr` | Q25/Q75 | `errorbar(yerr=[r−q25, q75−r])` |
-| `sem` | std/√n | `errorbar(yerr=sem)` |
-| `shade` | log-space ±1σ band | `plot` + `fill_between` |
 
 ### Network Scale Modelling
 
@@ -166,7 +125,6 @@ Reconstruct any P2P or network figure from `results.db` without re-running simul
 | Item |
 |------|
 | IQR error mode on network scripts: `--error iqr` shows Q1/Q3 band (shaded) instead of ±1σ; more robust to outlier seeds; add to `relay_sweep.py` and `user_sweep.py` alongside existing `bars`/`shade` options |
-| Sim count annotation on analyse figures: display number of simulations (MC runs × seeds) contributing to each data point, either as annotated text per point or in figure subtitle/legend |
 | Validate k-means + centroid as optimal MDI relay placement: benchmark against alternatives (random placement, grid, ILP-optimal); confirm or replace as the canonical topology strategy |
 | Monte Carlo sample count scaling: for key rates of order 10^-x, use 10^(x+1) samples; smallest observed rates ~10^-2 → target 1000 runs per point where feasible; audit all scripts and increase run counts accordingly |
 | Isolated parameter script (`scripts/P2P/isolate.py`): complement to `layers.py`; each curve = all-ideal config except one realistic parameter; overlay all isolated curves on one figure to compare each parameter's independent impact on key rate |
@@ -195,8 +153,9 @@ Reconstruct any P2P or network figure from `results.db` without re-running simul
 ### Extensions
 
 | Item |
-| Timing data extraction: extend `lib/progress.py` to record per-step and total wall-clock times; write to a sidecar JSON (`<output_stem>_timing.json`) alongside every script run; enables runtime profiling, Monte Carlo scaling estimates, and cost modelling |
 |------|
+| Interactive DB replot TUI (`scripts/analyse/tui.py`): Textual app with P2P and Network tabs; P2P tab functional; Network tab broken (Select widget issues with Textual 8.x); replace CLI scripts (`p2p.py`, `network.py`) with a unified TUI interface when Textual API stabilises |
+| Timing data extraction: extend `lib/progress.py` to record per-step and total wall-clock times; write to a sidecar JSON (`<output_stem>_timing.json`) alongside every script run; enables runtime profiling, Monte Carlo scaling estimates, and cost modelling |
 | Security level taxonomy: define deployment tiers L0–L5 by trust assumption (L0: trust all components except links = ideal QKD; ... L5: trust nothing = device-independent QKD); map BB84 and MDI-QKD to appropriate levels; use as framework for recommendations on when MDI is warranted despite key rate deficit |
 | MDI deployment on existing network infrastructure: scoping exercise — if fibre topology is fixed (no relay placement freedom), how does MDI performance change? Assess feasibility and cost delta vs greenfield deployment; flag as potential standalone research project |
 | Trusted-node BB84 network: users connect to K trusted relay nodes (O(N) fibre, same infrastructure as MDI); relay holds key material and performs XOR combine; cross-relay pairs use relay-relay BB84 links; key rate bottlenecked by slowest link in chain |

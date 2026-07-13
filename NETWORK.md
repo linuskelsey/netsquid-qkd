@@ -41,7 +41,9 @@ Extension: compare success rate for same-relay pairs vs cross-relay pairs to qua
 
 ## Cost Model
 
-Each hardware component (user node source, user node detector, relay node, fiber per km, optical switch) is assigned an arbitrary cost unit. Network cost is computed per simulation instance. Industry-standard component prices are used to lower- and upper-bound the arbitrary units, enabling cost-efficiency comparisons (key rate per unit cost).
+Each hardware component (user node source, user node detector, relay node, fiber per km, optical switch) is assigned an arbitrary cost unit. Industry-standard component prices are used to lower- and upper-bound the arbitrary units, enabling cost-efficiency comparisons (key rate per unit cost).
+
+Currently implemented: total fibre deployed (`total_fibre_km`) tracked per simulation and stored in `network_results`. Component cost assignment (relay node hardware, source/detector counts) is planned.
 
 Relay count comparison (cost vs performance) is a secondary analysis. Primary focus is user scaling.
 

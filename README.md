@@ -33,6 +33,10 @@ scripts/
     time/
       time_vs_area.py    Wall-clock runtime vs network area at fixed N and K
       time_vs_users.py   Wall-clock runtime vs user count N at fixed K
+  analyse/
+    db.py       Query layer: count_p2p, query_p2p, query_network, list_distinct
+    p2p.py      CLI: reconstruct any P2P sweep figure from results.db
+    network.py  CLI: reconstruct any network sweep figure from results.db
 ```
 
 ## Running
@@ -150,11 +154,29 @@ See [PARAMS.md](PARAMS.md) for config presets, simulation defaults, and realisti
 
 See [DATA.md](DATA.md) for database schema and example queries.
 
+## Reconstruct figures from DB
+
+```bash
+# P2P: reconstruct any sweep from results.db
+python scripts/analyse/p2p.py --sweep fibre_len
+python scripts/analyse/p2p.py --sweep detector_eff_z --error shade
+python scripts/analyse/p2p.py --sweep len_loss --protocols BB84
+
+# Network: reconstruct user or relay sweep
+python scripts/analyse/network.py                        # n_users sweep, avg key rate
+python scripts/analyse/network.py --x k_relays           # relay count sweep (BB84 flat line)
+python scripts/analyse/network.py --y success_rate --area 50
+python scripts/analyse/network.py --seed 1638            # single seed + MDI topology figure
+```
+
 ## Dependencies
 
 - [NetSquid](https://netsquid.org) (requires registration)
-- NumPy, Matplotlib
+- NumPy, Matplotlib, psutil, pandas
+- Textual (for `scripts/analyse/tui.py`)
 - SQLite3 (stdlib)
+
+Or: `pip install -r requirements.txt` (NetSquid requires separate registration).
 
 ## Status and Roadmap
 
