@@ -26,7 +26,8 @@ scripts/
     compare/    Sweep scripts: key rate vs distance, loss, efficiency, dark count rate,
                 node loss, source error rate, dephasing rate, detector basis bias,
                 beam splitter efficiency, Charlie placement
-    layers.py   Effect of each modelling layer per protocol
+    layers.py   Effect of each modelling layer per protocol (cumulative)
+    isolate.py  Independent impact of each parameter — all-ideal except one
   network/
     relay_sweep.py       Exp 1: fixed N users, vary K relays — key rate + success rate vs K
     user_sweep.py        Exp 2: fixed K relays (optimised at ref-N), vary N users — key rate vs N
@@ -84,6 +85,19 @@ python scripts/P2P/compare/length.py --no-db
 
 # Config preset + CLI override (CLI takes precedence)
 python scripts/P2P/compare/length.py --config configs/layer3_dark.json --fibre 30
+```
+
+## Layer and isolation analysis
+
+```bash
+# Cumulative layers (each adds one realistic parameter on top of the last)
+python scripts/P2P/layers.py
+python scripts/P2P/layers.py --protocol mdi --runtimes 50
+
+# Isolated parameter impact (all-ideal except one parameter at its realistic value)
+python scripts/P2P/isolate.py
+python scripts/P2P/isolate.py --protocol bb84 --runtimes 100 --workers 8
+python scripts/P2P/isolate.py --save docs/figures
 ```
 
 ## Network Simulations

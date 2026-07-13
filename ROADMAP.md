@@ -76,6 +76,7 @@
 | Always-on min/max error bars on `layers.py` |
 | Charlie placement sweep (asymmetric Alice-Charlie / Charlie-Bob links) |
 | Script to compare effect of each layer of modelling parameter per-protocol |
+| Isolated parameter script (`scripts/P2P/isolate.py`): each curve = all-ideal config except one realistic parameter; overlay all isolated curves on one figure per protocol to compare each parameter's independent impact on key rate |
 
 ### DB Reconstruction CLI (`scripts/analyse/`)
 
@@ -127,7 +128,6 @@ Reconstruct any P2P or network figure from `results.db` without re-running simul
 | IQR error mode on network scripts: `--error iqr` shows Q1/Q3 band (shaded) instead of ±1σ; more robust to outlier seeds; add to `relay_sweep.py` and `user_sweep.py` alongside existing `bars`/`shade` options |
 | Validate k-means + centroid as optimal MDI relay placement: benchmark against alternatives (random placement, grid, ILP-optimal); confirm or replace as the canonical topology strategy |
 | Monte Carlo sample count scaling: for key rates of order 10^-x, use 10^(x+1) samples; smallest observed rates ~10^-2 → target 1000 runs per point where feasible; audit all scripts and increase run counts accordingly |
-| Isolated parameter script (`scripts/P2P/isolate.py`): complement to `layers.py`; each curve = all-ideal config except one realistic parameter; overlay all isolated curves on one figure to compare each parameter's independent impact on key rate |
 | Finite-key corrections: block-size-dependent key rate using composable security bound; `photons` per run sets block size `n`; quantifies departure from asymptotic regime at low photon counts and short distances |
 | Analytical key rate overlay: plot closed-form Shor-Preskill (BB84) and Ma et al. 2012 (MDI-QKD) formula on sweep figures as validation reference; mismatch flags simulation error |
 | QBER decomposition by error source: track separate contributions from dark counts, dephasing, source errors, and basis bias per simulation point; identify dominant noise mechanism per parameter regime |
