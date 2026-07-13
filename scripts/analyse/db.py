@@ -256,37 +256,85 @@ def query_network(x_col, y_col, fixed_dict, protocols):
             std   — linear std across seeds (unlike P2P, not log-space)
             min, max, q25, q75, sem, n — as per query_p2p
     """
+    # Columns that are always NULL for specific protocols in network_results.
+    # When such a column is the x-axis, those protocols cannot produce a grouped
+    # series. Instead we draw a flat horizontal line: aggregate all their matching
+    # rows (ignoring the NULL x-axis column) and replicate across the x range.
+    _proto_null_x = {"BB84": {"k_relays"}}
+
     experiment = NET_EXPERIMENT[x_col]
     conn       = _connect()
     result     = {}
+
     for proto in protocols:
         clauses = ["experiment = ?", "protocol = ?"]
         params  = [experiment, proto]
-        # k_relays is NULL for all BB84 network rows; skip to avoid zero results.
-        _net_null_cols = {"k_relays"} if proto == "BB84" else set()
+        # Columns that are NULL for this protocol — exclude from WHERE to avoid zero results.
+        _null_cols = _proto_null_x.get(proto, set())
         for col, val in fixed_dict.items():
             if col == x_col or val is None or str(val).strip() == "":
                 continue
-            if col in _net_null_cols:
+            if col in _null_cols:
                 continue
             clauses.append(f"{col} = ?")
             params.append(val)
         where = " AND ".join(clauses)
-        rows  = conn.execute(
-            f"SELECT {x_col}, {y_col} FROM network_results "
+
+        # ── flat-line path ─────────────────────────────────────────────────
+        # x_col is NULL for this protocol; aggregate all matching rows and
+        # replicate the global aggregate as a flat line across the x range.
+        if x_col in _null_cols:
+            x_vals = [r[0] for r in conn.execute(
+                f"SELECT DISTINCT {x_col} FROM network_results "
+                f"WHERE experiment = ? AND {x_col} IS NOT NULL ORDER BY {x_col}",
+                [experiment],
+            ).fetchall()]
+            flat_rows = conn.execute(
+                f"SELECT {y_col}, runtimes, n_pairs FROM network_results WHERE {where}", params
+            ).fetchall()
+            ys  = [r[0] for r in flat_rows if r[0] is not None]
+            n_mc = sum(r[1] * r[2] for r in flat_rows if r[0] is not None)
+
+            _empty = dict(x=[], mean=[], std=[], std_log=[], min=[], max=[],
+                          q25=[], q75=[], sem=[], n=[])
+            if not x_vals or not ys:
+                result[proto] = _empty
+                continue
+
+            n       = len(ys)
+            mean    = sum(ys) / n
+            std     = statistics.stdev(ys) if n > 1 else 0.0
+            log_ys  = [math.log(y) for y in ys if y > 0]
+            std_log = statistics.stdev(log_ys) if len(log_ys) > 1 else 0.0
+            q25     = float(np.percentile(ys, 25))
+            q75     = float(np.percentile(ys, 75))
+            sem     = std / math.sqrt(n) if n > 1 else 0.0
+            k       = len(x_vals)
+            result[proto] = dict(
+                x=x_vals,
+                mean=[mean] * k, std=[std] * k, std_log=[std_log] * k,
+                min=[min(ys)] * k, max=[max(ys)] * k,
+                q25=[q25] * k, q75=[q75] * k, sem=[sem] * k, n=[n_mc] * k,
+            )
+            continue
+
+        # ── normal grouped path ────────────────────────────────────────────
+        rows = conn.execute(
+            f"SELECT {x_col}, {y_col}, runtimes, n_pairs FROM network_results "
             f"WHERE {where} ORDER BY {x_col}", params
         ).fetchall()
 
         groups = {}
-        for x_val, y_val in rows:
-            if y_val is not None:
+        mc_totals = {}
+        for x_val, y_val, runtimes, n_pairs in rows:
+            if x_val is not None and y_val is not None:
                 groups.setdefault(x_val, []).append(y_val)
+                mc_totals[x_val] = mc_totals.get(x_val, 0) + runtimes * n_pairs
 
         xs, means, stds, mins, maxs, q25s, q75s, sems, ns = [], [], [], [], [], [], [], [], []
         for x_val in sorted(groups):
-            ys     = groups[x_val]
-            n      = len(ys)
-            log_ys = [math.log(y) for y in ys if y > 0]
+            ys  = groups[x_val]
+            n   = len(ys)
             xs.append(x_val)
             means.append(sum(ys) / n)
             stds.append(statistics.stdev(ys) if n > 1 else 0.0)
@@ -295,17 +343,16 @@ def query_network(x_col, y_col, fixed_dict, protocols):
             q25s.append(float(np.percentile(ys, 25)))
             q75s.append(float(np.percentile(ys, 75)))
             sems.append(statistics.stdev(ys) / math.sqrt(n) if n > 1 else 0.0)
-            ns.append(n)
+            ns.append(mc_totals[x_val])
 
-        # std_log computed separately as log-space std across seeds (for shade/sigma modes)
         std_logs = [
             statistics.stdev([math.log(y) for y in groups[xv] if y > 0])
             if len([y for y in groups[xv] if y > 0]) > 1 else 0.0
             for xv in xs
         ]
-
         result[proto] = dict(x=xs, mean=means, std=stds, std_log=std_logs, min=mins,
                              max=maxs, q25=q25s, q75=q75s, sem=sems, n=ns)
+
     conn.close()
     return result
 
