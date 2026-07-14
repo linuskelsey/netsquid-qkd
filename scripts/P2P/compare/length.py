@@ -135,11 +135,13 @@ if __name__ == "__main__":
     parser.add_argument("--init-loss",  type=float, default=None, dest="init_loss",  help="Insertion loss, linear fraction [0-1] (e.g. 0.1 = 10%%)")
     parser.add_argument("--node-loss",  type=float, default=None, dest="node_loss",  help="Receiver node insertion loss (dB)")
     parser.add_argument("--source-err", type=float, default=None, dest="source_err", help="Source bit error rate [0-1]")
-    parser.add_argument("--no-db",     action="store_true", help="Disable DB writing")
-    parser.add_argument("--workers",    type=int,   default=None, help="Worker processes (default: 80%% of CPU cores)")
-    parser.add_argument("--error",    choices=["bars", "shade", "sigma", "iqr", "sem"], default="bars",
+    parser.add_argument("--no-db",          action="store_true", help="Disable DB writing")
+    parser.add_argument("--workers",         type=int,   default=None, help="Worker processes (default: 80%% of CPU cores)")
+    parser.add_argument("--error",           choices=["bars", "shade", "sigma", "iqr", "sem"], default="bars",
                         help="Error display: bars=min/max whiskers (default), shade=±1 std dev band")
-    parser.add_argument("--output-dir", type=str, default=None, help="Directory to save figure into (skips interactive display)")
+    parser.add_argument("--output-dir",      type=str,   default=None, help="Directory to save figure into (skips interactive display)")
+    parser.add_argument("--compare-configs", nargs="+",  metavar="PATH", dest="compare_configs",
+                        help="2–4 config paths; overlay same distance sweep under each preset on one figure")
     args = parser.parse_args()
     cfg  = load_config(args.config)
     if args.loss is not None:        cfg["fibre_loss_db_per_km"] = args.loss
@@ -149,66 +151,110 @@ if __name__ == "__main__":
     if args.node_loss is not None:   cfg["node_loss_db"]         = args.node_loss
     if args.source_err is not None:  cfg["source_error_rate"]    = args.source_err
 
+    Dx = [1,5,10,20,30,40,50,60,70,80,90,100]
+
+    # ------------------------------------------------------------------
+    # Helper: run full distance sweep for one config
+    # ------------------------------------------------------------------
+    def _run_sweep(sweep_cfg, label=""):
+        prog = Progress(len(Dx))
+        step = 0
+        r_bb84, r_mdi = [], []
+        mins_b, maxs_b, stds_b, q25s_b, q75s_b, sems_b = [], [], [], [], [], []
+        mins_m, maxs_m, stds_m, q25s_m, q75s_m, sems_m = [], [], [], [], [], []
+        for d in Dx:
+            tag = f"[{label}] " if label else ""
+            prog.update(step, f"{tag}Distance: {d}/{Dx[-1]} km  BB84+MDI running...")
+            bb84, mdi = main(runtimes=args.runtimes, fibre=d,
+                             lenLoss=sweep_cfg["fibre_loss_db_per_km"], initLoss=sweep_cfg["init_loss"],
+                             detEff=sweep_cfg["detector_efficiency"], darkCount=sweep_cfg["dark_count_rate"],
+                             nodeLossDb=sweep_cfg["node_loss_db"], sourceErrRate=sweep_cfg["source_error_rate"],
+                             dephasingRate=sweep_cfg["dephasing_rate"], bsEff=sweep_cfg["bs_eff"],
+                             workers=args.workers, no_db=args.no_db)
+            r_bb84.append(bb84[3]); r_mdi.append(mdi[3])
+            for rs, mins, maxs, stds, q25s, q75s, sems in [
+                    (bb84[4], mins_b, maxs_b, stds_b, q25s_b, q75s_b, sems_b),
+                    (mdi[4],  mins_m, maxs_m, stds_m, q25s_m, q75s_m, sems_m)]:
+                nz = [r for r in rs if r > 0]
+                mins.append(min(nz)  if nz else float('nan'))
+                maxs.append(max(rs)  if rs else float('nan'))
+                stds.append(statistics.stdev([math.log(r) for r in nz]) if len(nz) > 1 else 0.0)
+                q25s.append(float(np.percentile(nz, 25)) if nz else float('nan'))
+                q75s.append(float(np.percentile(nz, 75)) if nz else float('nan'))
+                sems.append(statistics.stdev(nz) / math.sqrt(len(nz)) if len(nz) > 1 else 0.0)
+            step += 1
+            prog.update(step, f"{tag}Distance: {d}/{Dx[-1]} km  BB84 {bb84[3]/1000:.2f} | MDI {mdi[3]/1000:.2f} kbps")
+        prog.stop()
+        return dict(
+            rates_bb84=r_bb84, rates_mdi=r_mdi,
+            mins_bb84=mins_b, maxs_bb84=maxs_b, stds_bb84=stds_b,
+            q25s_bb84=q25s_b, q75s_bb84=q75s_b, sems_bb84=sems_b,
+            mins_mdi=mins_m,  maxs_mdi=maxs_m,  stds_mdi=stds_m,
+            q25s_mdi=q25s_m,  q75s_mdi=q75s_m,  sems_mdi=sems_m,
+        )
+
+    # ------------------------------------------------------------------
+    # --compare-configs: overlay multiple presets on one figure
+    # ------------------------------------------------------------------
+    if args.compare_configs:
+        cc_paths = args.compare_configs
+        if not (2 <= len(cc_paths) <= 4):
+            parser.error("--compare-configs requires 2–4 paths")
+
+        colors = [plt.cm.tab10(i) for i in range(len(cc_paths))]
+        fig, ax1 = plt.subplots()
+        names = []
+
+        for ci, path in enumerate(cc_paths):
+            cc_cfg = load_config(path)
+            if args.loss is not None:        cc_cfg["fibre_loss_db_per_km"] = args.loss
+            if args.det_eff is not None:     cc_cfg["detector_efficiency"]  = args.det_eff
+            if args.dark_count is not None:  cc_cfg["dark_count_rate"]      = args.dark_count
+            if args.init_loss is not None:   cc_cfg["init_loss"]            = args.init_loss
+            if args.node_loss is not None:   cc_cfg["node_loss_db"]         = args.node_loss
+            if args.source_err is not None:  cc_cfg["source_error_rate"]    = args.source_err
+            name = os.path.splitext(os.path.basename(path))[0]
+            names.append(name)
+            print(f"\n--- Config {ci+1}/{len(cc_paths)}: {name} ---")
+            total_start = time.time()
+            res = _run_sweep(cc_cfg, label=name)
+            m, s = divmod(int(time.time() - total_start), 60)
+            print(f"✓ {name} complete  {m}m {s:02d}s")
+
+            c = colors[ci]
+            ax1.plot(Dx, [r/1000 for r in res["rates_bb84"]], '--', color=c, lw=1.5, label=f"BB84 — {name}")
+            ax1.plot(Dx, [r/1000 for r in res["rates_mdi"]],  '-',  color=c, lw=1.5, label=f"MDI  — {name}")
+
+        ax1.set_yscale("log")
+        ax1.set_xlabel("Separation between Alice and Bob in km")
+        ax1.set_ylabel("Secure key rate (kbps)")
+        ax1.legend(fontsize=8)
+        ax1.grid(True, alpha=0.3)
+        plt.title(f"Key rate vs distance — config comparison\n(BB84 dashed, MDI solid)\n{', '.join(names)}")
+        plt.tight_layout()
+        if args.output_dir:
+            os.makedirs(args.output_dir, exist_ok=True)
+            fn = os.path.splitext(os.path.basename(__file__))[0] + "_compare.png"
+            plt.savefig(os.path.join(args.output_dir, fn), dpi=150, bbox_inches="tight")
+            plt.close()
+        else:
+            plt.show()
+        sys.exit(0)
+
+    # ------------------------------------------------------------------
+    # Single-config path (original behaviour)
+    # ------------------------------------------------------------------
     print()
     print(f"Sweep: distance [1-100 km]  |  Fixed: α={cfg['fibre_loss_db_per_km']} dB/km  η_d={cfg['detector_efficiency']}  d_c={cfg['dark_count_rate']} cps")
 
-
-    Dx = [1,5,10,20,30,40,50,60,70,80,90,100]
-
     total_start = time.time()
-    prog = Progress(len(Dx))
-    step = 0
+    res = _run_sweep(cfg)
+    rates_bb84 = res["rates_bb84"];  rates_mdi = res["rates_mdi"]
+    mins_bb84  = res["mins_bb84"];   maxs_bb84 = res["maxs_bb84"];  stds_bb84 = res["stds_bb84"]
+    mins_mdi   = res["mins_mdi"];    maxs_mdi  = res["maxs_mdi"];   stds_mdi  = res["stds_mdi"]
+    q25s_bb84  = res["q25s_bb84"];   q75s_bb84 = res["q75s_bb84"];  sems_bb84 = res["sems_bb84"]
+    q25s_mdi   = res["q25s_mdi"];    q75s_mdi  = res["q75s_mdi"];   sems_mdi  = res["sems_mdi"]
 
-    lengths_bb84 = []
-    lengths_mdi  = []
-    qbers_bb84   = []
-    qbers_mdi    = []
-    rates_bb84   = []
-    rates_mdi    = []
-    mins_bb84    = []
-    maxs_bb84    = []
-    stds_bb84    = []
-    mins_mdi     = []
-    maxs_mdi     = []
-    stds_mdi     = []
-    q25s_bb84    = []
-    q75s_bb84    = []
-    sems_bb84    = []
-    q25s_mdi     = []
-    q75s_mdi     = []
-    sems_mdi     = []
-
-    for d in Dx:
-        prog.update(step, f"Distance: {d}/{Dx[-1]} km  BB84+MDI running...")
-        bb84, mdi = main(runtimes=args.runtimes, fibre=d,
-                         lenLoss=cfg["fibre_loss_db_per_km"], initLoss=cfg["init_loss"],
-                         detEff=cfg["detector_efficiency"], darkCount=cfg["dark_count_rate"],
-                         nodeLossDb=cfg["node_loss_db"], sourceErrRate=cfg["source_error_rate"],
-                         dephasingRate=cfg["dephasing_rate"], bsEff=cfg["bs_eff"],
-                         workers=args.workers, no_db=args.no_db)
-
-        lengths_bb84.append(bb84[1])
-        qbers_bb84.append(bb84[2])
-        rates_bb84.append(bb84[3])
-
-        lengths_mdi.append(mdi[1])
-        qbers_mdi.append(mdi[2])
-        rates_mdi.append(mdi[3])
-
-        for rs, mins, maxs, stds, q25s, q75s, sems in [
-                (bb84[4], mins_bb84, maxs_bb84, stds_bb84, q25s_bb84, q75s_bb84, sems_bb84),
-                (mdi[4],  mins_mdi,  maxs_mdi,  stds_mdi,  q25s_mdi,  q75s_mdi,  sems_mdi)]:
-            nz = [r for r in rs if r > 0]
-            mins.append(min(nz) if nz else float('nan'))
-            maxs.append(max(rs) if rs else float('nan'))
-            stds.append(statistics.stdev([math.log(r) for r in nz]) if len(nz) > 1 else 0.0)
-            q25s.append(float(np.percentile(nz, 25)) if nz else float('nan'))
-            q75s.append(float(np.percentile(nz, 75)) if nz else float('nan'))
-            sems.append(statistics.stdev(nz) / math.sqrt(len(nz)) if len(nz) > 1 else 0.0)
-        step += 1
-        prog.update(step, f"Distance: {d}/{Dx[-1]} km  BB84 {bb84[3]/1000:.2f} | MDI {mdi[3]/1000:.2f} kbps")
-
-    prog.stop()
     m, s = divmod(int(time.time() - total_start), 60)
     print(f"✓ complete  total {m}m {s:02d}s")
 

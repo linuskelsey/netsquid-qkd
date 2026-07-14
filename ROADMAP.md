@@ -26,6 +26,7 @@
 | Compare scripts: length, loss, efficiency, dark count, node loss, source error, dephasing, basis bias, beam splitter efficiency, Charlie placement (`scripts/P2P/compare/`) |
 | Run-all parallel launcher (`scripts/P2P/compare/run_all.py`): all 10 compare scripts in parallel; auto-saves to timestamped `docs/figures/<Month>/<YYYYMMDD> - P2P parameters/all parameters/` |
 | Layer comparison script (`scripts/P2P/layers.py`) |
+| `--compare-configs PATH [PATH ...]` on all 10 compare scripts: overlay 2–4 config presets on one sweep figure (BB84 dashed, MDI solid, tab10 palette per config) |
 | Config presets unified (layer0–layer8, cumulative, industry-typical values) |
 | Raw script config wiring |
 | `--workers` flag on all compare scripts |
@@ -102,7 +103,6 @@ Reconstruct any P2P or network figure from `results.db` without re-running simul
 
 | Feature |
 |---------|
-| `--compare-configs` flag on all compare scripts: run same sweep under 2–3 config presets, overlay on one figure |
 | Interactive TUI launcher (`scripts/tui.py`): arrow-key menus for P2P or network path, full parameter setup, assembles and optionally runs the target script; optionally saves config JSON |
 
 ### Network Scale Modelling

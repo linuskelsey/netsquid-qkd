@@ -116,6 +116,8 @@ if __name__ == "__main__":
     parser.add_argument("--error",    choices=["bars", "shade", "sigma", "iqr", "sem"], default="bars",
                         help="Error display: bars=min/max whiskers (default), shade=±1 std dev band")
     parser.add_argument("--output-dir", type=str, default=None, help="Directory to save figure into (skips interactive display)")
+    parser.add_argument("--compare-configs", nargs="+", metavar="PATH", dest="compare_configs",
+                        help="2–4 config paths; overlay same source error sweep under each preset on one figure")
     args = parser.parse_args()
     cfg  = load_config(args.config)
     if args.loss is not None:       cfg["fibre_loss_db_per_km"] = args.loss
@@ -131,52 +133,93 @@ if __name__ == "__main__":
 
     SEx = [0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.03, 0.04]
 
+    def _run_sweep(sweep_cfg, label=""):
+        prog = Progress(len(SEx))
+        step = 0
+        r_bb84, r_mdi = [], []
+        mins_b, maxs_b, stds_b, q25s_b, q75s_b, sems_b = [], [], [], [], [], []
+        mins_m, maxs_m, stds_m, q25s_m, q75s_m, sems_m = [], [], [], [], [], []
+        for se in SEx:
+            tag = f"[{label}] " if label else ""
+            prog.update(step, f"{tag}Source err.: {se}/{SEx[-1]}  BB84+MDI running...")
+            bb84, mdi = main(runtimes=args.runtimes, fibre=args.fibre,
+                             lenLoss=sweep_cfg["fibre_loss_db_per_km"], initLoss=sweep_cfg["init_loss"],
+                             detEff=sweep_cfg["detector_efficiency"], darkCount=sweep_cfg["dark_count_rate"],
+                             nodeLossDb=sweep_cfg["node_loss_db"], sourceErrRate=se,
+                             dephasingRate=sweep_cfg["dephasing_rate"], bsEff=sweep_cfg["bs_eff"],
+                             workers=args.workers, no_db=args.no_db)
+            r_bb84.append(bb84[3]); r_mdi.append(mdi[3])
+            for rs, mins, maxs, stds, q25s, q75s, sems in [
+                    (bb84[4], mins_b, maxs_b, stds_b, q25s_b, q75s_b, sems_b),
+                    (mdi[4],  mins_m, maxs_m, stds_m, q25s_m, q75s_m, sems_m)]:
+                nz = [r for r in rs if r > 0]
+                mins.append(min(nz) if nz else float('nan'))
+                maxs.append(max(rs) if rs else float('nan'))
+                stds.append(statistics.stdev([math.log(r) for r in nz]) if len(nz) > 1 else 0.0)
+                q25s.append(float(np.percentile(nz, 25)) if nz else float('nan'))
+                q75s.append(float(np.percentile(nz, 75)) if nz else float('nan'))
+                sems.append(statistics.stdev(nz) / math.sqrt(len(nz)) if len(nz) > 1 else 0.0)
+            step += 1
+            prog.update(step, f"{tag}Source err.: {se}/{SEx[-1]}  BB84 {bb84[3]/1000:.2f} | MDI {mdi[3]/1000:.2f} kbps")
+        prog.stop()
+        return dict(
+            rates_bb84=r_bb84, rates_mdi=r_mdi,
+            mins_bb84=mins_b, maxs_bb84=maxs_b, stds_bb84=stds_b,
+            q25s_bb84=q25s_b, q75s_bb84=q75s_b, sems_bb84=sems_b,
+            mins_mdi=mins_m,  maxs_mdi=maxs_m,  stds_mdi=stds_m,
+            q25s_mdi=q25s_m,  q75s_mdi=q75s_m,  sems_mdi=sems_m,
+        )
+
+    if args.compare_configs:
+        cc_paths = args.compare_configs
+        if not (2 <= len(cc_paths) <= 4):
+            parser.error("--compare-configs requires 2–4 paths")
+        colors = [plt.cm.tab10(i) for i in range(len(cc_paths))]
+        fig, ax1 = plt.subplots()
+        names = []
+        for ci, path in enumerate(cc_paths):
+            cc_cfg = load_config(path)
+            if args.loss is not None:        cc_cfg["fibre_loss_db_per_km"] = args.loss
+            if args.det_eff is not None:     cc_cfg["detector_efficiency"]  = args.det_eff
+            if args.dark_count is not None:  cc_cfg["dark_count_rate"]      = args.dark_count
+            if args.init_loss is not None:   cc_cfg["init_loss"]            = args.init_loss
+            if args.node_loss is not None:   cc_cfg["node_loss_db"]         = args.node_loss
+            name = os.path.splitext(os.path.basename(path))[0]
+            names.append(name)
+            print(f"\n--- Config {ci+1}/{len(cc_paths)}: {name} ---")
+            _ts = time.time()
+            res = _run_sweep(cc_cfg, label=name)
+            _m, _s = divmod(int(time.time() - _ts), 60)
+            print(f"✓ {name} complete  {_m}m {_s:02d}s")
+            c = colors[ci]
+            ax1.plot(SEx, [r/1000 for r in res["rates_bb84"]], '--', color=c, lw=1.5, label=f"BB84 — {name}")
+            ax1.plot(SEx, [r/1000 for r in res["rates_mdi"]],  '-',  color=c, lw=1.5, label=f"MDI  — {name}")
+        ax1.set_yscale("log")
+        ax1.set_xlabel(r"Source error rate $\varepsilon_s$")
+        ax1.set_ylabel("Secure key rate (kbps)")
+        ax1.legend(fontsize=8)
+        ax1.grid(True, alpha=0.3)
+        plt.title(f"Key rate vs source error rate — config comparison\n(BB84 dashed, MDI solid)\n{', '.join(names)}")
+        plt.tight_layout()
+        if args.output_dir:
+            os.makedirs(args.output_dir, exist_ok=True)
+            fn = os.path.splitext(os.path.basename(__file__))[0] + "_compare.png"
+            plt.savefig(os.path.join(args.output_dir, fn), dpi=150, bbox_inches="tight")
+            plt.close()
+        else:
+            plt.show()
+        sys.exit(0)
+
     total_start = time.time()
-    prog = Progress(len(SEx))
-    step = 0
-
-    rates_bb84 = []
-    rates_mdi  = []
-    mins_bb84  = []
-    maxs_bb84  = []
-    stds_bb84  = []
-    q25s_bb84  = []
-    q75s_bb84  = []
-    sems_bb84  = []
-    mins_mdi   = []
-    maxs_mdi   = []
-    stds_mdi   = []
-    q25s_mdi   = []
-    q75s_mdi   = []
-    sems_mdi   = []
-
-    for se in SEx:
-        prog.update(step, f"Source err.: {se}/{SEx[-1]}  BB84+MDI running...")
-        bb84, mdi = main(runtimes=args.runtimes, fibre=args.fibre,
-                         lenLoss=cfg["fibre_loss_db_per_km"], initLoss=cfg["init_loss"],
-                         detEff=cfg["detector_efficiency"], darkCount=cfg["dark_count_rate"],
-                         nodeLossDb=cfg["node_loss_db"], sourceErrRate=se,
-                         dephasingRate=cfg["dephasing_rate"], bsEff=cfg["bs_eff"],
-                         workers=args.workers, no_db=args.no_db)
-        rates_bb84.append(bb84[3])
-        rates_mdi.append(mdi[3])
-
-        for rs, mins, maxs, stds, q25s, q75s, sems in [
-                (bb84[4], mins_bb84, maxs_bb84, stds_bb84, q25s_bb84, q75s_bb84, sems_bb84),
-                (mdi[4],  mins_mdi,  maxs_mdi,  stds_mdi,  q25s_mdi,  q75s_mdi,  sems_mdi)]:
-            nz = [r for r in rs if r > 0]
-            mins.append(min(nz) if nz else float('nan'))
-            maxs.append(max(rs) if rs else float('nan'))
-            stds.append(statistics.stdev([math.log(r) for r in nz]) if len(nz) > 1 else 0.0)
-            q25s.append(float(np.percentile(nz, 25)) if nz else float('nan'))
-            q75s.append(float(np.percentile(nz, 75)) if nz else float('nan'))
-            sems.append(statistics.stdev(nz) / math.sqrt(len(nz)) if len(nz) > 1 else 0.0)
-        step += 1
-        prog.update(step, f"Source err.: {se}/{SEx[-1]}  BB84 {bb84[3]/1000:.2f} | MDI {mdi[3]/1000:.2f} kbps")
-
-    prog.stop()
+    res = _run_sweep(cfg)
     m, s = divmod(int(time.time() - total_start), 60)
     print(f"✓ complete  total {m}m {s:02d}s")
+
+    rates_bb84 = res["rates_bb84"]; rates_mdi = res["rates_mdi"]
+    mins_bb84  = res["mins_bb84"];  maxs_bb84 = res["maxs_bb84"]; stds_bb84 = res["stds_bb84"]
+    mins_mdi   = res["mins_mdi"];   maxs_mdi  = res["maxs_mdi"];  stds_mdi  = res["stds_mdi"]
+    q25s_bb84  = res["q25s_bb84"];  q75s_bb84 = res["q75s_bb84"]; sems_bb84 = res["sems_bb84"]
+    q25s_mdi   = res["q25s_mdi"];   q75s_mdi  = res["q75s_mdi"];  sems_mdi  = res["sems_mdi"]
 
     abs_rates_bb84 = [r / 1000 for r in rates_bb84]
     abs_rates_mdi  = [r / 1000 for r in rates_mdi]

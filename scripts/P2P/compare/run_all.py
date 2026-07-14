@@ -19,6 +19,9 @@ Options:
     --output-dir PATH  Override save directory (disables auto timestamped path)
     --show           Open interactive plot windows instead of saving to disk
     --config PATH    JSON config preset passed to every script
+    --compare-configs PATH [PATH ...]
+                     2–4 config paths; each script runs in compare-configs mode,
+                     overlaying all configs on one figure per sweep
 
 Sweeps run:
     length.py       Key rate vs distance (1-100 km)
@@ -67,8 +70,13 @@ if __name__ == "__main__":
     parser.add_argument("--output-dir", type=str,  default=None, help="Override save directory")
     parser.add_argument("--show",       action="store_true", help="Display plots interactively instead of saving")
     parser.add_argument("--config",     type=str,  default=None, help="JSON config preset")
-    parser.add_argument("--no-db",      action="store_true", help="Disable DB writing")
+    parser.add_argument("--no-db",          action="store_true", help="Disable DB writing")
+    parser.add_argument("--compare-configs", nargs="+", metavar="PATH", dest="compare_configs",
+                        help="2–4 config paths; run every script in compare-configs mode")
     args = parser.parse_args()
+
+    if args.compare_configs and not (2 <= len(args.compare_configs) <= 4):
+        parser.error("--compare-configs requires 2–4 paths")
 
     here         = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(os.path.dirname(os.path.dirname(here)))
@@ -77,10 +85,11 @@ if __name__ == "__main__":
         if args.output_dir:
             output_dir = args.output_dir
         else:
-            now        = datetime.now()
-            month_dir  = os.path.join(project_root, "docs", "figures", now.strftime("%B"))
-            day_dir    = os.path.join(month_dir, f"{now.strftime('%Y%m%d')} - P2P parameters")
-            output_dir = os.path.join(day_dir, "all parameters")
+            now       = datetime.now()
+            month_dir = os.path.join(project_root, "docs", "figures", now.strftime("%B"))
+            day_dir   = os.path.join(month_dir, f"{now.strftime('%Y%m%d')} - P2P parameters")
+            subfolder = "config comparison" if args.compare_configs else "all parameters"
+            output_dir = os.path.join(day_dir, subfolder)
         os.makedirs(output_dir, exist_ok=True)
         print(f"Figures will be saved to: {output_dir}")
     else:
@@ -92,7 +101,9 @@ if __name__ == "__main__":
         if args.workers is not None:
             cmd += ["--workers", str(args.workers)]
         cmd += ["--error", args.error]
-        if args.config is not None:
+        if args.compare_configs:
+            cmd += ["--compare-configs"] + args.compare_configs
+        elif args.config is not None:
             cmd += ["--config", args.config]
         if output_dir is not None:
             cmd += ["--output-dir", output_dir]
