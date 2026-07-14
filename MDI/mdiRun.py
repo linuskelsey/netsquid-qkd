@@ -154,27 +154,34 @@ def run_mdi_sims(runtimes=10,
                  db_path=DEFAULT_DB_PATH,
                  config_preset=None):
 
+    _BATCH = 100
+
     run_id        = new_run_id()
     run_timestamp = datetime.now().isoformat()
 
     n = max(1, int(os.cpu_count() * 0.8)) if workers is None else workers
-    n = min(n, runtimes)
-
-    base, remainder = divmod(runtimes, n)
-    sizes = [base + (1 if i < remainder else 0) for i in range(n)]
-
-    job_args = [(s, fibreLen, qDelay, qSpeed, photonCount, sourceFreq,
-                 lenLoss, initLoss, detectorEffZ, detectorEffX, darkCount, nodeLossDb, sourceErrRate, dephasingRate, bsEff, charliePos) for s in sizes]
-
-    with get_context('spawn').Pool(n) as pool:
-        parts = pool.map(_mdi_chunk, job_args)
 
     KeyListA, KeyListB, KeyRateList, QBERList = [], [], [], []
-    for kA, kB, kR, kQ in parts:
-        KeyListA.extend(kA)
-        KeyListB.extend(kB)
-        KeyRateList.extend(kR)
-        QBERList.extend(kQ)
+    remaining = runtimes
+    while remaining > 0:
+        batch = min(remaining, _BATCH)
+        remaining -= batch
+
+        nb = min(n, batch)
+        base, remainder = divmod(batch, nb)
+        sizes = [base + (1 if i < remainder else 0) for i in range(nb)]
+
+        job_args = [(s, fibreLen, qDelay, qSpeed, photonCount, sourceFreq,
+                     lenLoss, initLoss, detectorEffZ, detectorEffX, darkCount, nodeLossDb, sourceErrRate, dephasingRate, bsEff, charliePos) for s in sizes]
+
+        with get_context('spawn').Pool(nb) as pool:
+            parts = pool.map(_mdi_chunk, job_args)
+
+        for kA, kB, kR, kQ in parts:
+            KeyListA.extend(kA)
+            KeyListB.extend(kB)
+            KeyRateList.extend(kR)
+            QBERList.extend(kQ)
 
     if db_path is not None:
         params = {

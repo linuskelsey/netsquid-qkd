@@ -33,14 +33,13 @@ import argparse
 
 import numpy as np
 import matplotlib.pyplot as plt
-from multiprocessing import get_context
 from datetime import datetime
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, ROOT)
 
-from BB84.BB84_run import _bb84_chunk
-from MDI.mdiRun import _mdi_chunk
+from BB84.BB84_run import run_BB84_sims
+from MDI.mdiRun import run_mdi_sims
 from lib.db import DEFAULT_DB_PATH, new_run_id, init_db, insert_p2p_rows
 
 _Dx = [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
@@ -76,51 +75,14 @@ _MDI_IDX  = list(range(len(_PARAMS)))
 
 
 def _plot_proto(proto_name, param_indices, runtimes, workers, db_path):
-    """
-    Build all jobs for every curve × distance upfront and submit in one
-    pool.map call so workers are continuously fed with no idle gaps.
-    """
-    is_mdi   = proto_name == "MDI"
-    chunk_fn = _mdi_chunk if is_mdi else _bb84_chunk
-    proto    = "MDI" if is_mdi else "BB84"
+    is_mdi = proto_name == "MDI"
+    proto  = "MDI" if is_mdi else "BB84"
 
-    n        = max(1, int(os.cpu_count() * 0.8)) if workers is None else workers
-    n        = min(n, runtimes)
-    base, rm = divmod(runtimes, n)
-    sizes    = [base + (1 if i < rm else 0) for i in range(n)]
-
-    # all_cfgs[0] = ideal baseline; all_cfgs[1+] = one isolated param each
     all_cfgs   = [_IDEAL] + [dict(_IDEAL, **{_PARAMS[pi][0]: _PARAMS[pi][1]}) for pi in param_indices]
     all_labels = ["Ideal (baseline)"] + [_PARAMS[pi][2] for pi in param_indices]
     colours    = plt.cm.tab10(np.linspace(0, 0.9, len(param_indices)))
 
-    # Flat job list: all_jobs[(ci * n_dists + di) * n + si] = one chunk call
-    n_dists  = len(_Dx)
-    all_jobs = []
-    for cfg in all_cfgs:
-        for d in _Dx:
-            for s in sizes:
-                if is_mdi:
-                    all_jobs.append((s, d, 0, 0.8, 1024, 1e7,
-                                     cfg["fibre_loss_db_per_km"], cfg["init_loss"],
-                                     cfg["detector_efficiency"], cfg["det_eff_x"],
-                                     cfg["dark_count_rate"], cfg["node_loss_db"],
-                                     cfg["source_error_rate"], cfg["dephasing_rate"],
-                                     cfg["bs_eff"], 0.5))
-                else:
-                    all_jobs.append((s, d, 0, 0.8, 1024, 1e7,
-                                     cfg["fibre_loss_db_per_km"], cfg["init_loss"],
-                                     cfg["detector_efficiency"], cfg["det_eff_x"],
-                                     cfg["dark_count_rate"], cfg["node_loss_db"],
-                                     cfg["source_error_rate"], cfg["dephasing_rate"]))
-
-    print(f"{proto_name}  submitting {len(all_jobs)} tasks "
-          f"({len(all_cfgs)} curves × {n_dists} distances × {n} chunks)...")
-
-    with get_context('spawn').Pool(n) as pool:
-        all_results = pool.map(chunk_fn, all_jobs)
-
-    print(f"{proto_name}  done — plotting...")
+    print(f"{proto_name}  {len(all_cfgs)} curves × {len(_Dx)} distances...")
 
     conn      = init_db(db_path) if db_path else None
     timestamp = datetime.now().isoformat()
@@ -128,12 +90,25 @@ def _plot_proto(proto_name, param_indices, runtimes, workers, db_path):
 
     for ci, (cfg, label) in enumerate(zip(all_cfgs, all_labels)):
         rates, mins, maxs = [], [], []
-        for di, d in enumerate(_Dx):
-            offset = (ci * n_dists + di) * n
-            parts  = all_results[offset:offset + n]
-            KA, KB, KR, KQ = [], [], [], []
-            for kA, kB, kR, kQ in parts:
-                KA.extend(kA); KB.extend(kB); KR.extend(kR); KQ.extend(kQ)
+        for d in _Dx:
+            if is_mdi:
+                KA, KB, KR, KQ = run_mdi_sims(
+                    runtimes=runtimes, fibreLen=d, photonCount=1024, sourceFreq=1e7,
+                    qSpeed=0.8, lenLoss=cfg["fibre_loss_db_per_km"], initLoss=cfg["init_loss"],
+                    detectorEffZ=cfg["detector_efficiency"], detectorEffX=cfg["det_eff_x"],
+                    darkCount=cfg["dark_count_rate"], nodeLossDb=cfg["node_loss_db"],
+                    sourceErrRate=cfg["source_error_rate"], dephasingRate=cfg["dephasing_rate"],
+                    bsEff=cfg["bs_eff"], charliePos=0.5, workers=workers, db_path=None,
+                )
+            else:
+                KA, KB, KR, KQ = run_BB84_sims(
+                    runtimes=runtimes, fibreLen=d, photonCount=1024, sourceFreq=1e7,
+                    qSpeed=0.8, lenLoss=cfg["fibre_loss_db_per_km"], initLoss=cfg["init_loss"],
+                    detectorEffZ=cfg["detector_efficiency"], detectorEffX=cfg["det_eff_x"],
+                    darkCount=cfg["dark_count_rate"], nodeLossDb=cfg["node_loss_db"],
+                    sourceErrRate=cfg["source_error_rate"], dephasingRate=cfg["dephasing_rate"],
+                    workers=workers, db_path=None,
+                )
 
             if conn is not None:
                 db_params = {
