@@ -48,6 +48,7 @@
 | Key rate vs relay count K — all three protocols (`scripts/network/relay_sweep.py`) |
 | Network success rate (QBER < 11%) vs relay count K |
 | Multi-seed averaging (`--seeds N`): repeat sweep over N random placements, report mean ± std across seeds for statistically robust results |
+| `--error iqr`: Q1/Q3 shaded band on all three protocols, more robust to outlier seeds than ±1σ (`relay_sweep.py`, `user_sweep.py`) |
 
 #### Experiment 2 — User count sweep
 
@@ -127,7 +128,6 @@ Reconstruct any P2P or network figure from `results.db` without re-running simul
 
 | Item |
 |------|
-| IQR error mode on network scripts: `--error iqr` shows Q1/Q3 band (shaded) instead of ±1σ; more robust to outlier seeds; add to `relay_sweep.py` and `user_sweep.py` alongside existing `bars`/`shade` options |
 | Validate k-means + centroid as optimal MDI relay placement: benchmark against alternatives (random placement, grid, ILP-optimal); confirm or replace as the canonical topology strategy |
 | Monte Carlo sample count scaling: for key rates of order 10^-x, use 10^(x+1) samples; smallest observed rates ~10^-2 → target 1000 runs per point where feasible; audit all scripts and increase run counts accordingly |
 | Finite-key corrections: block-size-dependent key rate using composable security bound; `photons` per run sets block size `n`; quantifies departure from asymptotic regime at low photon counts and short distances |

@@ -20,7 +20,7 @@ Options:
     --seeds INT      Random topologies to average over (default: 1)
     --runtimes INT   Monte Carlo runs per pair (default: 20)
     --config PATH    JSON config preset
-    --error          Error style: bars (default) or shade
+    --error          Error style: bars (default), shade (±1σ fill), or iqr (Q1/Q3 fill)
     --workers INT    Worker processes (default: 80% of CPU cores)
     --save PATH      Save figure to file instead of displaying
 
@@ -70,7 +70,7 @@ def main():
     parser.add_argument("--seeds",    type=int,   default=1,    help="Number of random topologies to average over")
     parser.add_argument("--runtimes", type=int,   default=20,   help="Monte Carlo runs per pair")
     parser.add_argument("--config",   type=str,   default=None, help="Path to JSON config")
-    parser.add_argument("--error",    type=str,   default="bars", choices=["bars", "shade"])
+    parser.add_argument("--error",    type=str,   default="bars", choices=["bars", "shade", "iqr"])
     parser.add_argument("--save",     type=str,   default=None, help="Save path for results figure")
     parser.add_argument("--no-p2p-db", action="store_true", help="Disable P2P DB writing")
     parser.add_argument("--no-net-db", action="store_true", help="Disable network DB writing")
@@ -172,31 +172,45 @@ def main():
     K_arr  = np.array(K_values)
     b_mean = np.array(bb84_means) / 1000   # bps → kbps
     b_std  = np.array(bb84_stds)  / 1000
+    b_q1   = np.array([np.percentile(bb84_per_seed, 25)] * len(K_values)) / 1000
+    b_q3   = np.array([np.percentile(bb84_per_seed, 75)] * len(K_values)) / 1000
     m_mean = np.array(mdi_means)  / 1000
     m_std  = np.array(mdi_stds)   / 1000
+    m_q1   = np.array([np.percentile(mdi_per_seed[K], 25) for K in K_values]) / 1000
+    m_q3   = np.array([np.percentile(mdi_per_seed[K], 75) for K in K_values]) / 1000
     t_mean = np.array(t_means)    / 1000
     t_std  = np.array(t_stds)     / 1000
+    t_q1   = np.array([np.percentile(trusted_per_seed[K], 25) for K in K_values]) / 1000
+    t_q3   = np.array([np.percentile(trusted_per_seed[K], 75) for K in K_values]) / 1000
 
     bb84_ref = b_mean[0] if b_mean[0] > 0 else 1.0  # normalise relative axis to BB84
 
     # --- Figure 1: results ---
     fig, ax1 = plt.subplots(figsize=(8, 5))
 
-    # BB84 — always dotted, no markers, shaded error
+    # BB84 — always dotted, no markers; error band style follows --error
     ax1.plot(K_arr, b_mean, '--', color="#377eb8", lw=1.5, label="BB84")
-    ax1.fill_between(K_arr, b_mean - b_std, b_mean + b_std, alpha=0.2, color="#377eb8")
+    if args.error == "iqr":
+        ax1.fill_between(K_arr, b_q1, b_q3, alpha=0.2, color="#377eb8")
+    else:
+        ax1.fill_between(K_arr, b_mean - b_std, b_mean + b_std, alpha=0.2, color="#377eb8")
 
-    # MDI — solid with circles, error controlled by --error flag
+    # MDI and trusted BB84 — solid with markers, error controlled by --error flag
     if args.error == "bars":
         ax1.errorbar(K_arr, m_mean, yerr=m_std, label="MDI", color="#e41a1c",
                      marker="o", capsize=4, lw=1.5)
         ax1.errorbar(K_arr, t_mean, yerr=t_std, label="Trusted BB84", color="#4daf4a",
                      marker="s", capsize=4, lw=1.5)
-    else:
+    elif args.error == "shade":
         ax1.plot(K_arr, m_mean, color="#e41a1c", marker="o", lw=1.5, label="MDI")
         ax1.fill_between(K_arr, m_mean - m_std, m_mean + m_std, alpha=0.2, color="#e41a1c")
         ax1.plot(K_arr, t_mean, color="#4daf4a", marker="s", lw=1.5, label="Trusted BB84")
         ax1.fill_between(K_arr, t_mean - t_std, t_mean + t_std, alpha=0.2, color="#4daf4a")
+    else:  # iqr
+        ax1.plot(K_arr, m_mean, color="#e41a1c", marker="o", lw=1.5, label="MDI")
+        ax1.fill_between(K_arr, m_q1, m_q3, alpha=0.2, color="#e41a1c")
+        ax1.plot(K_arr, t_mean, color="#4daf4a", marker="s", lw=1.5, label="Trusted BB84")
+        ax1.fill_between(K_arr, t_q1, t_q3, alpha=0.2, color="#4daf4a")
 
     ax1.set_yscale("log")
     ax1.set_xlabel("Relay count K")

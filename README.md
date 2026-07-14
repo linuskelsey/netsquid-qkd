@@ -148,15 +148,22 @@ python scripts/network/user_sweep.py --k 3 --n-min 4 --n-max 20 --n-step 2 --run
 python scripts/network/user_sweep.py --k 3 --n-min 4 --n-max 20 --config configs/layer3_dark.json --save figures/user_sweep.png
 # --ref-n: N at which relay positions are optimised (default: n-max)
 python scripts/network/user_sweep.py --k 3 --n-min 4 --n-max 20 --ref-n 20
+# Error style: std error bars (default), ±1σ fill, or Q1/Q3 fill
+python scripts/network/user_sweep.py --seeds 10 --error iqr
 ```
 
-Relay positions are optimised once at `--ref-n` and held fixed across all N values. Both protocols re-run per N. Total fibre printed per row showing O(N²) BB84 vs O(N) MDI scaling.
+Relay positions are optimised once at `--ref-n` and held fixed across all N values. All three protocols re-run per N. Total fibre printed per row showing O(N²) BB84 vs O(N) MDI/trusted-BB84 scaling.
 
 Run Experiment 1 — relay count sweep (fixed N, vary K):
 
 ```bash
 python scripts/network/relay_sweep.py --n 20 --k-min 1 --k-max 8 --runtimes 20
 python scripts/network/relay_sweep.py --n 20 --k-min 1 --k-max 8 --config configs/layer3_dark.json --save figures/relay_sweep.png
+
+# Error style: std error bars (default), ±1σ fill, or Q1/Q3 fill (robust to outlier seeds)
+python scripts/network/relay_sweep.py --error bars
+python scripts/network/relay_sweep.py --error shade
+python scripts/network/relay_sweep.py --error iqr
 
 # DB control: suppress P2P pair rows, network summary rows, or both
 python scripts/network/relay_sweep.py --no-p2p-db
