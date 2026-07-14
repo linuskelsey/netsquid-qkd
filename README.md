@@ -12,10 +12,11 @@ UCL MSc Quantum Technologies Research Project — Linus Kelsey
 BB84/           BB84 Alice/Bob protocols and simulation runner
 MDI/            MDI-QKD Alice/Bob/Charlie protocols and simulation runner
 network/        Multi-user network simulation
-  topology.py           User placement, k-means relay optimisation, BB84/MDI link distances
-  bb84_network.py       BB84 over all N(N-1)/2 direct pairs; per-pair and network-level metrics
-  mdi_network.py        MDI-QKD over all pairs via nearest relay; cross-cluster passive routing
-  visualise_network.py  Side-by-side MDI cluster / BB84 mesh topology plot
+  topology.py              User placement, k-means relay optimisation, BB84/MDI link distances
+  bb84_network.py          BB84 over all N(N-1)/2 direct pairs; per-pair and network-level metrics
+  mdi_network.py           MDI-QKD over all pairs via nearest relay; cross-cluster passive routing
+  trusted_bb84_network.py  Trusted-node BB84: users connect to K relay nodes; relays XOR-combine keys; cross-relay pairs dilute backbone key rate; rate = min link in chain
+  visualise_network.py     Side-by-side MDI cluster / BB84 mesh topology plot
 lib/            Shared utilities (delay model, photon source, config loader, DB layer)
   db.py                 SQLite persistence: p2p_results and network_results tables
 data/           SQLite database (git-ignored; created on first run)
@@ -115,6 +116,7 @@ Run network simulations directly (used by sweep scripts):
 from network.topology import place_users, optimise_relays, Topology
 from network.bb84_network import run_bb84_network
 from network.mdi_network import run_mdi_network
+from network.trusted_bb84_network import run_trusted_bb84_network
 from lib.functions import load_config
 
 cfg       = load_config("configs/layer3_dark.json")
@@ -122,20 +124,22 @@ user_pos  = place_users(N=10, area_km=10, seed=42)
 relay_pos = optimise_relays(user_pos, K=3, seed=42)
 topo      = Topology(user_pos, relay_pos)
 
-bb84 = run_bb84_network(topo, cfg, runtimes=20)
-mdi  = run_mdi_network(topo, cfg, runtimes=20)
+bb84    = run_bb84_network(topo, cfg, runtimes=20)
+mdi     = run_mdi_network(topo, cfg, runtimes=20)
+trusted = run_trusted_bb84_network(topo, cfg, runtimes=20)
 
-# bb84["avg_key_rate"], bb84["success_rate"], bb84["total_fibre_km"]
-# mdi["avg_key_rate"],  mdi["success_rate"],  mdi["total_fibre_km"]
+# bb84["avg_key_rate"],    bb84["success_rate"],    bb84["total_fibre_km"]
+# mdi["avg_key_rate"],     mdi["success_rate"],     mdi["total_fibre_km"]
+# trusted["avg_key_rate"], trusted["success_rate"], trusted["total_fibre_km"]
 ```
 
 Key network cost outputs:
 
-| Field | BB84 | MDI |
-|-------|------|-----|
-| `total_fibre_km` | Σ all N(N-1)/2 pair distances | Σ user-relay + relay-relay links |
-| `n_links` | N(N-1)/2 | N + K(K-1)/2 |
-| `switch_loss_db` | — | extra node loss (dB) for cross-cluster pairs (default 1.0) |
+| Field | BB84 | MDI | Trusted BB84 |
+|-------|------|-----|--------------|
+| `total_fibre_km` | Σ all N(N-1)/2 pair distances | Σ user-relay + relay-relay links | Σ user-relay + relay-relay links (same as MDI) |
+| `n_links` | N(N-1)/2 | N + K(K-1)/2 | N + K(K-1)/2 |
+| `switch_loss_db` | — | extra node loss (dB) for cross-cluster pairs (default 1.0) | — (backbone is a direct BB84 link, no optical switch) |
 
 Run Experiment 2 — user count sweep (fixed K relays, vary N):
 
@@ -160,7 +164,7 @@ python scripts/network/relay_sweep.py --no-net-db
 python scripts/network/relay_sweep.py --no-p2p-db --no-net-db
 ```
 
-BB84 is run once (relay-independent) and reused across all K values. MDI re-runs per K with re-optimised relay positions. Produces two figures: key rate + success rate vs K, and a topology visualisation at the midpoint K.
+BB84 is run once (relay-independent) and reused across all K values. MDI and trusted-node BB84 both re-run per K with re-optimised relay positions. Produces two figures: key rate vs K (all three protocols), and a topology visualisation at the midpoint K.
 
 See [NETWORK.md](NETWORK.md) for full experimental design and hypotheses.
 

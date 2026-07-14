@@ -1,9 +1,12 @@
 """
 Experiment 1 — relay count sweep.
 
-Fixed N users, vary relay count K. Plots average key rate vs K for BB84 and MDI-QKD.
-Error bars show std across Monte Carlo runs (--seeds 1) or across random topologies (--seeds N).
-Topology visualisation only produced when --seeds 1.
+Fixed N users, vary relay count K. Plots average key rate vs K for BB84, MDI-QKD,
+and trusted-node BB84. Error bars show std across Monte Carlo runs (--seeds 1) or
+across random topologies (--seeds N). Topology visualisation only produced when --seeds 1.
+
+BB84 is relay-independent (direct mesh) and is run once per seed.
+MDI and trusted-node BB84 both use the relay topology and are re-run per K.
 
 Usage:
     python scripts/network/relay_sweep.py [options]
@@ -43,6 +46,7 @@ from lib.progress import Progress
 from topology import place_users, optimise_relays, Topology
 from bb84_network import run_bb84_network
 from mdi_network import run_mdi_network
+from trusted_bb84_network import run_trusted_bb84_network
 from visualise_network import draw_mdi, draw_bb84
 
 
@@ -85,10 +89,12 @@ def main():
         rng   = np.random.default_rng(args.seed)
         seeds = rng.integers(0, 100_000, size=args.seeds).tolist()
 
-    bb84_per_seed    = []
-    bb84_ok_per_seed = []
-    mdi_per_seed     = {K: [] for K in K_values}
-    mdi_ok_per_seed  = {K: [] for K in K_values}
+    bb84_per_seed     = []
+    bb84_ok_per_seed  = []
+    mdi_per_seed      = {K: [] for K in K_values}
+    mdi_ok_per_seed   = {K: [] for K in K_values}
+    trusted_per_seed  = {K: [] for K in K_values}
+    trusted_ok_per_seed = {K: [] for K in K_values}
 
     seed_total  = 1 + len(K_values)
     total_start = time.time()
@@ -129,8 +135,20 @@ def main():
             _s_mdi_ok  = mdi_res["success_rate"] * 100
             mdi_per_seed[K].append(_s_mdi)
             mdi_ok_per_seed[K].append(_s_mdi_ok)
+
+            trusted_res   = run_trusted_bb84_network(topo, cfg, runtimes=args.runtimes, workers=args.workers,
+                                p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
+                                net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
+                                experiment="relay_sweep", seed=seed, area_km=args.area,
+                                config_preset=args.config)
+            tp            = _pair_avgs(trusted_res["pair_rates"])
+            _s_trusted    = np.mean(tp) if tp else 0.0
+            _s_trusted_ok = trusted_res["success_rate"] * 100
+            trusted_per_seed[K].append(_s_trusted)
+            trusted_ok_per_seed[K].append(_s_trusted_ok)
+
             step += 1
-            prog.update(step, f"Relay count: {K}/{K_values[-1]}  BB84 {_s_bb84/1000:.2f} | MDI {_s_mdi/1000:.2f} kbps")
+            prog.update(step, f"Relay count: {K}/{K_values[-1]}  BB84 {_s_bb84/1000:.2f} | MDI {_s_mdi/1000:.2f} | TBB84 {_s_trusted/1000:.2f} kbps")
 
         prog.stop()
         m, s = divmod(int(time.time() - seed_start), 60)
@@ -147,11 +165,17 @@ def main():
     mdi_stds  = [np.std(mdi_per_seed[K])     for K in K_values]
     mdi_ok    = [np.mean(mdi_ok_per_seed[K]) for K in K_values]
 
+    t_means = [np.mean(trusted_per_seed[K])    for K in K_values]
+    t_stds  = [np.std(trusted_per_seed[K])     for K in K_values]
+    t_ok    = [np.mean(trusted_ok_per_seed[K]) for K in K_values]
+
     K_arr  = np.array(K_values)
     b_mean = np.array(bb84_means) / 1000   # bps → kbps
     b_std  = np.array(bb84_stds)  / 1000
     m_mean = np.array(mdi_means)  / 1000
     m_std  = np.array(mdi_stds)   / 1000
+    t_mean = np.array(t_means)    / 1000
+    t_std  = np.array(t_stds)     / 1000
 
     bb84_ref = b_mean[0] if b_mean[0] > 0 else 1.0  # normalise relative axis to BB84
 
@@ -162,13 +186,17 @@ def main():
     ax1.plot(K_arr, b_mean, '--', color="#377eb8", lw=1.5, label="BB84")
     ax1.fill_between(K_arr, b_mean - b_std, b_mean + b_std, alpha=0.2, color="#377eb8")
 
-    # MDI — solid with markers, error controlled by --error flag
+    # MDI — solid with circles, error controlled by --error flag
     if args.error == "bars":
         ax1.errorbar(K_arr, m_mean, yerr=m_std, label="MDI", color="#e41a1c",
                      marker="o", capsize=4, lw=1.5)
+        ax1.errorbar(K_arr, t_mean, yerr=t_std, label="Trusted BB84", color="#4daf4a",
+                     marker="s", capsize=4, lw=1.5)
     else:
         ax1.plot(K_arr, m_mean, color="#e41a1c", marker="o", lw=1.5, label="MDI")
         ax1.fill_between(K_arr, m_mean - m_std, m_mean + m_std, alpha=0.2, color="#e41a1c")
+        ax1.plot(K_arr, t_mean, color="#4daf4a", marker="s", lw=1.5, label="Trusted BB84")
+        ax1.fill_between(K_arr, t_mean - t_std, t_mean + t_std, alpha=0.2, color="#4daf4a")
 
     ax1.set_yscale("log")
     ax1.set_xlabel("Relay count K")
@@ -180,6 +208,7 @@ def main():
     ax2 = ax1.twinx()
     ax2.plot(K_arr, b_mean / bb84_ref, alpha=0)
     ax2.plot(K_arr, m_mean / bb84_ref, alpha=0)
+    ax2.plot(K_arr, t_mean / bb84_ref, alpha=0)
     ax2.set_ylabel("Relative key rate")
     ax2.set_yscale("log")
 

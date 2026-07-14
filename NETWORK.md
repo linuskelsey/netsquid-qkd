@@ -49,14 +49,15 @@ Relay count comparison (cost vs performance) is a secondary analysis. Primary fo
 
 ## Infrastructure Comparison
 
-| | BB84 | MDI-QKD |
-|---|---|---|
-| Fibre links | N(N-1)/2 direct P2P links | N user-relay + K(K-1)/2 relay-relay links |
-| Relay hardware | none | K Charlie nodes (untrusted) |
-| Security assumptions | none beyond endpoints | relay untrusted — MDI advantage |
-| Infrastructure scaling | O(N²) | O(N) |
+| | BB84 | MDI-QKD | Trusted-node BB84 |
+|---|---|---|---|
+| Fibre links | N(N-1)/2 direct P2P links | N user-relay + K(K-1)/2 relay-relay links | N user-relay + K(K-1)/2 relay-relay links |
+| Relay hardware | none | K Charlie nodes (untrusted) | K trusted relay nodes |
+| Security assumptions | none beyond endpoints | relay untrusted — MDI advantage | relay **trusted** — holds plaintext key material |
+| Infrastructure scaling | O(N²) | O(N) | O(N) |
+| Key rate bottleneck | direct link | BSM success rate + routing | min link in chain; backbone shared across cross-relay pairs |
 
-BB84's O(N²) fibre scaling makes it prohibitively expensive at large N even if per-pair key rate is higher. MDI's O(N) fibre scaling is the primary economic argument for network deployment.
+BB84's O(N²) fibre scaling makes it prohibitively expensive at large N even if per-pair key rate is higher. MDI's O(N) fibre scaling is the primary economic argument for network deployment. Trusted-node BB84 shares the same O(N) infrastructure as MDI but requires relays to be security-trusted, sacrificing the key advantage of MDI — the comparison isolates the cost of the trust-removal guarantee.
 
 ## Working Hypotheses
 
