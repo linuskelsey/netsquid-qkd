@@ -59,6 +59,8 @@
 | Network success rate vs user count N |
 | Cost tracking: total fibre (km), link count, component count per simulation |
 | Multi-seed averaging (`--seeds N`): relay positions re-optimised per seed; mean ± std across seeds reported |
+| End-of-sweep summary table: K/N × BB84/MDI/trusted-BB84 × key rate (kbps) × success % × fibre km printed to stdout after each run |
+| `--no-figure` flag on both sweep scripts: suppress all figure output (useful for batch runs or headless servers) |
 
 ### Analysis
 
@@ -110,7 +112,6 @@ Reconstruct any P2P or network figure from `results.db` without re-running simul
 | Item |
 |------|
 | Checkpoint saving: persist intermediate results per K/N to JSON so long runs can recover from crash |
-| End-of-sweep summary table: print formatted K/N × protocol × key rate × success rate × fibre km table to stdout |
 
 #### Experiment 2 — User count sweep
 

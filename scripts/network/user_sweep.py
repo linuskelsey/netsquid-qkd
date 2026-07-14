@@ -73,8 +73,9 @@ def main():
     parser.add_argument("--seeds",    type=int,   default=1,    help="Number of random topologies to average over")
     parser.add_argument("--runtimes", type=int,   default=20,   help="Monte Carlo runs per pair")
     parser.add_argument("--config",   type=str,   default=None, help="Path to JSON config")
-    parser.add_argument("--error",    type=str,   default="bars", choices=["bars", "shade", "iqr"])
-    parser.add_argument("--save",     type=str,   default=None, help="Save path for results figure")
+    parser.add_argument("--error",     type=str,   default="bars", choices=["bars", "shade", "iqr"])
+    parser.add_argument("--save",      type=str,   default=None, help="Save path for results figure")
+    parser.add_argument("--no-figure", action="store_true", help="Skip all figure output (no show, no save)")
     parser.add_argument("--no-p2p-db", action="store_true", help="Disable P2P DB writing")
     parser.add_argument("--no-net-db", action="store_true", help="Disable network DB writing")
     parser.add_argument("--workers",  type=int,   default=None, help="Worker processes (default: 80%% of CPU cores)")
@@ -178,6 +179,17 @@ def main():
     t_ok           = [np.mean(trusted_ok_per_seed[N])   for N in N_arr_final]
     t_fibre        = [np.mean(trusted_fibre_per_seed[N]) for N in N_arr_final]
 
+    print(f"\n{'N':>3}  {'BB84 kbps':>10}  {'MDI kbps':>9}  {'TBB84 kbps':>11}  {'BB84 ok%':>9}  {'MDI ok%':>8}  {'TBB84 ok%':>10}  {'BB84 km':>8}  {'MDI km':>7}  {'TBB84 km':>9}")
+    print("-" * 102)
+    for N, b_r, m_r, t_r, b_ok, m_ok, t_ok_, b_km, m_km, t_km in zip(
+            N_arr_final, bb84_means, mdi_means, t_means,
+            bb84_ok, mdi_ok, t_ok, bb84_fibre, mdi_fibre, t_fibre):
+        print(
+            f"{N:>3}  {b_r/1000:>10.2f}  {m_r/1000:>9.2f}  {t_r/1000:>11.2f}  "
+            f"{b_ok:>8.0f}%  {m_ok:>7.0f}%  {t_ok_:>9.0f}%  "
+            f"{b_km:>8.1f}  {m_km:>7.1f}  {t_km:>9.1f}"
+        )
+
     N_arr  = np.array(N_arr_final)
     b_mean = np.array(bb84_means) / 1000
     b_std  = np.array(bb84_stds)  / 1000
@@ -240,14 +252,15 @@ def main():
     )
     plt.tight_layout()
 
-    if args.save:
-        plt.savefig(args.save, dpi=150)
-        print(f"Saved to {args.save}")
-    else:
-        plt.show()
+    if not args.no_figure:
+        if args.save:
+            plt.savefig(args.save, dpi=150)
+            print(f"Saved to {args.save}")
+        else:
+            plt.show()
 
     # --- Figure 2: topology at midpoint N (single seed only) ---
-    if args.seeds == 1:
+    if args.seeds == 1 and not args.no_figure:
         N_mid      = N_arr_final[len(N_arr_final) // 2]
         user_mid   = place_users(N_mid, area_km=args.area, seed=seeds[0])
         ref_mid    = place_users(ref_n, area_km=args.area, seed=seeds[0])

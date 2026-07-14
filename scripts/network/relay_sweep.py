@@ -70,11 +70,12 @@ def main():
     parser.add_argument("--seeds",    type=int,   default=1,    help="Number of random topologies to average over")
     parser.add_argument("--runtimes", type=int,   default=20,   help="Monte Carlo runs per pair")
     parser.add_argument("--config",   type=str,   default=None, help="Path to JSON config")
-    parser.add_argument("--error",    type=str,   default="bars", choices=["bars", "shade", "iqr"])
-    parser.add_argument("--save",     type=str,   default=None, help="Save path for results figure")
+    parser.add_argument("--error",     type=str,   default="bars", choices=["bars", "shade", "iqr"])
+    parser.add_argument("--save",      type=str,   default=None, help="Save path for results figure")
+    parser.add_argument("--no-figure", action="store_true", help="Skip all figure output (no show, no save)")
     parser.add_argument("--no-p2p-db", action="store_true", help="Disable P2P DB writing")
     parser.add_argument("--no-net-db", action="store_true", help="Disable network DB writing")
-    parser.add_argument("--workers",  type=int,   default=None, help="Worker processes (default: 80%% of CPU cores)")
+    parser.add_argument("--workers",   type=int,   default=None, help="Worker processes (default: 80%% of CPU cores)")
     args = parser.parse_args()
 
     if args.seed is None:
@@ -89,12 +90,15 @@ def main():
         rng   = np.random.default_rng(args.seed)
         seeds = rng.integers(0, 100_000, size=args.seeds).tolist()
 
-    bb84_per_seed     = []
-    bb84_ok_per_seed  = []
-    mdi_per_seed      = {K: [] for K in K_values}
-    mdi_ok_per_seed   = {K: [] for K in K_values}
-    trusted_per_seed  = {K: [] for K in K_values}
-    trusted_ok_per_seed = {K: [] for K in K_values}
+    bb84_per_seed        = []
+    bb84_ok_per_seed     = []
+    bb84_fibre_per_seed  = []
+    mdi_per_seed         = {K: [] for K in K_values}
+    mdi_ok_per_seed      = {K: [] for K in K_values}
+    mdi_fibre_per_seed   = {K: [] for K in K_values}
+    trusted_per_seed     = {K: [] for K in K_values}
+    trusted_ok_per_seed  = {K: [] for K in K_values}
+    trusted_fibre_per_seed = {K: [] for K in K_values}
 
     seed_total  = 1 + len(K_values)
     total_start = time.time()
@@ -118,6 +122,7 @@ def main():
         _s_bb84_ok = bb84_res["success_rate"] * 100
         bb84_per_seed.append(_s_bb84)
         bb84_ok_per_seed.append(_s_bb84_ok)
+        bb84_fibre_per_seed.append(bb84_res["total_fibre_km"])
         step += 1
         prog.update(step, f"BB84 {_s_bb84/1000:.2f} kbps  ({_s_bb84_ok:.0f}% ok)")
 
@@ -135,6 +140,7 @@ def main():
             _s_mdi_ok  = mdi_res["success_rate"] * 100
             mdi_per_seed[K].append(_s_mdi)
             mdi_ok_per_seed[K].append(_s_mdi_ok)
+            mdi_fibre_per_seed[K].append(mdi_res["total_fibre_km"])
 
             trusted_res   = run_trusted_bb84_network(topo, cfg, runtimes=args.runtimes, workers=args.workers,
                                 p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
@@ -146,6 +152,7 @@ def main():
             _s_trusted_ok = trusted_res["success_rate"] * 100
             trusted_per_seed[K].append(_s_trusted)
             trusted_ok_per_seed[K].append(_s_trusted_ok)
+            trusted_fibre_per_seed[K].append(trusted_res["total_fibre_km"])
 
             step += 1
             prog.update(step, f"Relay count: {K}/{K_values[-1]}  BB84 {_s_bb84/1000:.2f} | MDI {_s_mdi/1000:.2f} | TBB84 {_s_trusted/1000:.2f} kbps")
@@ -156,6 +163,23 @@ def main():
 
     m, s = divmod(int(time.time() - total_start), 60)
     print(f"✓ complete  total {m}m {s:02d}s")
+
+    print(f"\n{'K':>3}  {'BB84 kbps':>10}  {'MDI kbps':>9}  {'TBB84 kbps':>11}  {'BB84 ok%':>9}  {'MDI ok%':>8}  {'TBB84 ok%':>10}  {'BB84 km':>8}  {'MDI km':>7}  {'TBB84 km':>9}")
+    print("-" * 102)
+    b_fibre_mean = np.mean(bb84_fibre_per_seed) if bb84_fibre_per_seed else 0.0
+    for K in K_values:
+        print(
+            f"{K:>3}  "
+            f"{np.mean(bb84_per_seed)/1000:>10.2f}  "
+            f"{np.mean(mdi_per_seed[K])/1000:>9.2f}  "
+            f"{np.mean(trusted_per_seed[K])/1000:>11.2f}  "
+            f"{np.mean(bb84_ok_per_seed):>8.0f}%  "
+            f"{np.mean(mdi_ok_per_seed[K]):>7.0f}%  "
+            f"{np.mean(trusted_ok_per_seed[K]):>9.0f}%  "
+            f"{b_fibre_mean:>8.1f}  "
+            f"{np.mean(mdi_fibre_per_seed[K]):>7.1f}  "
+            f"{np.mean(trusted_fibre_per_seed[K]):>9.1f}"
+        )
 
     bb84_means = [np.mean(bb84_per_seed)] * len(K_values)
     bb84_stds  = [np.std(bb84_per_seed)]  * len(K_values)
@@ -233,14 +257,15 @@ def main():
     )
     plt.tight_layout()
 
-    if args.save:
-        plt.savefig(args.save, dpi=150)
-        print(f"Saved to {args.save}")
-    else:
-        plt.show()
+    if not args.no_figure:
+        if args.save:
+            plt.savefig(args.save, dpi=150)
+            print(f"Saved to {args.save}")
+        else:
+            plt.show()
 
     # --- Figure 2: topology at midpoint K (single seed only) ---
-    if args.seeds == 1:
+    if args.seeds == 1 and not args.no_figure:
         K_mid      = K_values[len(K_values) // 2]
         topo_users = place_users(args.n, area_km=args.area, seed=seeds[0])
         topo_mid   = Topology(topo_users, optimise_relays(topo_users, K_mid, seed=seeds[0]))
