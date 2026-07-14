@@ -13,9 +13,11 @@ Usage:
     python scripts/P2P/layers.py [options]
 
 Options:
-    --runtimes INT   Monte Carlo runs per distance point (default: 100)
-    --protocol STR   Protocol(s) to run: bb84, mdi, or both (default: both)
-    --workers INT    Worker processes per distance point (default: 80% of CPU cores)
+    --runtimes INT      Monte Carlo runs per distance point (default: 100)
+    --protocol STR      Protocol(s) to run: bb84, mdi, or both (default: both)
+    --workers INT       Worker processes per distance point (default: 80% of CPU cores)
+    --no-db             Disable DB writing
+    --output-dir PATH   Save figures to directory instead of displaying
 
 Layers:
     Layer 0   Ideal (no physical noise)
@@ -139,11 +141,12 @@ def run_layer_mdi(cfg, runtimes, workers=None, db_path=DEFAULT_DB_PATH):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--runtimes",  type=int, default=100)
-    parser.add_argument("--protocol",  choices=["bb84", "mdi", "both"], default="both",
+    parser.add_argument("--runtimes",   type=int, default=100)
+    parser.add_argument("--protocol",   choices=["bb84", "mdi", "both"], default="both",
                         help="Protocol(s) to run: bb84, mdi, or both (default: both)")
-    parser.add_argument("--no-db",    action="store_true", help="Disable DB writing")
-    parser.add_argument("--workers",  type=int, default=None, help="Worker processes (default: 80%% of CPU cores)")
+    parser.add_argument("--no-db",     action="store_true", help="Disable DB writing")
+    parser.add_argument("--workers",   type=int, default=None, help="Worker processes (default: 80%% of CPU cores)")
+    parser.add_argument("--output-dir", type=str, default=None, help="Directory to save figures into (skips interactive display)")
     args = parser.parse_args()
 
     run_bb84 = args.protocol in ("bb84", "both")
@@ -167,6 +170,10 @@ if __name__ == "__main__":
         ax_bb84.grid(True, alpha=0.3)
         ax_bb84.legend(fontsize=7)
         ax_bb84.set_title("Key rate vs distance: BB84 — cumulative modelling layers")
+        if args.output_dir:
+            os.makedirs(args.output_dir, exist_ok=True)
+            fig_bb84.savefig(os.path.join(args.output_dir, "layers_bb84.png"), dpi=150, bbox_inches="tight")
+            plt.close(fig_bb84)
 
     if run_mdi:
         colours_mdi = plt.cm.Oranges(np.linspace(0.3, 0.95, 10))
@@ -186,5 +193,10 @@ if __name__ == "__main__":
         ax_mdi.grid(True, alpha=0.3)
         ax_mdi.legend(fontsize=7)
         ax_mdi.set_title("Key rate vs distance: MDI-QKD — cumulative modelling layers")
+        if args.output_dir:
+            os.makedirs(args.output_dir, exist_ok=True)
+            fig_mdi.savefig(os.path.join(args.output_dir, "layers_mdi.png"), dpi=150, bbox_inches="tight")
+            plt.close(fig_mdi)
 
-    plt.show()
+    if not args.output_dir:
+        plt.show()

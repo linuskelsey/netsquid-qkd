@@ -19,12 +19,12 @@ Options:
     --protocol STR   Protocol(s) to run: bb84, mdi, or both (default: both)
     --workers INT    Worker processes (default: 80%% of CPU cores)
     --no-db          Disable DB writing
-    --save DIR       Save figures to directory instead of displaying
+    --output-dir DIR Save figures to directory instead of displaying
 
 Examples:
     python scripts/P2P/isolate.py
     python scripts/P2P/isolate.py --protocol mdi --runtimes 50
-    python scripts/P2P/isolate.py --save docs/figures
+    python scripts/P2P/isolate.py --output-dir docs/figures
 """
 
 import os
@@ -196,7 +196,7 @@ if __name__ == "__main__":
                         help="Worker processes (default: 80%% of CPU cores)")
     parser.add_argument("--no-db",   action="store_true",
                         help="Disable DB writing")
-    parser.add_argument("--save",    metavar="DIR", default=None,
+    parser.add_argument("--output-dir", metavar="DIR", default=None,
                         help="Save figures to directory instead of displaying")
     args = parser.parse_args()
 
@@ -210,10 +210,10 @@ if __name__ == "__main__":
     if run_mdi:
         figs.append(("mdi",  _plot_proto("MDI",  _MDI_IDX,  args.runtimes, args.workers, db_path)))
 
-    if args.save:
-        os.makedirs(args.save, exist_ok=True)
+    if args.output_dir:
+        os.makedirs(args.output_dir, exist_ok=True)
         for name, fig in figs:
-            path = os.path.join(args.save, f"isolate_{name}.png")
+            path = os.path.join(args.output_dir, f"isolate_{name}.png")
             fig.savefig(path, dpi=150, bbox_inches="tight")
             print(f"Saved to {path}")
         plt.close("all")
