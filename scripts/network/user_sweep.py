@@ -2,9 +2,11 @@
 Experiment 2 — user count sweep.
 
 Fixed K relays (positions optimised at ref-N), vary user count N. Plots average key rate vs N
-for BB84 and MDI-QKD. Relay positions are re-optimised per seed when --seeds > 1.
-Error bars show std across Monte Carlo runs (--seeds 1) or across random topologies (--seeds N).
-Topology visualisation only produced when --seeds 1.
+for BB84, MDI-QKD, and trusted-node BB84. Relay positions are re-optimised per seed when
+--seeds > 1. Error bars show std across Monte Carlo runs (--seeds 1) or across random
+topologies (--seeds N). Topology visualisation only produced when --seeds 1.
+
+MDI and trusted-node BB84 share the same relay topology per N; BB84 uses a direct mesh.
 
 Usage:
     python scripts/network/user_sweep.py [options]
@@ -46,6 +48,7 @@ from lib.progress import Progress
 from topology import place_users, optimise_relays, Topology
 from bb84_network import run_bb84_network
 from mdi_network import run_mdi_network
+from trusted_bb84_network import run_trusted_bb84_network
 from visualise_network import draw_mdi, draw_bb84
 
 
@@ -90,12 +93,15 @@ def main():
         rng   = np.random.default_rng(args.seed)
         seeds = rng.integers(0, 100_000, size=args.seeds).tolist()
 
-    bb84_per_seed   = {N: [] for N in N_values}
-    mdi_per_seed    = {N: [] for N in N_values}
-    bb84_ok_per_seed  = {N: [] for N in N_values}
-    mdi_ok_per_seed   = {N: [] for N in N_values}
-    bb84_fibre_per_seed = {N: [] for N in N_values}
-    mdi_fibre_per_seed  = {N: [] for N in N_values}
+    bb84_per_seed        = {N: [] for N in N_values}
+    mdi_per_seed         = {N: [] for N in N_values}
+    trusted_per_seed     = {N: [] for N in N_values}
+    bb84_ok_per_seed     = {N: [] for N in N_values}
+    mdi_ok_per_seed      = {N: [] for N in N_values}
+    trusted_ok_per_seed  = {N: [] for N in N_values}
+    bb84_fibre_per_seed  = {N: [] for N in N_values}
+    mdi_fibre_per_seed   = {N: [] for N in N_values}
+    trusted_fibre_per_seed = {N: [] for N in N_values}
 
     seed_total  = len(N_values)
     total_start = time.time()
@@ -128,19 +134,28 @@ def main():
                                        net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
                                        experiment="user_sweep", seed=seed, area_km=args.area,
                                        config_preset=args.config)
+            trusted_res = run_trusted_bb84_network(topo_mdi, cfg, runtimes=args.runtimes, workers=args.workers,
+                                       p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
+                                       net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
+                                       experiment="user_sweep", seed=seed, area_km=args.area,
+                                       config_preset=args.config)
 
             bp = _pair_avgs(bb84_res["pair_rates"])
             mp = _pair_avgs(mdi_res["pair_rates"])
+            tp = _pair_avgs(trusted_res["pair_rates"])
 
             bb84_per_seed[N].append(np.mean(bp) if bp else 0.0)
             mdi_per_seed[N].append(np.mean(mp)  if mp else 0.0)
+            trusted_per_seed[N].append(np.mean(tp) if tp else 0.0)
             bb84_ok_per_seed[N].append(bb84_res["success_rate"] * 100)
             mdi_ok_per_seed[N].append(mdi_res["success_rate"] * 100)
+            trusted_ok_per_seed[N].append(trusted_res["success_rate"] * 100)
             bb84_fibre_per_seed[N].append(bb84_res["total_fibre_km"])
             mdi_fibre_per_seed[N].append(mdi_res["total_fibre_km"])
+            trusted_fibre_per_seed[N].append(trusted_res["total_fibre_km"])
 
             step += 1
-            prog.update(step, f"User count: {N}/{N_values[-1]}  BB84 {bb84_per_seed[N][-1]/1000:.2f} | MDI {mdi_per_seed[N][-1]/1000:.2f} kbps")
+            prog.update(step, f"User count: {N}/{N_values[-1]}  BB84 {bb84_per_seed[N][-1]/1000:.2f} | MDI {mdi_per_seed[N][-1]/1000:.2f} | TBB84 {trusted_per_seed[N][-1]/1000:.2f} kbps")
 
         prog.stop()
         m, s = divmod(int(time.time() - seed_start), 60)
@@ -149,21 +164,27 @@ def main():
     m, s = divmod(int(time.time() - total_start), 60)
     print(f"✓ complete  total {m}m {s:02d}s")
 
-    N_arr_final = [N for N in N_values if bb84_per_seed[N]]
-    bb84_means  = [np.mean(bb84_per_seed[N])      for N in N_arr_final]
-    bb84_stds   = [np.std(bb84_per_seed[N])       for N in N_arr_final]
-    bb84_ok     = [np.mean(bb84_ok_per_seed[N])   for N in N_arr_final]
-    bb84_fibre  = [np.mean(bb84_fibre_per_seed[N]) for N in N_arr_final]
-    mdi_means   = [np.mean(mdi_per_seed[N])       for N in N_arr_final]
-    mdi_stds    = [np.std(mdi_per_seed[N])        for N in N_arr_final]
-    mdi_ok      = [np.mean(mdi_ok_per_seed[N])    for N in N_arr_final]
-    mdi_fibre   = [np.mean(mdi_fibre_per_seed[N]) for N in N_arr_final]
+    N_arr_final    = [N for N in N_values if bb84_per_seed[N]]
+    bb84_means     = [np.mean(bb84_per_seed[N])         for N in N_arr_final]
+    bb84_stds      = [np.std(bb84_per_seed[N])          for N in N_arr_final]
+    bb84_ok        = [np.mean(bb84_ok_per_seed[N])      for N in N_arr_final]
+    bb84_fibre     = [np.mean(bb84_fibre_per_seed[N])   for N in N_arr_final]
+    mdi_means      = [np.mean(mdi_per_seed[N])          for N in N_arr_final]
+    mdi_stds       = [np.std(mdi_per_seed[N])           for N in N_arr_final]
+    mdi_ok         = [np.mean(mdi_ok_per_seed[N])       for N in N_arr_final]
+    mdi_fibre      = [np.mean(mdi_fibre_per_seed[N])    for N in N_arr_final]
+    t_means        = [np.mean(trusted_per_seed[N])      for N in N_arr_final]
+    t_stds         = [np.std(trusted_per_seed[N])       for N in N_arr_final]
+    t_ok           = [np.mean(trusted_ok_per_seed[N])   for N in N_arr_final]
+    t_fibre        = [np.mean(trusted_fibre_per_seed[N]) for N in N_arr_final]
 
     N_arr  = np.array(N_arr_final)
     b_mean = np.array(bb84_means) / 1000
     b_std  = np.array(bb84_stds)  / 1000
     m_mean = np.array(mdi_means)  / 1000
     m_std  = np.array(mdi_stds)   / 1000
+    t_mean = np.array(t_means)    / 1000
+    t_std  = np.array(t_stds)     / 1000
 
     bb84_ref = b_mean[0] if b_mean[0] > 0 else 1.0
 
@@ -175,11 +196,15 @@ def main():
                      linestyle="--", capsize=4, lw=1.5)
         ax1.errorbar(N_arr, m_mean, yerr=m_std, label="MDI", color="#e41a1c",
                      marker="o", capsize=4, lw=1.5)
+        ax1.errorbar(N_arr, t_mean, yerr=t_std, label="Trusted BB84", color="#4daf4a",
+                     marker="s", capsize=4, lw=1.5)
     else:
         ax1.plot(N_arr, b_mean, '--', color="#377eb8", lw=1.5, label="BB84")
         ax1.fill_between(N_arr, b_mean - b_std, b_mean + b_std, alpha=0.2, color="#377eb8")
         ax1.plot(N_arr, m_mean, color="#e41a1c", marker="o", lw=1.5, label="MDI")
         ax1.fill_between(N_arr, m_mean - m_std, m_mean + m_std, alpha=0.2, color="#e41a1c")
+        ax1.plot(N_arr, t_mean, color="#4daf4a", marker="s", lw=1.5, label="Trusted BB84")
+        ax1.fill_between(N_arr, t_mean - t_std, t_mean + t_std, alpha=0.2, color="#4daf4a")
 
     ax1.set_yscale("log")
     ax1.set_xlabel("User count N")
@@ -191,6 +216,7 @@ def main():
     ax2 = ax1.twinx()
     ax2.plot(N_arr, b_mean / bb84_ref, alpha=0)
     ax2.plot(N_arr, m_mean / bb84_ref, alpha=0)
+    ax2.plot(N_arr, t_mean / bb84_ref, alpha=0)
     ax2.set_ylabel("Relative key rate")
     ax2.set_yscale("log")
 
