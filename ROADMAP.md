@@ -43,8 +43,9 @@
 | Network topology visualiser: MDI cluster / BB84 mesh side-by-side (`network/visualise_network.py`) |
 | BB84 network simulator: all N(N-1)/2 direct pairs (`network/bb84_network.py`) |
 | MDI-QKD network simulator: nearest-relay routing, cross-cluster passive optical routing (`network/mdi_network.py`) |
+| Trusted-node BB84 network simulator: users connect to K relay nodes via BB84; relays XOR-combine keys; cross-relay pairs share backbone key rate proportionally; bottleneck = min link rate (`network/trusted_bb84_network.py`) |
 | Passive optical routing model: cross-cluster photon redirection via optical switch (configurable insertion loss, default 1 dB) |
-| Key rate vs relay count K — both protocols (`scripts/network/relay_sweep.py`) |
+| Key rate vs relay count K — all three protocols (`scripts/network/relay_sweep.py`) |
 | Network success rate (QBER < 11%) vs relay count K |
 | Multi-seed averaging (`--seeds N`): repeat sweep over N random placements, report mean ± std across seeds for statistically robust results |
 
@@ -52,7 +53,7 @@
 
 | Item |
 |------|
-| Key rate vs user count N — both protocols (`scripts/network/user_sweep.py`) |
+| Key rate vs user count N — all three protocols (`scripts/network/user_sweep.py`) |
 | Network success rate vs user count N |
 | Cost tracking: total fibre (km), link count, component count per simulation |
 | Multi-seed averaging (`--seeds N`): relay positions re-optimised per seed; mean ± std across seeds reported |
@@ -158,7 +159,6 @@ Reconstruct any P2P or network figure from `results.db` without re-running simul
 | Timing data extraction: extend `lib/progress.py` to record per-step and total wall-clock times; write to a sidecar JSON (`<output_stem>_timing.json`) alongside every script run; enables runtime profiling, Monte Carlo scaling estimates, and cost modelling |
 | Security level taxonomy: define deployment tiers L0–L5 by trust assumption (L0: trust all components except links = ideal QKD; ... L5: trust nothing = device-independent QKD); map BB84 and MDI-QKD to appropriate levels; use as framework for recommendations on when MDI is warranted despite key rate deficit |
 | MDI deployment on existing network infrastructure: scoping exercise — if fibre topology is fixed (no relay placement freedom), how does MDI performance change? Assess feasibility and cost delta vs greenfield deployment; flag as potential standalone research project |
-| Trusted-node BB84 network: users connect to K trusted relay nodes (O(N) fibre, same infrastructure as MDI); relay holds key material and performs XOR combine; cross-relay pairs use relay-relay BB84 links; key rate bottlenecked by slowest link in chain |
 | Trusted-node BB84 vs MDI-QKD vs direct-link BB84: three-way comparison of key rate, cost, and user scalability; isolates the cost of the MDI trust-removal guarantee |
 | Decoy-state key rate formula: vacuum + weak decoy correction for PNS-attack resistance; relevant if source model is relaxed from ideal single-photon to weak coherent pulse (WCP) |
 | WDM multi-user MDI-QKD: multiple Alice-Bob pairs on separate wavelengths, MUX onto shared fibre, DEMUX at Charlie for per-channel BSM |
