@@ -54,6 +54,7 @@
 | Item |
 |------|
 | Key rate vs user count N — all three protocols (`scripts/network/user_sweep.py`) |
+| Three-way comparison (BB84 / MDI / trusted-node BB84) in both sweep scripts: isolates cost of the MDI trust-removal guarantee vs same O(N) infrastructure |
 | Network success rate vs user count N |
 | Cost tracking: total fibre (km), link count, component count per simulation |
 | Multi-seed averaging (`--seeds N`): relay positions re-optimised per seed; mean ± std across seeds reported |
@@ -159,7 +160,6 @@ Reconstruct any P2P or network figure from `results.db` without re-running simul
 | Timing data extraction: extend `lib/progress.py` to record per-step and total wall-clock times; write to a sidecar JSON (`<output_stem>_timing.json`) alongside every script run; enables runtime profiling, Monte Carlo scaling estimates, and cost modelling |
 | Security level taxonomy: define deployment tiers L0–L5 by trust assumption (L0: trust all components except links = ideal QKD; ... L5: trust nothing = device-independent QKD); map BB84 and MDI-QKD to appropriate levels; use as framework for recommendations on when MDI is warranted despite key rate deficit |
 | MDI deployment on existing network infrastructure: scoping exercise — if fibre topology is fixed (no relay placement freedom), how does MDI performance change? Assess feasibility and cost delta vs greenfield deployment; flag as potential standalone research project |
-| Trusted-node BB84 vs MDI-QKD vs direct-link BB84: three-way comparison of key rate, cost, and user scalability; isolates the cost of the MDI trust-removal guarantee |
 | Decoy-state key rate formula: vacuum + weak decoy correction for PNS-attack resistance; relevant if source model is relaxed from ideal single-photon to weak coherent pulse (WCP) |
 | WDM multi-user MDI-QKD: multiple Alice-Bob pairs on separate wavelengths, MUX onto shared fibre, DEMUX at Charlie for per-channel BSM |
 | Key rate vs WDM user count: MUX/DEMUX insertion loss (~1–3 dB per device) per channel |
@@ -169,6 +169,5 @@ Reconstruct any P2P or network figure from `results.db` without re-running simul
 | Long-distance repeater chain: N-hop linear topology for range extension (BB84 and MDI-QKD) |
 | Key rate vs number of repeater hops (sweep) |
 | BB84 vs MDI-QKD repeater chain performance head-to-head |
-| Fully connected BB84 (direct pairwise links, no relay) as additional baseline |
 | Relay placement sensitivity: random vs optimal placement comparison |
 | Cross-relay vs same-relay pair success rate comparison |
