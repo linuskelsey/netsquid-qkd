@@ -29,6 +29,9 @@ scripts/
                 beam splitter efficiency, Charlie placement
     layers.py   Effect of each modelling layer per protocol (cumulative)
     isolate.py  Independent impact of each parameter — all-ideal except one
+    time/
+      surrogate.py    GP surrogate model: train on coarse (distance × detector_eff) grid, predict dense grid; benchmarks speedup vs simulation
+      adaptive_mc.py  Adaptive Monte Carlo: early stopping when std/mean converges; benchmarks run reduction and wall-clock saving vs fixed baseline
   network/
     relay_sweep.py       Exp 1: fixed N users, vary K relays — key rate + success rate vs K
     user_sweep.py        Exp 2: fixed K relays (optimised at ref-N), vary N users — key rate vs N
@@ -86,6 +89,17 @@ python scripts/P2P/compare/length.py --no-db
 
 # Config preset + CLI override (CLI takes precedence)
 python scripts/P2P/compare/length.py --config configs/layer3_dark.json --fibre 30
+```
+
+## Computational optimisation benchmarks
+
+```bash
+# GP surrogate: train on coarse grid, evaluate dense grid, benchmark speedup
+python scripts/P2P/time/surrogate.py --grid-size 10 --runtimes 100 --save-grid data/surrogate_grids --output-dir docs/figures
+python scripts/P2P/time/surrogate.py --load-grid data/surrogate_grids --output-dir docs/figures   # skip simulation
+
+# Adaptive MC: early stopping benchmark vs fixed baseline
+python scripts/P2P/time/adaptive_mc.py --protocol both --batch 50 --min-runs 50 --max-runs 200 --output-dir docs/figures
 ```
 
 ## Layer and isolation analysis

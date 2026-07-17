@@ -84,6 +84,13 @@
 | Script to compare effect of each layer of modelling parameter per-protocol |
 | Isolated parameter script (`scripts/P2P/isolate.py`): each curve = all-ideal config except one realistic parameter; overlay all isolated curves on one figure per protocol to compare each parameter's independent impact on key rate |
 
+### Computational Optimisation Benchmarks (`scripts/P2P/time/`)
+
+| Item |
+|------|
+| GP surrogate model (`surrogate.py`): train `sklearn` GPR on coarse (distance × detector_eff) grid; predict 10,000-point dense grid; ~1.7×10⁶× per-point speedup vs simulation; GP posterior gives uncertainty quantification free; `--grid-size`, `--runtimes`, `--save-grid`, `--load-grid` flags |
+| Adaptive MC (`adaptive_mc.py`): batch early stopping when σ/μ < rel_tol; benchmarks run reduction and wall-clock saving vs fixed baseline; finding: spawn overhead dominates at batch level — BB84 25% run reduction but ~0% wall-clock saving; MDI variance too high for convergence; effective adaptive sampling requires in-loop NetSquid modification |
+
 ### DB Reconstruction CLI (`scripts/analyse/`)
 
 Reconstruct any P2P or network figure from `results.db` without re-running simulations.
