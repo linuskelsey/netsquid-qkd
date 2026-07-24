@@ -29,6 +29,7 @@ Sweeps run:
     efficiency.py   Key rate vs detector efficiency (1.0->0.15)
     dark_count.py   Key rate vs dark count rate (0-250 cps)
     node_loss.py    Key rate vs node/connector loss (0-6 dB)
+    init_loss.py    Key rate vs TX insertion loss (0-0.5)
     source_err.py   Key rate vs source error rate (0-4%)
     dephasing.py    Key rate vs fibre dephasing rate (0-0.003 /km)
     basis_bias.py   Key rate vs X-basis detector bias (1.0->0.5)
@@ -55,6 +56,7 @@ SCRIPTS = [
     "efficiency.py",
     "dark_count.py",
     "node_loss.py",
+    "init_loss.py",
     "source_err.py",
     "dephasing.py",
     "basis_bias.py",
