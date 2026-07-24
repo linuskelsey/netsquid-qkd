@@ -71,11 +71,11 @@ def _fit_gp(X, y):
     return gp
 
 
-def surrogate_trend(grid_dir):
+def surrogate_trend(grid_dir, sim_runtimes, workers):
     """
     Load BB84 grid, fit GP, time inference at each eval size.
-    Also estimate sim_time_per_point from a single timed predict + training data metadata.
-    Returns (eval_sizes, gp_times_ms, speedups).
+    Times one real sim call to get sim_time_per_pt for apples-to-apples speedup.
+    Returns (eval_sizes, gp_times_ms, speedups, sim_time_per_pt_s).
     """
     path = os.path.join(grid_dir, "grid_bb84.npz")
     data = np.load(path)
@@ -83,15 +83,15 @@ def surrogate_trend(grid_dir):
     n_train = len(y)
     print(f"  Loaded BB84 grid: {n_train} training points")
 
+    print(f"  Timing one sim call ({sim_runtimes} runtimes, d=40km)...", flush=True)
+    t0 = time.perf_counter()
+    run_BB84_sims(runtimes=sim_runtimes, fibreLen=40.0, workers=workers, **_FIXED_KWARGS)
+    sim_time_per_pt_s = time.perf_counter() - t0
+    print(f"  Sim time per point: {sim_time_per_pt_s:.2f}s")
+
     print(f"  Fitting GP...", flush=True)
     gp = _fit_gp(X, y)
     print(f"  Kernel: {gp.kernel_}")
-
-    # Estimate sim time per point: time one GP call on a small grid to warm up,
-    # then derive from the surrogate slide data (stored in the npz if available,
-    # otherwise use a reasonable measured value).
-    # We use the measured value from the overnight run: ~28s/pt at 500 runs.
-    sim_time_per_pt_s = 28.0
 
     gp_times_ms = []
     speedups     = []
@@ -291,8 +291,10 @@ if __name__ == "__main__":
     )
     parser.add_argument("--load-grid",      metavar="DIR", default=None,
                         help="Directory with saved grid_bb84.npz (required for surrogate trend)")
+    parser.add_argument("--sim-runtimes",   type=int, default=500,
+                        help="MC runs for the single sim timing call — match your training grid runtimes")
     parser.add_argument("--workers",        type=int, default=None,
-                        help="Worker processes for adaptive MC (default: 80%% of CPU cores)")
+                        help="Worker processes (default: 80%% of CPU cores)")
     parser.add_argument("--output-dir",     metavar="DIR", default=None,
                         help="Save figures to directory instead of displaying")
     parser.add_argument("--skip-surrogate", action="store_true",
@@ -312,7 +314,7 @@ if __name__ == "__main__":
         print(f"\n{'='*60}")
         print("  Surrogate: speedup vs evaluation grid size")
         print(f"{'='*60}")
-        eval_sizes, gp_times, speedups, sim_s = surrogate_trend(args.load_grid)
+        eval_sizes, gp_times, speedups, sim_s = surrogate_trend(args.load_grid, args.sim_runtimes, args.workers)
         plot_surrogate_trend(eval_sizes, gp_times, speedups, sim_s, args.output_dir)
 
     if not args.skip_adaptive:
