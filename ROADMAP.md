@@ -151,6 +151,8 @@ Reconstruct any P2P or network figure from `results.db` without re-running simul
 | MDI vs BB84 deployment recommendations section: use security level taxonomy (L0–L5) to frame when MDI is the right choice despite key rate being always worse; argument centres on trust assumptions, not raw performance |
 | Explain MDI network-scale key rate gap (~10× vs ~3× at P2P) in results/discussion: investigate candidate causes (relay routing overhead, BSM success rate compounding, passive optical insertion loss, increased hop distances at network scale) and present supported explanation |
 
+note ^ the above is largely solved due to a number of causes - i) relays add distance to total fibre link so total loss greater; ii) quadratic efficiency dependency means greater penalty for mdi in network setting on average; iii) twice the effect from insertion loss adds to the gap
+
 ---
 
 ## Open Questions

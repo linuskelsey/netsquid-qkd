@@ -13,6 +13,7 @@ docs/netsquid
 docs/latex_slides
 docs/case-study-tex
 docs/dissertation
+docs/lit-rev
 
 # merge script
 merge-all.sh
