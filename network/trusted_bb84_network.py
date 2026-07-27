@@ -177,5 +177,7 @@ def run_trusted_bb84_network(topo, cfg, runtimes=10, workers=None, verbose=False
         "max_key_rate":   max(all_valid) if all_valid else 0.0,
         "total_fibre_km": total_fibre_km,
         "n_links":        n_links,
+        "n_sources":      N + K,
+        "n_spd":          2 * K,
         "net_run_id":     net_run_id,
     }

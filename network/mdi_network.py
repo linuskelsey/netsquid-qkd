@@ -145,5 +145,7 @@ def run_mdi_network(topo, cfg, runtimes=10, workers=None, switch_loss_db=SWITCH_
         "max_key_rate":   max(all_valid) if all_valid else 0.0,
         "total_fibre_km": total_fibre_km,
         "n_links":        topo.N + topo.K * (topo.K - 1) // 2,
+        "n_sources":      topo.N,
+        "n_spd":          2 * topo.K,
         "net_run_id":     net_run_id,
     }

@@ -120,6 +120,8 @@ Reconstruct any P2P or network figure from `results.db` without re-running simul
 |------|
 | Checkpoint saving: persist intermediate results per K/N to JSON so long runs can recover from crash |
 
+note: in the simple model (no traffic, key rate = f(fibre length only)), K=1 is theoretically optimal — a single relay minimises total fibre by placing one Steiner point. Increasing K adds relay-relay backbone fibre and BSM hops, reducing average key rate. The relay sweep's observed peak at low K confirms this. Traffic (simultaneous multi-pair demand, relay capacity limits) breaks this optimum: a single relay becomes a bottleneck under high user load, favouring higher K. This is out of scope for the current model but is an important dimension to flag in the dissertation (see Extensions).
+
 #### Experiment 2 — User count sweep
 
 | Item |
@@ -147,7 +149,7 @@ Reconstruct any P2P or network figure from `results.db` without re-running simul
 
 | Item |
 |------|
-| Justify every methodology decision in thesis: multi-seeding rationale (statistical robustness, seed count choice), k-means relay placement, Monte Carlo run counts, QBER cutoff threshold, config layer choices — each needs a cited or argued justification |
+| Justify every methodology decision in thesis: multi-seeding rationale (statistical robustness, seed count choice), k-means relay placement, Monte Carlo run counts, QBER cutoff threshold (security proofs), config layer choices (commercially available hardware specs) — each needs a cited or argued justification |
 | MDI vs BB84 deployment recommendations section: use security level taxonomy (L0–L5) to frame when MDI is the right choice despite key rate being always worse; argument centres on trust assumptions, not raw performance |
 | Explain MDI network-scale key rate gap (~10× vs ~3× at P2P) in results/discussion: investigate candidate causes (relay routing overhead, BSM success rate compounding, passive optical insertion loss, increased hop distances at network scale) and present supported explanation |
 
@@ -181,3 +183,5 @@ note ^ the above is largely solved due to a number of causes - i) relays add dis
 | BB84 vs MDI-QKD repeater chain performance head-to-head |
 | Relay placement sensitivity: random vs optimal placement comparison |
 | Cross-relay vs same-relay pair success rate comparison |
+| Traffic-aware relay count optimisation: current model minimises fibre length, making K=1 optimal (single Steiner-point relay). Under realistic traffic — simultaneous multi-pair sessions, finite relay throughput, time-multiplexed BSM — a single relay saturates under high user load, shifting the optimal K upward. Extension: model relay capacity as a bounded queue (e.g. M/M/1 or token-bucket), sweep K vs offered traffic load, identify optimal K(N, load). This reframes the relay count question from a geometry problem to a queuing/scheduling problem. |
+| Cost–rate Pareto optimisation: bi-objective problem over (K, N, topology seed). Two dual problems: (1) fixed budget C_max → find configuration maximising avg key rate; (2) fixed min rate R_min → find configuration minimising cost. Sweep K and seed at fixed N, compute (cost, avg_key_rate) per point, plot Pareto frontier for each protocol; configurations on the frontier are deployment-optimal. Practically: run cost_sweep over a grid of K values, extract frontier via standard 2D Pareto filter. Useful for deployment planning: given a capex budget, which protocol and relay count gives the most key rate? |

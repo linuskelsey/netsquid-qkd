@@ -111,5 +111,7 @@ def run_bb84_network(topo, cfg, runtimes=10, workers=None, verbose=False,
         "max_key_rate":   max(all_valid) if all_valid else 0.0,
         "total_fibre_km": sum(pair_distances),
         "n_links":        n_pairs,
+        "n_sources":      topo.N,
+        "n_spd":          2 * topo.N,
         "net_run_id":     net_run_id,
     }
