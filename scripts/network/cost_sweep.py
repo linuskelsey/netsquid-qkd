@@ -33,7 +33,7 @@ Options:
     --detector-tech TECH     Detector preset: SPAD | InGaAs | SNSPD
                                Sets detector_efficiency in sim AND spd_usd in cost model.
                                Explicit --spd-cost overrides the preset cost.
-    --source-tech TECH       Source preset: WCP | SPDC | ideal
+    --source-tech TECH       Source preset: QD | NV | hSPDC | ideal
                                Sets source_usd in cost model.
                                Explicit --source-cost overrides the preset cost.
     --source-cost FLOAT      USD per photon source (overrides --source-tech cost)

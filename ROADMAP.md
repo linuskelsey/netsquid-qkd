@@ -62,6 +62,14 @@
 | Multi-seed averaging (`--seeds N`): relay positions re-optimised per seed; mean ± std across seeds reported |
 | End-of-sweep summary table: K/N × BB84/MDI/trusted-BB84 × key rate (kbps) × success % × fibre km printed to stdout after each run |
 | `--no-figure` flag on both sweep scripts: suppress all figure output (useful for batch runs or headless servers) |
+| Cost-efficiency metric: key rate per unit cost vs N — all three protocols (`scripts/network/cost_sweep.py`) |
+
+#### Cost Modelling
+
+| Item |
+|------|
+| Hardware cost model (`network/cost.py`): `component_counts()` for BB84/MDI/trusted-BB84; `total_cost()` with fibre + hardware breakdown; `DETECTOR_TECH` presets (SPAD/InGaAs/SNSPD) and `SOURCE_TECH` presets (QD/NV/hSPDC/ideal) with per-preset efficiency and cost |
+| Cost sweep (`scripts/network/cost_sweep.py`): deployment cost vs N and cost-efficiency (kbps/M$) vs N — all three protocols; detector/source tech presets wire simulation η and cost model simultaneously; explicit CLI cost-flag overrides; multi-seed averaging; DB writing; end-of-sweep summary table |
 
 ### Analysis
 
@@ -83,6 +91,8 @@
 | Charlie placement sweep (asymmetric Alice-Charlie / Charlie-Bob links) |
 | Script to compare effect of each layer of modelling parameter per-protocol |
 | Isolated parameter script (`scripts/P2P/isolate.py`): each curve = all-ideal config except one realistic parameter; overlay all isolated curves on one figure per protocol to compare each parameter's independent impact on key rate |
+| Relay placement grid search (K=1): sweep relay position over full-area grid; confirms centroid placement ≈ peak average key rate for MDI and trusted-BB84 (`scripts/network/relay_placement.py --exp 1`) |
+| Relay placement strategy comparison (K=2): centroid vs boundary-displaced relay placement across N in two-cluster topology; centroid consistently outperforms boundary placement (`scripts/network/relay_placement.py --exp 2`) |
 
 ### Computational Optimisation Benchmarks (`scripts/P2P/time/`)
 
@@ -122,12 +132,6 @@ Reconstruct any P2P or network figure from `results.db` without re-running simul
 
 note: in the simple model (no traffic, key rate = f(fibre length only)), K=1 is theoretically optimal — a single relay minimises total fibre by placing one Steiner point. Increasing K adds relay-relay backbone fibre and BSM hops, reducing average key rate. The relay sweep's observed peak at low K confirms this. Traffic (simultaneous multi-pair demand, relay capacity limits) breaks this optimum: a single relay becomes a bottleneck under high user load, favouring higher K. This is out of scope for the current model but is an important dimension to flag in the dissertation (see Extensions).
 
-#### Experiment 2 — User count sweep
-
-| Item |
-|------|
-| Cost-efficiency metric: key rate per unit cost vs N — both protocols |
-
 #### Experiment 3 — Real-world topology case studies
 
 | Item |
@@ -138,7 +142,7 @@ note: in the simple model (no traffic, key rate = f(fibre length only)), K=1 is 
 
 | Item |
 |------|
-| Validate k-means + centroid as optimal MDI relay placement: benchmark against alternatives (random placement, grid, ILP-optimal); confirm or replace as the canonical topology strategy |
+| ILP-optimal relay placement benchmark: formally compare k-means centroid against ILP-optimal placement to confirm or replace as canonical topology strategy (grid search and centroid-vs-boundary comparison already complete; ILP comparison outstanding) |
 | Monte Carlo sample count scaling: for key rates of order 10^-x, use 10^(x+1) samples; smallest observed rates ~10^-2 → target 1000 runs per point where feasible; audit all scripts and increase run counts accordingly |
 | Finite-key corrections: block-size-dependent key rate using composable security bound; `photons` per run sets block size `n`; quantifies departure from asymptotic regime at low photon counts and short distances |
 | Analytical key rate overlay: plot closed-form Shor-Preskill (BB84) and Ma et al. 2012 (MDI-QKD) formula on sweep figures as validation reference; mismatch flags simulation error |
