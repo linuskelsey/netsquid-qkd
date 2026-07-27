@@ -45,6 +45,9 @@ Options:
     --no-figure              Suppress all figure output
     --no-p2p-db              Disable P2P DB writing
     --no-net-db              Disable network DB writing
+    --cost-only              Skip QKD simulation; compute cost from topology geometry only.
+                               Produces cost and marginal cost figures instantly (no MC runs).
+                               Key rate and cost-efficiency figures are suppressed.
 """
 import argparse
 import os
@@ -73,6 +76,22 @@ def _compute_cost(res, N, K, protocol, cost_kw):
     return total_cost(counts, res["total_fibre_km"], **cost_kw)["total_usd"]
 
 
+def _fibre_km_bb84(topo):
+    return sum(topo.bb84_link(i, j) for (i, j) in topo.all_pairs())
+
+
+def _fibre_km_mdi(topo):
+    user_relay = sum(
+        float(np.linalg.norm(topo.user_pos[i] - topo.relay_pos[topo.user_relay[i]]))
+        for i in range(topo.N)
+    )
+    relay_relay = sum(
+        float(np.linalg.norm(topo.relay_pos[k1] - topo.relay_pos[k2]))
+        for k1 in range(topo.K) for k2 in range(k1 + 1, topo.K)
+    )
+    return user_relay + relay_relay
+
+
 def main():
     parser = argparse.ArgumentParser(description="Cost analysis — user count sweep")
     parser.add_argument("--k",           type=int,   default=3)
@@ -99,6 +118,7 @@ def main():
     parser.add_argument("--no-figure",     action="store_true")
     parser.add_argument("--no-p2p-db",     action="store_true")
     parser.add_argument("--no-net-db",     action="store_true")
+    parser.add_argument("--cost-only",     action="store_true")
     args = parser.parse_args()
 
     if args.seed is None:
@@ -153,36 +173,43 @@ def main():
                 step += 1
                 continue
 
-            prog.update(step, f"N={N}/{N_values[-1]}  running simulations...")
             user_pos  = place_users(N, area_km=args.area, seed=seed)
             topo_bb84 = Topology(user_pos)
             topo_mdi  = Topology(user_pos, relay_pos)
 
-            bb84_res = run_bb84_network(
-                topo_bb84, cfg, runtimes=args.runtimes, workers=args.workers,
-                p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
-                net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
-                experiment="cost_sweep", seed=seed, area_km=args.area,
-                config_preset=args.config)
-            mdi_res = run_mdi_network(
-                topo_mdi, cfg, runtimes=args.runtimes, workers=args.workers,
-                p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
-                net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
-                experiment="cost_sweep", seed=seed, area_km=args.area,
-                config_preset=args.config)
-            trusted_res = run_trusted_bb84_network(
-                topo_mdi, cfg, runtimes=args.runtimes, workers=args.workers,
-                p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
-                net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
-                experiment="cost_sweep", seed=seed, area_km=args.area,
-                config_preset=args.config)
-
-            bb84_rate_s[N].append(bb84_res["avg_key_rate"])
-            mdi_rate_s[N].append(mdi_res["avg_key_rate"])
-            trusted_rate_s[N].append(trusted_res["avg_key_rate"])
-            bb84_cost_s[N].append(_compute_cost(bb84_res, N, 0, "BB84", cost_kw))
-            mdi_cost_s[N].append(_compute_cost(mdi_res, N, args.k, "MDI", cost_kw))
-            trusted_cost_s[N].append(_compute_cost(trusted_res, N, args.k, "trusted_BB84", cost_kw))
+            if args.cost_only:
+                prog.update(step, f"N={N}/{N_values[-1]}  computing cost from geometry...")
+                bb84_fibre = _fibre_km_bb84(topo_bb84)
+                mdi_fibre  = _fibre_km_mdi(topo_mdi)
+                bb84_cost_s[N].append(total_cost(component_counts(N, 0,       "BB84"),       bb84_fibre, **cost_kw)["total_usd"])
+                mdi_cost_s[N].append( total_cost(component_counts(N, args.k,  "MDI"),        mdi_fibre,  **cost_kw)["total_usd"])
+                trusted_cost_s[N].append(total_cost(component_counts(N, args.k, "trusted_BB84"), mdi_fibre, **cost_kw)["total_usd"])
+            else:
+                prog.update(step, f"N={N}/{N_values[-1]}  running simulations...")
+                bb84_res = run_bb84_network(
+                    topo_bb84, cfg, runtimes=args.runtimes, workers=args.workers,
+                    p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
+                    net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
+                    experiment="cost_sweep", seed=seed, area_km=args.area,
+                    config_preset=args.config)
+                mdi_res = run_mdi_network(
+                    topo_mdi, cfg, runtimes=args.runtimes, workers=args.workers,
+                    p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
+                    net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
+                    experiment="cost_sweep", seed=seed, area_km=args.area,
+                    config_preset=args.config)
+                trusted_res = run_trusted_bb84_network(
+                    topo_mdi, cfg, runtimes=args.runtimes, workers=args.workers,
+                    p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
+                    net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
+                    experiment="cost_sweep", seed=seed, area_km=args.area,
+                    config_preset=args.config)
+                bb84_rate_s[N].append(bb84_res["avg_key_rate"])
+                mdi_rate_s[N].append(mdi_res["avg_key_rate"])
+                trusted_rate_s[N].append(trusted_res["avg_key_rate"])
+                bb84_cost_s[N].append(_compute_cost(bb84_res, N, 0, "BB84", cost_kw))
+                mdi_cost_s[N].append(_compute_cost(mdi_res, N, args.k, "MDI", cost_kw))
+                trusted_cost_s[N].append(_compute_cost(trusted_res, N, args.k, "trusted_BB84", cost_kw))
 
             step += 1
             prog.update(step, f"N={N}  costs: BB84 ${bb84_cost_s[N][-1]/1e6:.2f}M  MDI ${mdi_cost_s[N][-1]/1e6:.2f}M  TBB84 ${trusted_cost_s[N][-1]/1e6:.2f}M")
@@ -202,25 +229,31 @@ def main():
     def _stds(d):
         return np.array([np.std(d[N]) for N in N_arr])
 
-    bb84_cost  = _means(bb84_cost_s)  / 1e6
-    mdi_cost   = _means(mdi_cost_s)   / 1e6
+    bb84_cost  = _means(bb84_cost_s)    / 1e6
+    mdi_cost   = _means(mdi_cost_s)     / 1e6
     t_cost     = _means(trusted_cost_s) / 1e6
-    bb84_rate  = _means(bb84_rate_s)  / 1000
-    mdi_rate   = _means(mdi_rate_s)   / 1000
-    t_rate     = _means(trusted_rate_s) / 1000
 
-    # cost-efficiency: kbps per M$  (avoid divide-by-zero)
-    bb84_eff = np.where(bb84_cost > 0, bb84_rate / bb84_cost, 0.0)
-    mdi_eff  = np.where(mdi_cost  > 0, mdi_rate  / mdi_cost,  0.0)
-    t_eff    = np.where(t_cost    > 0, t_rate    / t_cost,    0.0)
+    if not args.cost_only:
+        bb84_rate = _means(bb84_rate_s)    / 1000
+        mdi_rate  = _means(mdi_rate_s)     / 1000
+        t_rate    = _means(trusted_rate_s) / 1000
+        bb84_eff  = np.where(bb84_cost > 0, bb84_rate / bb84_cost, 0.0)
+        mdi_eff   = np.where(mdi_cost  > 0, mdi_rate  / mdi_cost,  0.0)
+        t_eff     = np.where(t_cost    > 0, t_rate    / t_cost,    0.0)
 
     # --- summary table ---
-    print(f"\n{'N':>3}  {'BB84 cost':>11}  {'MDI cost':>10}  {'TBB84 cost':>12}  "
-          f"{'BB84 eff':>10}  {'MDI eff':>9}  {'TBB84 eff':>11}")
-    print("-" * 90)
-    for i, N in enumerate(N_arr):
-        print(f"{int(N):>3}  ${bb84_cost[i]:>9.2f}M  ${mdi_cost[i]:>8.2f}M  ${t_cost[i]:>10.2f}M  "
-              f"{bb84_eff[i]:>9.2f}  {mdi_eff[i]:>8.2f}  {t_eff[i]:>10.2f}  kbps/M$")
+    if args.cost_only:
+        print(f"\n{'N':>3}  {'BB84 cost':>11}  {'MDI cost':>10}  {'TBB84 cost':>12}")
+        print("-" * 42)
+        for i, N in enumerate(N_arr):
+            print(f"{int(N):>3}  ${bb84_cost[i]:>9.2f}M  ${mdi_cost[i]:>8.2f}M  ${t_cost[i]:>10.2f}M")
+    else:
+        print(f"\n{'N':>3}  {'BB84 cost':>11}  {'MDI cost':>10}  {'TBB84 cost':>12}  "
+              f"{'BB84 eff':>10}  {'MDI eff':>9}  {'TBB84 eff':>11}")
+        print("-" * 90)
+        for i, N in enumerate(N_arr):
+            print(f"{int(N):>3}  ${bb84_cost[i]:>9.2f}M  ${mdi_cost[i]:>8.2f}M  ${t_cost[i]:>10.2f}M  "
+                  f"{bb84_eff[i]:>9.2f}  {mdi_eff[i]:>8.2f}  {t_eff[i]:>10.2f}  kbps/M$")
 
     if args.no_figure:
         return
@@ -254,26 +287,55 @@ def main():
     else:
         plt.show()
 
-    # --- Figure 2: cost-efficiency vs N ---
-    fig2, ax2 = plt.subplots(figsize=(8, 5))
-    ax2.plot(N_arr, bb84_eff, "--", color="#377eb8", lw=1.5, label="BB84 (direct mesh)")
-    ax2.plot(N_arr, mdi_eff,  "-",  color="#e41a1c", lw=1.5, marker="o", label="MDI")
-    ax2.plot(N_arr, t_eff,    "-",  color="#4daf4a", lw=1.5, marker="s", label="Trusted BB84")
-    ax2.set_xlabel("User count $N$")
-    ax2.set_ylabel("Cost-efficiency (kbps / M\$)")
-    ax2.set_xticks(N_arr)
-    ax2.legend()
-    ax2.grid(True, alpha=0.3)
-    ax2.set_title(f"Key rate per unit cost vs user count\n{top_label}", fontsize=9)
-    fig2.tight_layout()
+    # --- Figure 2: cost-efficiency vs N (requires simulation data) ---
+    if not args.cost_only:
+        fig2, ax2 = plt.subplots(figsize=(8, 5))
+        ax2.plot(N_arr, bb84_eff, "--", color="#377eb8", lw=1.5, label="BB84 (direct mesh)")
+        ax2.plot(N_arr, mdi_eff,  "-",  color="#e41a1c", lw=1.5, marker="o", label="MDI")
+        ax2.plot(N_arr, t_eff,    "-",  color="#4daf4a", lw=1.5, marker="s", label="Trusted BB84")
+        ax2.set_xlabel("User count $N$")
+        ax2.set_ylabel("Cost-efficiency (kbps / M\$)")
+        ax2.set_xticks(N_arr)
+        ax2.legend()
+        ax2.grid(True, alpha=0.3)
+        ax2.set_title(f"Key rate per unit cost vs user count\n{top_label}", fontsize=9)
+        fig2.tight_layout()
 
-    if args.save:
-        stem, ext = (args.save.rsplit(".", 1) + ["png"])[:2]
-        p = f"{stem}_efficiency.{ext}"
-        fig2.savefig(p, dpi=150)
-        print(f"Saved {p}")
-    else:
-        plt.show()
+        if args.save:
+            stem, ext = (args.save.rsplit(".", 1) + ["png"])[:2]
+            p = f"{stem}_efficiency.{ext}"
+            fig2.savefig(p, dpi=150)
+            print(f"Saved {p}")
+        else:
+            plt.show()
+
+    # --- Figure 3: marginal cost vs N ---
+    if len(N_arr) > 1:
+        step_arr   = np.diff(N_arr)
+        N_mid      = N_arr[1:]
+        bb84_marg  = np.diff(bb84_cost) / step_arr
+        mdi_marg   = np.diff(mdi_cost)  / step_arr
+        t_marg     = np.diff(t_cost)    / step_arr
+
+        fig3, ax3 = plt.subplots(figsize=(8, 5))
+        ax3.plot(N_mid, bb84_marg, "--", color="#377eb8", lw=1.5, label="BB84 (direct mesh)")
+        ax3.plot(N_mid, mdi_marg,  "-",  color="#e41a1c", lw=1.5, marker="o", label="MDI")
+        ax3.plot(N_mid, t_marg,    "-",  color="#4daf4a", lw=1.5, marker="s", label="Trusted BB84")
+        ax3.set_xlabel("User count $N$")
+        ax3.set_ylabel(r"Marginal cost $\Delta C\,/\,\Delta N$ (M\$)")
+        ax3.set_xticks(N_mid)
+        ax3.legend()
+        ax3.grid(True, alpha=0.3)
+        ax3.set_title(f"Marginal deployment cost vs user count\n{top_label}", fontsize=9)
+        fig3.tight_layout()
+
+        if args.save:
+            stem, ext = (args.save.rsplit(".", 1) + ["png"])[:2]
+            p = f"{stem}_marginal.{ext}"
+            fig3.savefig(p, dpi=150)
+            print(f"Saved {p}")
+        else:
+            plt.show()
 
 
 if __name__ == "__main__":

@@ -121,6 +121,8 @@ Reconstruct any P2P or network figure from `results.db` without re-running simul
 | Feature |
 |---------|
 | Interactive TUI launcher (`scripts/tui.py`): arrow-key menus for P2P or network path, full parameter setup, assembles and optionally runs the target script; optionally saves config JSON |
+| DB cost reconstruction: query `network_results` for `total_fibre_km` per (N, protocol, experiment), apply `component_counts` + `total_cost` from `network/cost.py` to reconstruct cost/efficiency curves from historical runs not produced by `cost_sweep.py`; expose via `scripts/analyse/network.py` (e.g. `--cost` flag) |
+| Analytical cost script (`scripts/network/cost_analytical.py`): sweep N without any QKD simulation — compute `total_fibre_km` from topology geometry, apply cost model; sweep N=4..100+ in seconds; enables wide-range marginal cost and scaling analysis decoupled from MC runtime |
 
 ### Network Scale Modelling
 
