@@ -96,6 +96,7 @@
 | Isolated parameter script (`scripts/P2P/isolate.py`): each curve = all-ideal config except one realistic parameter; overlay all isolated curves on one figure per protocol to compare each parameter's independent impact on key rate |
 | Relay placement grid search (K=1): sweep relay position over full-area grid; confirms centroid placement ≈ peak average key rate for MDI and trusted-BB84 (`scripts/network/relay_placement.py --exp 1`) |
 | Relay placement strategy comparison (K=2): centroid vs boundary-displaced relay placement across N in two-cluster topology; centroid consistently outperforms boundary placement (`scripts/network/relay_placement.py --exp 2`) |
+| PLOB repeaterless bound overlay (`lib/analytical.py`, `--plob` flag on `length.py` and `loss.py`): `R ≤ -log₂(1 - η)` where η = fibre × init × node passive loss; channel-only upper bound both protocols must sit below |
 
 ### Computational Optimisation Benchmarks (`scripts/P2P/time/`)
 
@@ -150,7 +151,6 @@ note: in the simple model (no traffic, key rate = f(fibre length only)), K=1 is 
 | ILP-optimal relay placement benchmark: formally compare k-means centroid against ILP-optimal placement to confirm or replace as canonical topology strategy (grid search and centroid-vs-boundary comparison already complete; ILP comparison outstanding) |
 | Monte Carlo sample count scaling: for key rates of order 10^-x, use 10^(x+1) samples; smallest observed rates ~10^-2 → target 1000 runs per point where feasible; audit all scripts and increase run counts accordingly |
 | Finite-key corrections: block-size-dependent key rate using composable security bound; `photons` per run sets block size `n`; quantifies departure from asymptotic regime at low photon counts and short distances |
-| Analytical key rate overlay: plot closed-form Shor-Preskill (BB84) and Ma et al. 2012 (MDI-QKD) formula on sweep figures as validation reference; mismatch flags simulation error |
 | QBER decomposition by error source: track separate contributions from dark counts, dephasing, source errors, and basis bias per simulation point; identify dominant noise mechanism per parameter regime |
 | Parameter sensitivity ranking: compute d(key_rate)/d(param) at operating point for each physical parameter; produce ranked bar chart identifying which hardware spec drives performance most |
 

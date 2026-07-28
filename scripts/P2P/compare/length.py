@@ -25,6 +25,7 @@ from BB84.BB84_run import run_BB84_sims
 from MDI.mdiRun import run_mdi_sims
 from lib.db import DEFAULT_DB_PATH
 from lib.functions import load_config, config_arg_parser
+from lib.analytical import plob_bound
 import time
 from lib.progress import Progress
 
@@ -135,6 +136,7 @@ if __name__ == "__main__":
     parser.add_argument("--init-loss",  type=float, default=None, dest="init_loss",  help="Insertion loss, linear fraction [0-1] (e.g. 0.1 = 10%%)")
     parser.add_argument("--node-loss",  type=float, default=None, dest="node_loss",  help="Receiver node insertion loss (dB)")
     parser.add_argument("--source-err", type=float, default=None, dest="source_err", help="Source bit error rate [0-1]")
+    parser.add_argument("--no-plob",          action="store_false", dest="plob", default=True, help="Suppress PLOB repeaterless bound overlay")
     parser.add_argument("--no-db",          action="store_true", help="Disable DB writing")
     parser.add_argument("--workers",         type=int,   default=None, help="Worker processes (default: 80%% of CPU cores)")
     parser.add_argument("--error",           choices=["bars", "shade", "sigma", "iqr", "sem"], default="bars",
@@ -224,6 +226,19 @@ if __name__ == "__main__":
             c = colors[ci]
             ax1.plot(Dx, [r/1000 for r in res["rates_bb84"]], '--', color=c, lw=1.5, label=f"BB84 — {name}")
             ax1.plot(Dx, [r/1000 for r in res["rates_mdi"]],  '-',  color=c, lw=1.5, label=f"MDI  — {name}")
+
+        if args.plob:
+            for ci, path in enumerate(cc_paths):
+                cc_cfg_p = load_config(path)
+                name_p   = os.path.splitext(os.path.basename(path))[0]
+                plob = plob_bound(
+                    Dx,
+                    alpha_db_per_km = cc_cfg_p["fibre_loss_db_per_km"],
+                    init_loss        = cc_cfg_p["init_loss"],
+                    node_loss_db     = cc_cfg_p["node_loss_db"],
+                )
+                ax1.plot(Dx, plob, '--', color=colors[ci], lw=0.8, alpha=0.5,
+                         label=f"PLOB — {name_p}", zorder=3)
 
         ax1.set_yscale("log")
         ax1.set_xlabel("Separation between Alice and Bob in km")
@@ -323,6 +338,15 @@ if __name__ == "__main__":
         hi2 = [r * math.exp(+s) for r, s in zip(abs_rates_mdi,  stds_mdi)]
         ax1.fill_between(Dx, lo1, hi1, alpha=0.15, color=line1.get_color())
         ax1.fill_between(Dx, lo2, hi2, alpha=0.15, color=line2.get_color())
+    if args.plob:
+        plob = plob_bound(
+            Dx,
+            alpha_db_per_km = cfg["fibre_loss_db_per_km"],
+            init_loss        = cfg["init_loss"],
+            node_loss_db     = cfg["node_loss_db"],
+        )
+        ax1.plot(Dx, plob, 'k--', lw=1.2, label="PLOB bound", zorder=3)
+
     ax1.set_xlabel("Separation between Alice and Bob in km")
     ax1.set_ylabel("Absolute secure key rate (kbps)")
     ax1.set_yscale("log")
