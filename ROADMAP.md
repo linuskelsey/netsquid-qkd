@@ -8,14 +8,16 @@
 
 | Layer | Description |
 |-------|-------------|
+| 0 | Ideal baseline (no physical impairments) |
 | 1 | Fibre loss: Beer-Lambert `T = 10^(-αL/10)` |
 | 2 | Detector efficiency `η_d` |
 | 3 | Dark counts: per-slot Bernoulli + lost-slot model |
-| 4 | Node / connector loss |
-| 5 | Source bit errors |
-| 6 | Detector basis bias `η_Z` / `η_X` |
-| 7 | Fibre dephasing (`DephaseNoiseModel`, rate per km) |
-| 8 | Beam splitter efficiency (MDI relay BSM, η_bs) |
+| 4 | Init / coupling loss |
+| 5 | Node / connector loss |
+| 6 | Source bit errors |
+| 7 | Detector basis bias `η_Z` / `η_X` |
+| 8 | Fibre dephasing (`DephaseNoiseModel`, rate per km) |
+| 9 | Beam splitter efficiency (MDI relay BSM, η_bs) |
 
 ### Infrastructure
 
@@ -23,7 +25,7 @@
 |---------|
 | JSON config presets + CLI overrides |
 | Multiprocessing: P2P scripts split runtimes across cores; network scripts split pairs across cores (one pool per protocol call) |
-| Compare scripts: length, loss, efficiency, dark count, node loss, source error, dephasing, basis bias, beam splitter efficiency, Charlie placement (`scripts/P2P/compare/`) |
+| Compare scripts: length, loss, efficiency, dark count, init loss, node loss, source error, dephasing, basis bias, beam splitter efficiency, Charlie placement (`scripts/P2P/compare/`) |
 | Run-all parallel launcher (`scripts/P2P/compare/run_all.py`): all 10 compare scripts in parallel; auto-saves to timestamped `docs/figures/<Month>/<YYYYMMDD> - P2P parameters/all parameters/` |
 | Layer comparison script (`scripts/P2P/layers.py`) |
 | `--compare-configs PATH [PATH ...]` on all 10 compare scripts: overlay 2–4 config presets on one sweep figure (BB84 dashed, MDI solid, tab10 palette per config) |
@@ -69,7 +71,8 @@
 | Item |
 |------|
 | Hardware cost model (`network/cost.py`): `component_counts()` for BB84/MDI/trusted-BB84; `total_cost()` with fibre + hardware breakdown; `DETECTOR_TECH` presets (SPAD/InGaAs/SNSPD) and `SOURCE_TECH` presets (QD/NV/hSPDC/ideal) with per-preset efficiency and cost |
-| Cost sweep (`scripts/network/cost_sweep.py`): deployment cost vs N and cost-efficiency (kbps/M$) vs N — all three protocols; detector/source tech presets wire simulation η and cost model simultaneously; explicit CLI cost-flag overrides; multi-seed averaging; DB writing; end-of-sweep summary table |
+| Cost sweep (`scripts/network/cost_sweep.py`): deployment cost vs N and cost-efficiency (kbps/M$) vs N — all three protocols; detector/source tech presets wire simulation η and cost model simultaneously; explicit CLI cost-flag overrides; multi-seed averaging; DB writing; end-of-sweep summary table; marginal cost vs N figure (`_marginal`) |
+| `--cost-only` flag on `cost_sweep.py`: skip QKD simulation entirely; compute cost and marginal cost from topology geometry alone; runs in seconds over wide N range |
 
 ### Analysis
 
@@ -100,6 +103,7 @@
 |------|
 | GP surrogate model (`surrogate.py`): train `sklearn` GPR on coarse (distance × detector_eff) grid; predict 10,000-point dense grid; ~1.7×10⁶× per-point speedup vs simulation; GP posterior gives uncertainty quantification free; `--grid-size`, `--runtimes`, `--save-grid`, `--load-grid` flags |
 | Adaptive MC (`adaptive_mc.py`): batch early stopping when σ/μ < rel_tol; benchmarks run reduction and wall-clock saving vs fixed baseline; finding: spawn overhead dominates at batch level — BB84 25% run reduction but ~0% wall-clock saving; MDI variance too high for convergence; effective adaptive sampling requires in-loop NetSquid modification |
+| Trend analysis (`trend_analysis.py`): speedup vs scale study; two analyses: (1) runtime scaling with distance/runtimes, (2) multiprocessing efficiency vs worker count |
 
 ### DB Reconstruction CLI (`scripts/analyse/`)
 
@@ -122,7 +126,6 @@ Reconstruct any P2P or network figure from `results.db` without re-running simul
 |---------|
 | Interactive TUI launcher (`scripts/tui.py`): arrow-key menus for P2P or network path, full parameter setup, assembles and optionally runs the target script; optionally saves config JSON |
 | DB cost reconstruction: query `network_results` for `total_fibre_km` per (N, protocol, experiment), apply `component_counts` + `total_cost` from `network/cost.py` to reconstruct cost/efficiency curves from historical runs not produced by `cost_sweep.py`; expose via `scripts/analyse/network.py` (e.g. `--cost` flag) |
-| Analytical cost script (`scripts/network/cost_analytical.py`): sweep N without any QKD simulation — compute `total_fibre_km` from topology geometry, apply cost model; sweep N=4..100+ in seconds; enables wide-range marginal cost and scaling analysis decoupled from MC runtime |
 
 ### Network Scale Modelling
 
