@@ -97,6 +97,7 @@
 | Relay placement grid search (K=1): sweep relay position over full-area grid; confirms centroid placement ≈ peak average key rate for MDI and trusted-BB84 (`scripts/network/relay_placement.py --exp 1`) |
 | Relay placement strategy comparison (K=2): centroid vs boundary-displaced relay placement across N in two-cluster topology; centroid consistently outperforms boundary placement (`scripts/network/relay_placement.py --exp 2`) |
 | PLOB repeaterless bound overlay (`lib/analytical.py`, `--plob` flag on `length.py` and `loss.py`): `R ≤ -log₂(1 - η)` where η = fibre × init × node passive loss; channel-only upper bound both protocols must sit below |
+| Parameter sensitivity ranking (`scripts/P2P/sensitivity.py`): run each parameter at its realistic value in isolation at a fixed distance (default 25 km); sensitivity = `(R_ideal - R_param) / R_ideal × 100%`; horizontal bar chart, BB84 and MDI side-by-side, sorted by BB84 impact; `--distance` flag for different operating regimes |
 
 ### Computational Optimisation Benchmarks (`scripts/P2P/time/`)
 
@@ -152,7 +153,6 @@ note: in the simple model (no traffic, key rate = f(fibre length only)), K=1 is 
 | Monte Carlo sample count scaling: for key rates of order 10^-x, use 10^(x+1) samples; smallest observed rates ~10^-2 → target 1000 runs per point where feasible; audit all scripts and increase run counts accordingly |
 | Finite-key corrections: block-size-dependent key rate using composable security bound; `photons` per run sets block size `n`; quantifies departure from asymptotic regime at low photon counts and short distances |
 | QBER decomposition by error source: track separate contributions from dark counts, dephasing, source errors, and basis bias per simulation point; identify dominant noise mechanism per parameter regime |
-| Parameter sensitivity ranking: compute d(key_rate)/d(param) at operating point for each physical parameter; produce ranked bar chart identifying which hardware spec drives performance most |
 
 ### Project Report
 
@@ -193,4 +193,4 @@ note ^ the above is largely solved due to a number of causes - i) relays add dis
 | Relay placement sensitivity: random vs optimal placement comparison |
 | Cross-relay vs same-relay pair success rate comparison |
 | Traffic-aware relay count optimisation: current model minimises fibre length, making K=1 optimal (single Steiner-point relay). Under realistic traffic — simultaneous multi-pair sessions, finite relay throughput, time-multiplexed BSM — a single relay saturates under high user load, shifting the optimal K upward. Extension: model relay capacity as a bounded queue (e.g. M/M/1 or token-bucket), sweep K vs offered traffic load, identify optimal K(N, load). This reframes the relay count question from a geometry problem to a queuing/scheduling problem. |
-| Cost–rate Pareto optimisation: bi-objective problem over (K, N, topology seed). Two dual problems: (1) fixed budget C_max → find configuration maximising avg key rate; (2) fixed min rate R_min → find configuration minimising cost. Sweep K and seed at fixed N, compute (cost, avg_key_rate) per point, plot Pareto frontier for each protocol; configurations on the frontier are deployment-optimal. Practically: run cost_sweep over a grid of K values, extract frontier via standard 2D Pareto filter. Useful for deployment planning: given a capex budget, which protocol and relay count gives the most key rate? |
+| Cost–rate Pareto optimisation: bi-objective problem over (K, N, topology seed). Two dual problems: (1) fixed budget C_max → find configuration maximising avg key rate; (2) fixed min rate R_min → find configuration minimising cost. Sweep K and seed at fixed N, compute (cost, avg_key_rate) per point, plot Pareto frontier for each protocol; configurations on the frontier are deployment-optimal. Practically: run cost_sweep over a grid of K values, extract frontier via standard 2D Pareto filter. Useful for deployment planning: given a capex budget, which relay count gives the best key rate for MDI, and in what detector/source configuration for both MDI and BB84? |
