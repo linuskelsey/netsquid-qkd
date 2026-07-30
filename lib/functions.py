@@ -9,8 +9,8 @@ from netsquid.components.models import DelayModel, FibreLossModel
 
 DEFAULTS = {
     "fibre_loss_db_per_km": 0.2,   # SMF-28 typical; pass --config configs/layer0_ideal.json for idealised baseline
-    "init_loss": 0.1,              # linear fraction [0-1], not dB (e.g. 0.1 = 10% loss)
-    "detector_efficiency": 0.65,
+    "init_loss": 0.15,             # linear fraction [0-1], not dB (e.g. 0.15 = 15% loss)
+    "detector_efficiency": 0.85,
     "dark_count_rate": 100,
     "node_loss_db": 2.0,           # receiver-side insertion loss in dB (connectors, coupling at Bob/Charlie)
     "source_error_rate": 0.005,
