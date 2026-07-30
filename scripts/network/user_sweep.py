@@ -24,11 +24,11 @@ Options:
     --config PATH    JSON config preset
     --error          Error style: bars (default), shade (±1σ fill), or iqr (Q1/Q3 fill)
     --workers INT    Worker processes (default: 80% of CPU cores; use nproc in command line to see maximum)
-    --save PATH      Save figure to file instead of displaying
+    --output-dir DIR Save figures to directory instead of displaying
 
 Examples:
     python scripts/network/user_sweep.py --k 3 --n-max 20 --runtimes 20
-    python scripts/network/user_sweep.py --seeds 5 --seed 42 --save results/user.png
+    python scripts/network/user_sweep.py --seeds 5 --seed 42 --output-dir results/
 """
 import argparse
 import os
@@ -74,7 +74,7 @@ def main():
     parser.add_argument("--runtimes", type=int,   default=20,   help="Monte Carlo runs per pair")
     parser.add_argument("--config",   type=str,   default=None, help="Path to JSON config")
     parser.add_argument("--error",     type=str,   default="bars", choices=["bars", "shade", "iqr"])
-    parser.add_argument("--save",      type=str,   default=None, help="Save path for results figure")
+    parser.add_argument("--output-dir", type=str,   default=None, help="Directory to save figures into (skips interactive display)")
     parser.add_argument("--no-figure", action="store_true", help="Skip all figure output (no show, no save)")
     parser.add_argument("--no-p2p-db", action="store_true", help="Disable P2P DB writing")
     parser.add_argument("--no-net-db", action="store_true", help="Disable network DB writing")
@@ -253,9 +253,12 @@ def main():
     plt.tight_layout()
 
     if not args.no_figure:
-        if args.save:
-            plt.savefig(args.save, dpi=150)
-            print(f"Saved to {args.save}")
+        if args.output_dir:
+            os.makedirs(args.output_dir, exist_ok=True)
+            fn = os.path.splitext(os.path.basename(__file__))[0] + ".png"
+            save_path = os.path.join(args.output_dir, fn)
+            plt.savefig(save_path, dpi=150, bbox_inches="tight")
+            print(f"Saved to {save_path}")
         else:
             plt.show()
 
@@ -275,10 +278,10 @@ def main():
         )
         plt.tight_layout()
 
-        if args.save:
-            topo_path = args.save.rsplit(".", 1)
-            topo_save = f"{topo_path[0]}_topology.{topo_path[1]}"
-            plt.savefig(topo_save, dpi=150)
+        if args.output_dir:
+            topo_fn = os.path.splitext(os.path.basename(__file__))[0] + "_topology.png"
+            topo_save = os.path.join(args.output_dir, topo_fn)
+            plt.savefig(topo_save, dpi=150, bbox_inches="tight")
             print(f"Topology saved to {topo_save}")
         else:
             plt.show()
