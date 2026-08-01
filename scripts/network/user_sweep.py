@@ -25,10 +25,14 @@ Options:
     --error          Error style: bars (default), shade (±1σ fill), or iqr (Q1/Q3 fill)
     --workers INT    Worker processes (default: 80% of CPU cores; use nproc in command line to see maximum)
     --output-dir DIR Save figures to directory instead of displaying
+    --placement STR  User placement mode: random (default) or clustered
+                     (clustered: each user drawn uniformly within the
+                      Voronoi-aware catchment circle of a randomly chosen relay)
 
 Examples:
     python scripts/network/user_sweep.py --k 3 --n-max 20 --runtimes 20
     python scripts/network/user_sweep.py --seeds 5 --seed 42 --output-dir results/
+    python scripts/network/user_sweep.py --placement clustered --k 3 --n-max 20
 """
 import argparse
 import os
@@ -45,7 +49,7 @@ import time
 from lib.functions import load_config
 from lib.db import DEFAULT_DB_PATH
 from lib.progress import Progress
-from topology import place_users, optimise_relays, Topology
+from topology import place_users, place_users_clustered, optimise_relays, Topology
 from bb84_network import run_bb84_network
 from mdi_network import run_mdi_network
 from trusted_bb84_network import run_trusted_bb84_network
@@ -75,6 +79,8 @@ def main():
     parser.add_argument("--config",   type=str,   default=None, help="Path to JSON config")
     parser.add_argument("--error",     type=str,   default="bars", choices=["bars", "shade", "iqr"])
     parser.add_argument("--output-dir", type=str,   default=None, help="Directory to save figures into (skips interactive display)")
+    parser.add_argument("--placement",  type=str,   default="random", choices=["random", "clustered"],
+                        help="User placement mode: random (uniform grid) or clustered (Voronoi catchment areas)")
     parser.add_argument("--no-figure", action="store_true", help="Skip all figure output (no show, no save)")
     parser.add_argument("--no-p2p-db", action="store_true", help="Disable P2P DB writing")
     parser.add_argument("--no-net-db", action="store_true", help="Disable network DB writing")
@@ -121,7 +127,10 @@ def main():
                 continue
 
             prog.update(step, f"User count: {N}/{N_values[-1]}  Both protocols running...")
-            user_pos  = place_users(N, area_km=args.area, seed=seed)
+            if args.placement == "clustered":
+                user_pos = place_users_clustered(N, relay_pos, area_km=args.area, seed=seed + N)
+            else:
+                user_pos = place_users(N, area_km=args.area, seed=seed)
             topo_bb84 = Topology(user_pos)
             topo_mdi  = Topology(user_pos, relay_pos)
 
@@ -265,9 +274,13 @@ def main():
     # --- Figure 2: topology at midpoint N (single seed only) ---
     if args.seeds == 1 and not args.no_figure:
         N_mid      = N_arr_final[len(N_arr_final) // 2]
-        user_mid   = place_users(N_mid, area_km=args.area, seed=seeds[0])
         ref_mid    = place_users(ref_n, area_km=args.area, seed=seeds[0])
-        topo_mid   = Topology(user_mid, optimise_relays(ref_mid, args.k, seed=seeds[0]))
+        relay_mid  = optimise_relays(ref_mid, args.k, seed=seeds[0])
+        if args.placement == "clustered":
+            user_mid = place_users_clustered(N_mid, relay_mid, area_km=args.area, seed=seeds[0] + N_mid)
+        else:
+            user_mid = place_users(N_mid, area_km=args.area, seed=seeds[0])
+        topo_mid   = Topology(user_mid, relay_mid)
 
         fig2, (axA, axB) = plt.subplots(1, 2, figsize=(12, 5))
         draw_mdi(axA, topo_mid)

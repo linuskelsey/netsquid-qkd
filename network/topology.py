@@ -7,6 +7,36 @@ def place_users(N, area_km=10.0, seed=None):
     return rng.uniform(0, area_km, size=(N, 2))
 
 
+def place_users_clustered(N, relay_pos, area_km=10.0, seed=None):
+    """Place N users in Voronoi-aware catchment areas around relays.
+
+    Each user is assigned a relay uniformly at random, then placed uniformly
+    within a circle of radius min(0.25*area_km, half_dist_to_nearest_relay).
+    """
+    rng = np.random.default_rng(seed)
+    relay_pos = np.array(relay_pos)
+    K = len(relay_pos)
+
+    catchment = np.full(K, 0.25 * area_km)
+    if K > 1:
+        for r in range(K):
+            dists = np.linalg.norm(relay_pos[r] - relay_pos, axis=1)
+            dists[r] = np.inf
+            catchment[r] = min(catchment[r], np.min(dists) / 2.0)
+
+    relay_indices = rng.integers(0, K, size=N)
+    positions = np.empty((N, 2))
+    for i, r_idx in enumerate(relay_indices):
+        cx, cy = relay_pos[r_idx]
+        rad = catchment[r_idx]
+        angle = rng.uniform(0, 2 * np.pi)
+        r_sample = rad * np.sqrt(rng.uniform(0, 1))
+        positions[i, 0] = np.clip(cx + r_sample * np.cos(angle), 0, area_km)
+        positions[i, 1] = np.clip(cy + r_sample * np.sin(angle), 0, area_km)
+
+    return positions
+
+
 def optimise_relays(user_pos, K, n_init=10, seed=None):
     km = KMeans(n_clusters=K, n_init=n_init, random_state=seed)
     km.fit(user_pos)
