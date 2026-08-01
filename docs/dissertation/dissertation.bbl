@@ -1,0 +1,78 @@
+\begin{thebibliography}{10}
+
+\bibitem{RSA_1978}
+R.~L. Rivest, A.~Shamir, and L.~Adleman, ``A method for obtaining digital signatures and public-key cryptosystems,'' {\em Commun. ACM}, vol.~21, p.~120–126, Feb. 1978.
+
+\bibitem{Koblitz_ECC}
+N.~Koblitz, ``{Elliptic Curve Cryptosystems},'' {\em Mathematics of Computation}, vol.~48, pp.~203--209, Jan. 1987.
+
+\bibitem{Miller_ECC}
+V.~S. Miller, ``{Use of Elliptic Curves in Cryptography},'' in {\em Advances in Cryptology --- CRYPTO '85 Proceedings} (H.~C. Williams, ed.), (Berlin, Heidelberg), pp.~417--426, Springer Berlin Heidelberg, 1986.
+
+\bibitem{Shor_1997}
+P.~W. Shor, ``{Polynomial-Time Algorithms for Prime Factorization and Discrete Logarithms on a Quantum Computer},'' {\em SIAM Journal on Computing}, vol.~26, p.~1484–1509, Oct. 1997.
+
+\bibitem{Wiesner_1983}
+S.~Wiesner, ``Conjugate coding,'' {\em SIGACT News}, vol.~15, p.~78–88, Jan. 1983.
+
+\bibitem{Bennett_2014}
+C.~H. Bennett and G.~Brassard, ``{Quantum cryptography: Public key distribution and coin tossing},'' {\em Theoretical Computer Science}, vol.~560, p.~7–11, Dec. 2014.
+
+\bibitem{chen2021}
+Y.-A. Chen {\em et~al.}, ``An integrated space-to-ground quantum communication network over 4,600 kilometres,'' {\em Nature}, vol.~589, 01 2021.
+
+\bibitem{Peev_2009}
+M.~Peev {\em et~al.}, ``{The SECOQC quantum key distribution network in Vienna},'' {\em New Journal of Physics}, vol.~11, p.~075001, 07 2009.
+
+\bibitem{Sasaki_2011}
+M.~Sasaki {\em et~al.}, ``Field test of quantum key distribution in the tokyo qkd network,'' {\em Optics Express}, vol.~19, p.~10387, May 2011.
+
+\bibitem{Lo_2012}
+H.-K. Lo, M.~Curty, and B.~Qi, ``{Measurement-Device-Independent Quantum Key Distribution},'' {\em Phys. Rev. Lett.}, vol.~108, p.~130503, Mar 2012.
+
+\bibitem{Dynes_2019}
+J.~Dynes {\em et~al.}, ``Cambridge quantum network,'' {\em npj Quantum Information}, vol.~5, 12 2019.
+
+\bibitem{Yan2025}
+W.~Yan, X.~Zheng, W.~Wen, L.~Lu, Y.~Du, Y.~Lu, S.~Zhu, and X.-S. Ma, ``A measurement-device-independent quantum key distribution network using optical frequency comb,'' 2025.
+
+\bibitem{Tang_2016}
+Y.-L. Tang {\em et~al.}, ``{Measurement-Device-Independent Quantum Key Distribution over Untrustful Metropolitan Network},'' {\em Physical Review X}, vol.~6, Mar. 2016.
+
+\bibitem{Berrevoets_2022}
+R.~C. Berrevoets {\em et~al.}, ``{Deployed measurement-device independent quantum key distribution and Bell-state measurements coexisting with standard internet data and networking equipment},'' {\em Communications Physics}, vol.~5, July 2022.
+
+\bibitem{Martins2024}
+V.~Martin {\em et~al.}, ``{MadQCI: a heterogeneous and scalable SDN-QKD network deployed in production facilities},'' {\em npj Quantum Information}, vol.~10, 09 2024.
+
+\bibitem{eu_open_qkd}
+E.~Commission, ``{Open European Quantum Key Distribution Testbed},'' 2024.
+
+\bibitem{Yehia_2022}
+R.~Yehia, S.~Neves, E.~Diamanti, and I.~Kerenidis, ``{Quantum {C}ity: simulation of a practical near-term metropolitan quantum network},'' 2022.
+
+\bibitem{DBLP:conf/ondm/KaraviasHBLP25}
+V.~Karavias, E.~Hugues{-}Salas, A.~Beghelli, A.~Lord, and M.~C. Payne, ``{Comparative Cost Analysis of Prepare and Measure and Entanglement-Based {QKD} Networks},'' in {\em International Conference on Optical Network Design and Modeling, {ONDM}, 2025}, 2025.
+
+\bibitem{Yehia_2025}
+R.~Yehia, Y.~Piétri, C.~Pascual-García, P.~Lefebvre, and F.~Centrone, ``{Energetic Analysis of Emerging Quantum Communication Protocols},'' 2025.
+
+\bibitem{Coopmans_2021}
+T.~Coopmans, R.~Knegjens, A.~Dahlberg, D.~Maier, L.~Nijsten, J.~de~Oliveira~Filho, M.~Papendrecht, J.~Rabbie, F.~Rozpędek, M.~Skrzypczyk, L.~Wubben, W.~de~Jong, D.~Podareanu, A.~Torres-Knoop, D.~Elkouss, and S.~Wehner, ``Netsquid, a network simulator for quantum information using discrete events,'' {\em Communications Physics}, vol.~4, no.~1, 2021.
+
+\bibitem{Shor_2000}
+P.~W. Shor and J.~Preskill, ``{Simple Proof of Security of the BB84 Quantum Key Distribution Protocol},'' {\em Physical Review Letters}, vol.~85, p.~441–444, July 2000.
+
+\bibitem{PNS_desc}
+E.~I. T.~C. Institute, ``What is the {P}hoton {N}umber {S}plitting ({PNS}) attack, and how does it constrain the communication distance in quantum cryptography?,'' 2024.
+
+\bibitem{Lo_decoys}
+H.-K. Lo, X.~Ma, and K.~Chen, ``Decoy {S}tate {Q}uantum {K}ey {D}istribution,'' {\em Phys. Rev. Lett.}, vol.~94, p.~230504, Jun 2005.
+
+\bibitem{Pirandola_2017}
+S.~Pirandola, R.~Laurenza, C.~Ottaviani, and L.~Banchi, ``Fundamental limits of repeaterless quantum communications,'' {\em Nature Communications}, vol.~8, Apr. 2017.
+
+\bibitem{Lucamarini_2018}
+M.~Lucamarini, Z.~L. Yuan, J.~F. Dynes, and A.~J. Shields, ``Overcoming the rate–distance limit of quantum key distribution without quantum repeaters,'' {\em Nature}, vol.~557, p.~400–403, May 2018.
+
+\end{thebibliography}

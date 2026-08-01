@@ -1,0 +1,23 @@
+\frametitle{NetSquid: Discrete-Event Simulator}
+\begin{columns}[T]
+        \begin{column}{0.50\textwidth}
+            \textbf{Design}
+            \begin{itemize}\scriptsize
+                \item QuTech (Delft); open-access; discrete-event (ns resolution) (Coopmans \textit{et al.}, 2021)
+                \item Three core abstractions: \texttt{Node}, \texttt{Channel}, \texttt{Protocol}
+                \item Quantum + classical channels; noise models built-in
+            \end{itemize}
+            \vspace{-4pt}
+            \textbf{What it can capture}
+            \begin{itemize}\scriptsize
+                \item Fibre loss, detector eff., dark counts; dephasing
+                \item Propagation delay; timing jitter (partial)
+                \item Post-selection, basis reconciliation, privacy amplification
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+\includegraphics[width=\linewidth]{artefacts/img/netsquidstack_detailed.png}
+            \vspace{0.05cm}
+            \scriptsize Physical effects compose freely — no new derivation per combination.
+        \end{column}
+    \end{columns}

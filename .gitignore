@@ -9,11 +9,11 @@
 docs/netsquid
 
 # latex
-*.tex
-docs/latex_slides
-docs/case-study-tex
-docs/dissertation
-docs/lit-rev
+# *.tex
+# docs/latex_slides
+# docs/case-study-tex
+# docs/dissertation
+# docs/lit-rev
 
 # merge script
 merge-all.sh

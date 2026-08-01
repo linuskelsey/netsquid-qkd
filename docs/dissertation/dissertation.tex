@@ -1,0 +1,214 @@
+\documentclass[12pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[top=2.5cm, bottom=2.5cm, left=3cm, right=2.5cm]{geometry}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{braket}
+\usepackage{cite}
+\usepackage{tikz}
+\usetikzlibrary{positioning,calc,fit,shapes.geometric,arrows.meta}
+\usepackage{quantikz}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\itshape Beyond BB84}
+\fancyhead[R]{\small\itshape Linus Kelsey}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\let\oldsection\section
+\renewcommand{\section}{\clearpage\oldsection}
+
+\title{Beyond BB84: The Cost of Trustless Detectors in Quantum Key Distribution}
+\author{Linus Kelsey}
+\date{Aug 2026}
+
+\begin{document}
+\onehalfspacing
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+Quantum Key Distribution (QKD) was first put forward in 1984 by Bennett and Brassard through their foundational proposal for bipartite secure key exchange taking advantage of quantum mechanics, now commonly known as BB84. In the following decades, a number of inspired methods have emerged to guarantee shared secrecy. In particular, Measurement-Device-Independent (MDI) QKD, presented in 2012, improves BB84 security assumptions by eliminating the need to trust photon detectors. In order to be able to deploy QKD at scale, providers must map the trade-offs of either protocol, and comparisons of the two in secure information exchange rate (key rate), cost and scalability allow for efficient application of this maturing technology. In this report, we aim to contribute to the solution of this problem through use of NetSquid, a quantum network discrete event simulation (DES) engine, and an algebraic cost model, to simulate and compare network behaviour for both MDI-QKD and BB84. We see that the price to pay for MDI's improved security is a drop in key rate, of up to 10 times, in modest metropolitan networks under realistic hardware assumptions.
+\end{abstract}
+
+\newpage
+\tableofcontents
+\thispagestyle{plain}
+\newpage
+
+\section{Introduction}
+
+The advent of large-scale quantum computing poses a fundamental threat to classical public-key cryptography. Modern key-exchange standards, including RSA \cite{RSA_1978} and Elliptic Curve Cryptography \cite{Koblitz_ECC,Miller_ECC}, derive their security from the computational hardness of integer factorisation and the discrete logarithm problem. Shor's algorithm \cite{Shor_1997}, published in 1997, demonstrated that both problems can be solved in polynomial time on a sufficiently powerful quantum computer, rendering these standards vulnerable to a quantum-capable adversary. Post-Quantum Cryptography (PQC) responds to this threat by identifying classically hard problems not susceptible to known quantum speed-ups; Quantum Key Distribution (QKD) takes the complementary route, using quantum mechanics to guarantee shared secrecy rather than computational assumption.
+
+QKD was first conceived by Wiesner \cite{Wiesner_1983} in the 1970s and given its first operational form by Bennett and Brassard in 1984 \cite{Bennett_2014}. In the decades since, QKD has matured into one of the most field-tested quantum technologies, with national-scale fibre deployments serving over 150 users across thousands of kilometres \cite{chen2021} and metropolitan testbeds demonstrating sustained multi-vendor operation \cite{Peev_2009,Sasaki_2011}. This trajectory has motivated a growing body of research into how QKD protocols should be chosen and deployed at scale. This work focuses on two protocols that represent a natural axis of comparison: BB84, the original Prepare-and-Measure scheme, and Measurement-Device-Independent QKD (MDI-QKD), proposed by Lo, Curty and Qi in 2012 \cite{Lo_2012}. Their protocols and theoretical performance bounds are introduced in Section~\ref{sec:background}.
+
+MDI-QKD improves upon BB84's security model by removing the need to trust photon detectors, an assumption that is difficult to verify in practice and has been exploited in hardware-level attacks. This advantage, however, comes at a real cost in key rate: at metropolitan distances, BB84 consistently delivers rates an order of magnitude higher than MDI under comparable hardware conditions \cite{Dynes_2019,Yan2025}. For network providers selecting between the two protocols, this trade-off must be mapped carefully across distance, topology, and network scale. The question is not simply which protocol is more secure, but under what deployment conditions MDI's security advantage justifies its rate penalty, and at what economic and energetic cost.
+
+Despite the commercial momentum behind both protocols — evidenced by field deployments \cite{Tang_2016,Berrevoets_2022}, heterogeneous network testbeds \cite{Martins2024}, and European infrastructure programmes \cite{eu_open_qkd} — the quantitative basis for choosing between BB84 and MDI-QKD for a given application remains poorly characterised. Simulation of MDI-QKD at metropolitan scale has not systematically explored the interplay between topology, relay placement, and hardware parameters across a sufficiently wide parameter space to support confident protocol selection \cite{Yehia_2022}. Cost models for MDI networks are largely absent from the literature: whilst integer linear programming approaches have been developed for PM and entanglement-based QKD infrastructure \cite{DBLP:conf/ondm/KaraviasHBLP25}, their extension to MDI has not been carried out. Energetic footprint, an increasingly central criterion in telecommunications infrastructure procurement, has only recently begun to receive attention in the QKD context \cite{Yehia_2025}. A rigorous parametric comparison across key rate, cost, and scalability is absent.
+
+This work addresses these gaps through a two-part methodology. First, we implement and simulate both protocols within NetSquid \cite{Coopmans_2021}, a discrete-event quantum network simulation engine, across a ten-layer hardware model spanning ideal to physically realistic conditions. Second, we model deployment costs algebraically from per-component hardware pricing for both protocols across a range of network sizes. We compare BB84 and MDI-QKD across three dimensions: key rate as a function of distance and hardware parameters; deployment cost under realistic component costs; and scalability, defined as the marginal key rate and cost when adding users to a fixed metropolitan topology. The remainder of this report is structured as follows. Section~\ref{sec:background} introduces the protocols, their hardware underpinnings, and the theoretical performance bounds that govern them. Section~\ref{sec:methodology} describes the simulation architecture and cost model. Section~\ref{sec:results} presents results across all three comparison axes, and Section~\ref{sec:conclusion} concludes with deployment recommendations and directions for future work.
+
+\section{Shared Quantum Secrecy}
+\label{sec:background}
+
+Quantum Key Distribution refers to any communications protocol in which two or more parties use quantum channels, the sharing of quantum states, together with authenticated classical channels and post-processing, to establish a shared secret cryptographic key. The security of such a scheme is guaranteed by the laws of quantum mechanics, providing information-theoretic security against any eavesdropper whose capabilities are bounded by quantum physics. Since Bennett and Brassard's foundational paper in 1984 \cite{Bennett_2014}, numerous variants of QKD have been proposed. This work focuses on two: the original Prepare-and-Measure scheme (BB84) and Measurement-Device-Independent QKD (MDI-QKD), proposed by Lo, Curty and Qi in 2012 \cite{Lo_2012}.
+
+\subsection{BB84}
+
+BB84 is representative of the class of Prepare-and-Measure (PM) protocols. Alice begins by preparing a string of $n$ photons, each encoded in one of four polarisation states ($0^\circ$, $45^\circ$, $90^\circ$ or $135^\circ$) selected uniformly at random. In the qubit formalism, these correspond to $\ket{0}$, $\ket{+} = \tfrac{1}{\sqrt{2}}(\ket{0}+\ket{1})$, $\ket{1}$ and $\ket{-} = \tfrac{1}{\sqrt{2}}(\ket{0}-\ket{1})$, respectively. Alice selects a basis ($\{\ket{0},\ket{1}\}$ or $\{\ket{+},\ket{-}\}$) for each qubit uniformly and independently, then uniformly and independently again, she applies a bit flip within that basis before transmission.
+
+She transmits these quantum states to Bob over a quantum channel. Bob measures each photon in a uniformly and independently random basis. Alice and Bob then use an authenticated classical channel to compare basis choices and discard all photons measured in mismatching bases, producing a raw, sifted key. A portion of this sifted key is compared over the classical channel to estimate the Quantum Bit Error Rate (QBER): the fraction of photon pairs measured in the same basis that nevertheless disagree. A QBER below $11\%$ is taken as evidence that the channel has not been compromised \cite{Shor_2000}. Alice and Bob then apply error correction and privacy amplification (hash-based post-processing that shortens the raw key, removing any partial information an eavesdropper may have gathered) to produce the final shared secret key. Figure~\ref{fig:bb84_comm} illustrates the basic bipartite logical layer.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}
+        \tikzset{
+            party/.style={draw, rounded corners, minimum width=1.45cm, minimum height=0.5cm, align=center, font=\bfseries},
+            qcomm/.style={red!75!black, dashed, thick},
+            ccomm/.style={black!60!gray, thick}
+        }
+        \node[party] (A) at (-2,0) {Alice};
+        \node[party] (B) at (2,0) {Bob};
+        \node[] (J) at (0, 0.5) {};
+        \node[above=5pt of J.south, font=\footnotesize, align=center, red!65!black] {Quantum};
+        \node[] (K) at (0, -0.5) {};
+        \node[below=5pt of K.north, font=\footnotesize, align=center] {Classical};
+        \draw[-,qcomm] (A.north) |- (J);
+        \draw[->,qcomm] (J.west) -| (B.north);
+        \draw[->,ccomm] (K.west) -| (A.south);
+        \draw[->,ccomm] (K.west) -| (B.south);
+    \end{tikzpicture}
+    \caption{Communication diagram for point-to-point BB84. Alice sends quantum states to Bob; basis reconciliation and post-processing occur over authenticated classical channels.}
+    \label{fig:bb84_comm}
+\end{figure}
+
+Security proofs for BB84, and QKD generally, are conditional on the modelling assumptions made about devices, network, and attacker capabilities. A particular vulnerability in practice arises from weak coherent pulse (WCP) laser sources, whose photon number per pulse follows a Poisson distribution. Multi-photon pulses allow a Photon Number Splitting (PNS) attack \cite{PNS_desc}, in which Eve intercepts and holds trailing photons until bases are announced, extracting key information without disturbing the QBER. The decoy-state technique \cite{Lo_decoys} mitigates this by varying pulse intensity randomly, enabling Alice and Bob to tightly bound the single-photon contribution to their key.
+
+\subsection{Measurement-Device-Independent QKD}
+
+MDI-QKD addresses a fundamental vulnerability shared by all PM schemes: the need to trust the measurement devices at Bob's node. Side-channel attacks on detectors represent a significant practical threat, as the gap between idealised device models assumed in security proofs and real hardware is difficult to close. MDI removes detectors entirely from the trust boundary by introducing an untrusted third-party relay, Charlie, who performs all measurement operations.
+
+In MDI-QKD, both Alice and Bob independently prepare photon strings in the manner of BB84 and transmit these to Charlie. Charlie performs a Bell State Measurement (BSM) on each arriving photon pair, projecting onto the two-qubit Bell basis:
+\[
+    \ket{\phi^\pm} = \frac{\ket{00} \pm \ket{11}}{\sqrt{2}}, \qquad \ket{\psi^\pm} = \frac{\ket{01} \pm \ket{10}}{\sqrt{2}}.
+\]
+Charlie announces the measurement outcome over a classical channel to both Alice and Bob. Since the BSM measures only the \emph{correlation} % make a brief appendix entry showing this? incorp hong-ou-mandel?
+between the two incoming photons rather than their individual polarisations, an eavesdropper with full control of Charlie's apparatus can learn nothing about Alice's or Bob's individual bit values, only the joint interaction. The bipartite logical layer for MDI-QKD is shown in Figure~\ref{fig:mdi_comm}.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}
+        \tikzset{
+            party/.style={draw, rounded corners, minimum width=1.45cm, minimum height=0.5cm, align=center, font=\bfseries},
+            qcomm/.style={red!65!black, dashed, thick},
+            ccomm/.style={black!60!gray, thick}
+        }
+        \node[party] (A) at (-3,0) {Alice};
+        \node[party] (B) at (3,0) {Bob};
+        \node[party] (C) at (0,0) {Charlie};
+        \draw[->,qcomm] (A.east) -- (C.west);
+        \draw[->,qcomm] (B.west) -- (C.east);
+        \node[] (J) at (-1.5,-0.5) {};
+        \node[] (K) at (1.5,-0.5) {};
+        \draw[-,ccomm] ($(C.south)+(-0.2,0)$) |- (J.west);
+        \draw[-,ccomm] ($(C.south)+(0.2,0)$) |- (K.east);
+        \draw[->,ccomm] (J) -| (A.south);
+        \draw[->,ccomm] (K) -| (B.south);
+    \end{tikzpicture}
+    \caption{Communication diagram for point-to-point MDI-QKD. Both Alice and Bob transmit quantum states to Charlie; Charlie performs a BSM and announces the result classically to both parties.}
+    \label{fig:mdi_comm}
+\end{figure}
+
+Alice and Bob sift by matching bases as in BB84. Upon receiving the BSM outcome, each party knows their own basis choice and bit value, and can deduce the other's bit via the outcome. Depending on the Bell state announced, one party selectively bit-flips to ensure agreement, as summarised in Table~\ref{tab:mdi_flips}. In the linear-optical BSM implementation, only two of the four Bell states ($\ket{\psi^+}$ and $\ket{\psi^-}$) are unambiguously distinguishable \cite{Lo_2012}; detection events corresponding to $\ket{\phi^\pm}$ are discarded as inconclusive. Privacy amplification and error correction then proceed as in BB84.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{lcc}
+        \toprule
+        BSM outcome & $\ket{\psi^{+}}$ & $\ket{\psi^{-}}$ \\
+        \midrule
+        Diagonal basis    & No bit flip & Bit flip \\
+        Rectilinear basis & Bit flip    & Bit flip \\
+        \bottomrule
+    \end{tabular}
+    \caption{Bit-flip rules upon receipt of BSM outcome. Alice and Bob agree in advance which party applies the flip; if both flip, there is no net change.}
+    \label{tab:mdi_flips}
+\end{table}
+
+The abstract operation of the BSM in quantum information terms is shown in Figure~\ref{fig:bsm_circ}: a CNOT gate followed by a Hadamard and measurement. The physical implementation uses a 50:50 beam-splitter and polarising beam-splitters, with the Hong-Ou-Mandel effect ensuring that only coincidence detection events, two simultaneous clicks at the detector array, constitute valid BSM outcomes.
+
+\begin{figure}[H]
+    \centering
+    \begin{quantikz}
+        \lstick{$q_0$} & \ctrl{1} & \gate{H} & \meter{} \\
+        \lstick{$q_1$} & \targ{}  &          & \meter{}
+    \end{quantikz}
+    \caption{Bell State Measurement circuit: CNOT gate followed by Hadamard, then measurement in the computational basis.}
+    \label{fig:bsm_circ}
+\end{figure}
+
+MDI-QKD's security advantage comes at a cost. Key generation requires a successful coincidence detection at Charlie -- both photons from Alice and Bob must arrive and be detected within the same time window. This requirement, combined with independent connection losses on each arm, imposes a rate penalty relative to BB84's single-link loss \cite{Lo_2012}. MDI's QBER tolerance is also more sensitive than BB84's, as two independent quantum channels each contribute noise, enlarging the attack surface accounted for by security proofs.
+
+\subsection{Theoretical Performance Bounds}
+
+The maximum achievable secure key rate in any point-to-point (no quantum repeater) QKD scheme is bounded by the Pirandola--Laurenza--Ottaviani--Banchi (PLOB) bound \cite{Pirandola_2017}. This fundamental result establishes that, against all attacks permitted by quantum physics, the key rate of a repeater-less link scales at most linearly with channel transmittance $\eta$:
+\[
+    R \leq -\log_2(1 - \eta) \approx \eta \log_2 e \quad \text{for } \eta \ll 1.
+\]
+Since transmittance decays exponentially with fibre length $L$ as $\eta = 10^{-\alpha L / 10}$ (with $\alpha$ the fibre attenuation coefficient in dB/km), the PLOB bound implies that key rates must fall exponentially with distance. Both BB84 and standard MDI-QKD are subject to this bound.
+
+Twin-Field QKD (TF-QKD), proposed in 2018 by Lucamarini et al.\ \cite{Lucamarini_2018}, exploits the same untrusted-relay tenet as MDI but replaces the two-photon BSM with single-photon interference. The result is that key rates scale as $\mathcal{O}(\sqrt{\eta})$ rather than $\mathcal{O}(\eta)$, exceeding the PLOB bound and extending the distance at which secure communication is achievable. TF-QKD thus represents the most practically significant near-term stepping stone beyond the repeater-less limit, and motivates the question central to this work, of precisely where and under what conditions MDI-QKD's security advantage over BB84 justifies its rate penalty, before that regime is superseded by TF-QKD or, eventually, quantum repeaters.
+
+\section{Methodology}
+\label{sec:methodology}
+We compare BB84 and MDI-QKD across three dimensions: performance, deployment cost, and scalability. Together these axes capture the trade-off a network provider faces when selecting between the two protocols for a given metropolitan deployment.
+
+\textit{Performance.} The primary metric is secure key rate, measured in bits per second: the length of the final distilled key divided by the time taken to produce it. Since all QKD-generated keys are information-theoretically equivalent in security regardless of protocol, key rate is the sole performance discriminant between BB84 and MDI-QKD. We simulate key rate as a function of distance and individual hardware parameters using NetSquid \cite{Coopmans_2021}, a discrete-event quantum network simulation engine, across a ten-layer hardware model that progressively introduces realistic physical imperfections from an ideal baseline.
+
+\textit{Cost.} Deployment cost is modelled algebraically from per-component hardware costs (photon sources, single-photon detectors, beam splitters, and fibre), with the number of each component determined by the network topology under each protocol. For a given user count and area, total infrastructure cost follows directly from the component counts implied by each protocol's topology. Beyond simple cost curves, we frame deployment decisions as a bi-objective optimisation: a provider operating under a fixed capital budget seeks the configuration maximising average key rate, whilst a provider with a minimum key rate requirement seeks the cheapest configuration meeting it. These two dual problems define a cost--rate Pareto frontier for each protocol, swept over relay count $K$ and network seed, from which deployment-optimal configurations can be read directly.
+
+\textit{Scalability.} We define scalability as the marginal key rate and cost incurred when adding a user to an existing network. Since BB84 requires a direct link between every user pair whilst MDI routes traffic through relay nodes, the two protocols exhibit fundamentally different scaling behaviour. We quantify this by sweeping user count at fixed topology parameters and extracting per-user marginal rates and costs for both protocols.
+
+\subsection{Cost Analysis}
+Algebraic cost model — component counts per protocol topology, cost curves vs user count.
+\subsection{Performance Analysis}
+Key rate, QBER cutoffs, success rate?
+\subsubsection{NetSquid}
+Discuss in brief, how is it integrated into a usable tool to achieve my goals?
+\subsubsection{Bipartite Single-Link Analysis}
+Protocol implementation Architecture, how have i extracted statistics from that?
+\subsubsection{Multi-User Network Analysis}
+same as above. justify modelling decisions inc k-means + centroid, multi-seeding etc
+\subsection{Scalability Analysis}
+network marginals for key rate and cost wrt relay user count?
+
+\section{Results}
+\label{sec:results}
+bunch of graphs...
+\subsection{Deployment Recommendations}
+
+The cost--rate Pareto frontier provides a direct basis for protocol selection. For each protocol, we sweep relay count $K$ at fixed user count and area, computing the (total deployment cost, average key rate) pair for each configuration. Configurations not dominated --- those for which no alternative achieves both lower cost and higher rate --- form the Pareto frontier. Points on this frontier represent deployment-optimal choices: any configuration off the frontier can be improved on at least one dimension without sacrificing the other.
+
+Two deployment questions are answered by reading from this frontier. Given a capital budget $C_{\max}$, the optimal configuration is the frontier point with the highest key rate subject to cost $\leq C_{\max}$. Given a minimum key rate requirement $R_{\min}$, the optimal configuration is the frontier point with the lowest cost subject to rate $\geq R_{\min}$. Comparing the BB84 and MDI-QKD frontiers directly reveals the regimes in which MDI's security advantage can be obtained within the same budget envelope as BB84, and the configurations for which MDI's rate penalty is acceptable given a stated security requirement.
+
+\section{Discussion}
+\label{sec:discussion}
+Discuss results? and their implications? critical analysis i think...
+
+\section{Conclusion}
+\label{sec:conclusion}
+Past work (summary of what has been done + achievements) -> Present work (my results) -> Future work (what I would do given more time)
+
+\bibliographystyle{ieeetr}
+\bibliography{IEEEabrv,bibliography}
+
+\end{document}
