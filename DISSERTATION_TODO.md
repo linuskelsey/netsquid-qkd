@@ -14,12 +14,7 @@
 
 ## 2. New Code / Features (needed for thesis results)
 
-- [ ] **[HIGH PRIORITY] Real-topology input tool**: implement a mechanism to load a fixed QKD network graph (node positions + edges) and feed it directly into the existing simulators instead of random generation. Use cases: real-world named networks (BT, Tokyo, Berrevoets et al.) and case study topologies fixed to real geography. Design questions to resolve before implementing:
-  - Input format: JSON or adjacency list specifying node positions (lat/lon or km-grid coords), node types (user/relay), and optionally fixed link distances.
-  - Entry point: likely a new flag on `relay_sweep.py` / `user_sweep.py` (e.g. `--topology PATH`) that replaces `topology.py`'s random generator with a loaded graph.
-  - Relay placement: skip k-means when topology is fixed; relay positions come from the input file.
-  - Visualisation: `visualise_network.py` should render the loaded topology correctly alongside simulation output.
-  - Cost model: `total_fibre_km` must be computed from the fixed link distances rather than Euclidean node positions.
+- [x] **Real-topology input tool**: `network/real_topology.py` — equirectangular lat/lon → km projection; JSON format with `"nodes"` (type: user/relay) and `"protocols"` fields; `load_real_topology()` returns `(Topology, meta)`. `--real NAME` flag on `user_sweep.py` and `cost_sweep.py` loads `data/real_topologies/NAME.json`, fixes relay positions, enforces 30 km catchment radius for clustered placement, skips k-means. Users generated incrementally (pool of n_max sliced per data point). TBB84 gated by `"protocols"` in JSON — only available in `--real` path. BT topology at `data/real_topologies/bt.json` (Slough, West End, City of London; 3 relays; BB84+MDI+TBB84). `relay_sweep.py` excluded (K sweep meaningless with fixed real topology).
 
 - [x] **Cost columns in DB**: 4 cost columns added to `network_results` schema (`detector_efficiency`, `hardware_cost_gbp`, `fibre_cost_gbp`, `total_cost_gbp`). Written via `update_network_cost()` from all three sweep scripts after each run.
 - [x] **DB cost reconstruction**: `scripts/analyse/network.py` now supports `--y total_cost_gbp / hardware_cost_gbp / fibre_cost_gbp` (M£, linear scale) and `--protocols trusted_BB84`. Cost columns written to DB by all sweep scripts.
