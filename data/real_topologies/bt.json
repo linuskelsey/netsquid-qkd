@@ -1,8 +1,0 @@
-{
-  "protocols": ["BB84", "MDI", "TBB84"],
-  "nodes": [
-    {"name": "Slough",          "lat": 51.508511370346,    "lon": -0.5859913756249396, "type": "relay"},
-    {"name": "West End",        "lat": 51.52301458690639,  "lon": -0.13911402790121472, "type": "relay"},
-    {"name": "City of London",  "lat": 51.513319554600415, "lon": -0.08971643207816477, "type": "relay"}
-  ]
-}
