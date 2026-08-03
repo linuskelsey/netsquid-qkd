@@ -32,8 +32,8 @@ DEFAULT_COSTS = {
 
 # Two supported detector classes. Efficiency drives SPD cost via linear model.
 DETECTOR_TECH = {
-    "SPAD":  {"efficiency": 0.20, "cost_gbp":  15_000},  # InGaAs SPAD, telecom-band (1550 nm)
-    "SNSPD": {"efficiency": 0.85, "cost_gbp": 100_000},  # superconducting nanowire, cryogenic (~2 K)
+    "SPAD":  {"efficiency": 0.20, "cost_gbp":  15_000, "dark_count_rate": 10_000},  # InGaAs SPAD, telecom-band (1550 nm)
+    "SNSPD": {"efficiency": 0.85, "cost_gbp": 100_000, "dark_count_rate":    100},  # superconducting nanowire, cryogenic (~2 K)
 }
 
 # Linear SPD cost model derived from the two anchor points above

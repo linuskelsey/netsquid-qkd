@@ -68,7 +68,8 @@ def run_mdi_network(topo, cfg, runtimes=10, workers=None, switch_loss_db=SWITCH_
         alice_km, bob_km, charlie_idx, cross_cluster = topo.mdi_link(i, j)
         total_km    = alice_km + bob_km
         charlie_pos = alice_km / total_km if total_km > 0 else 0.5
-        node_loss   = cfg["node_loss_db"] + (switch_loss_db if cross_cluster else 0.0)
+        mdi_base    = cfg.get("node_loss_db_mdi", cfg["node_loss_db"])
+        node_loss   = mdi_base + (switch_loss_db if cross_cluster else 0.0)
         tasks.append((
             i, j, total_km, charlie_pos, runtimes,
             cfg["fibre_loss_db_per_km"], cfg["init_loss"], cfg["detector_efficiency"],
@@ -146,6 +147,6 @@ def run_mdi_network(topo, cfg, runtimes=10, workers=None, switch_loss_db=SWITCH_
         "total_fibre_km": total_fibre_km,
         "n_links":        topo.N + topo.K * (topo.K - 1) // 2,
         "n_sources":      topo.N,
-        "n_spd":          2 * topo.K,
+        "n_spd":          4 * topo.K,
         "net_run_id":     net_run_id,
     }

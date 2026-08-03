@@ -6,9 +6,9 @@
 
 ## 1. Code Bugs (fix before final data runs)
 
-- [ ] **`mdi_network.py`**: return dict has `"n_spd": 2 * topo.K` — stale, cost model uses 4K. Update to `4 * topo.K`. (cost_analysis.tex Inconsistency IV)
-- [ ] **`cost_sweep.py`**: when `--detector-tech SPAD`, `dark_count_rate` stays at 100 cps (SNSPD-tier). Couple dark count to detector class: SPAD → ~10,000 cps, SNSPD → ~100 cps. (cost_analysis.tex Inconsistency II)
-- [ ] **`lib/functions.py` / JSON configs**: `node_loss_db = 2.0 dB` does not reflect actual EOM + PBS + switch stack. Define per-component insertion loss budget and update the relevant layer config files. (cost_analysis.tex Inconsistency I — severity high)
+- [x] **`mdi_network.py`**: return dict has `"n_spd": 2 * topo.K` — stale, cost model uses 4K. Update to `4 * topo.K`. (cost_analysis.tex Inconsistency IV)
+- [x] **`cost_sweep.py`**: when `--detector-tech SPAD`, `dark_count_rate` stays at 100 cps (SNSPD-tier). Couple dark count to detector class: SPAD → ~10,000 cps, SNSPD → ~100 cps. (cost_analysis.tex Inconsistency II)
+- [x] **`lib/functions.py` / JSON configs**: protocol-specific node loss implemented. BB84=2.0 dB, MDI=1.0 dB per arm, TBB84=3.0 dB. Fallback pattern: runners use `cfg.get("node_loss_db_mdi/tbb84", cfg["node_loss_db"])`. (cost_analysis.tex Inconsistency I)
 
 ---
 
@@ -30,6 +30,7 @@
 
 ## 3. Simulations to Run (data collection)
 
+- [ ] **[HIGH PRIORITY] Regenerate all figures** — node_loss_db (now protocol-specific) and dark_count_rate (now coupled to detector class) both affect simulated key rate. All existing P2P and network figures are stale and must be rerun before thesis submission.
 - [ ] **Cost sweep — SPAD and SNSPD** at representative N range (e.g. N=2..16, K=2): cost vs N and cost-efficiency vs N for all three protocols → figure for thesis §4.
 - [ ] **Cost–rate optimisation sweep** (K grid at fixed N, multi-seed): (cost, avg_key_rate) pairs for BB84/MDI/TBB84 → cost vs rate figures per protocol.
 - [ ] **Realistic hardware region shading**: finalise hardware parameter values from Lo 2012 (`\cite{Lo_2012}`), Tang 2016 (`\cite{Tang_2016}`), Berrevoets 2022 (`\cite{Berrevoets_2022}`); add to all P2P compare figures as shaded region. (TODO.md §1)
@@ -51,6 +52,7 @@ All default costs in `network/cost.py` are unverified placeholders. Verify each 
 - [ ] **EOM £2,000**: verify; also check insertion loss (0.5–3 dB, needed for Inconsistency I fix).
 - [ ] **Optical switch £5,000**: verify; check insertion loss (0.5–2 dB, needed for Inconsistency I fix).
 - [ ] **Dark fibre installed £10,000/km**: this varies significantly by region and duct availability; find a UK-relevant citation or acknowledge the range.
+- [ ] **Verify per-protocol node_loss_db values against literature**: BB84 (EOM+PBS), MDI per arm (BS excess+PBS), TBB84 (switch+EOM+PBS). Current values (2.0 / 1.0 / 3.0 dB) are indicative midpoints. Update `lib/functions.py` DEFAULTS and `configs/layer5_node_loss.json` once confirmed.
 - [ ] Once values verified: update `PARAMS.md` and `DEFAULT_COSTS` in `network/cost.py`, and cite sources in dissertation cost methodology section.
 
 ---

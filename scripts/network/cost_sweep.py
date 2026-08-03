@@ -14,10 +14,11 @@ explicit --spd-cost flag; pass --detector-tech to set efficiency.
 
 Component model
 ---------------
-  BB84 mesh    : N sources, 2N SPDs, N(N-1)/2 links      O(N^2) fibre
-  MDI          : N sources, 2K SPDs, K BS, 2K PBS,        O(N) fibre
-                 K switches, N + K(K-1)/2 links
-  Trusted BB84 : N+K sources, 2K SPDs, N + K(K-1)/2 links O(N) fibre
+  BB84 mesh    : N sources, 2N SPDs, N PBS, N EOMs, N(N-1)/2 links      O(N^2) fibre
+  MDI          : N sources, 4K SPDs, K BS, 2K PBS, K switches,           O(N) fibre
+                 N + K(K-1)/2 links
+  Trusted BB84 : N+K sources, 2K SPDs, K PBS, K EOMs, K switches,       O(N) fibre
+                 N + K(K-1)/2 links
 
 Usage:
     python scripts/network/cost_sweep.py [options]
@@ -33,9 +34,9 @@ Options:
     --runtimes INT           MC runs per pair (default: 20)
     --config PATH            JSON config preset
     --detector-tech TECH     Detector preset: SPAD | SNSPD
-                               Sets detector_efficiency in sim; SPD cost derived
-                               from efficiency via linear model.
-    --source-tech TECH       Source preset: QD | NV | hSPDC | ideal
+                               Sets detector_efficiency and dark_count_rate in sim;
+                               SPD cost derived from efficiency via linear model.
+                               SPAD: eta=0.20, dark=10000 cps; SNSPD: eta=0.85, dark=100 cps.
     --source-cost FLOAT      GBP per photon source (overrides --source-tech cost)
     --bs-cost FLOAT          GBP per 50:50 beam splitter at MDI relay
     --pbs-cost FLOAT         GBP per polarising beam splitter at MDI relay
@@ -139,9 +140,12 @@ def main():
     pbs_gbp    = args.pbs_cost    if args.pbs_cost    is not None else DEFAULT_COSTS["pbs_gbp"]
     fibre_gbp  = args.fibre_cost  if args.fibre_cost  is not None else DEFAULT_COSTS["fibre_per_km_gbp"]
 
-    # apply detector efficiency from preset to simulation config
-    if args.detector_tech and "efficiency" in det_preset:
-        cfg["detector_efficiency"] = det_preset["efficiency"]
+    # apply detector preset values to simulation config
+    if args.detector_tech:
+        if "efficiency" in det_preset:
+            cfg["detector_efficiency"] = det_preset["efficiency"]
+        if "dark_count_rate" in det_preset:
+            cfg["dark_count_rate"] = det_preset["dark_count_rate"]
     det_eff = cfg["detector_efficiency"]
 
     eom_gbp    = args.eom_cost    if args.eom_cost    is not None else DEFAULT_COSTS["eom_gbp"]

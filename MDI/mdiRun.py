@@ -219,7 +219,7 @@ if __name__ == "__main__":
         detectorEffZ  = cfg["detector_efficiency"],
         detectorEffX  = args.det_eff_x,
         darkCount     = cfg["dark_count_rate"],
-        nodeLossDb    = cfg["node_loss_db"],
+        nodeLossDb    = cfg.get("node_loss_db_mdi", cfg["node_loss_db"]),
         sourceErrRate = cfg["source_error_rate"],
         dephasingRate = args.dephasing_rate if args.dephasing_rate is not None else cfg["dephasing_rate"],
         bsEff         = args.bs_eff if args.bs_eff is not None else cfg["bs_eff"],

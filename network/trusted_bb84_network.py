@@ -52,7 +52,7 @@ def run_trusted_bb84_network(topo, cfg, runtimes=10, workers=None, verbose=False
 
     link_params = (
         cfg["fibre_loss_db_per_km"], cfg["init_loss"], cfg["detector_efficiency"],
-        cfg["dark_count_rate"], cfg["node_loss_db"], cfg["source_error_rate"], cfg["dephasing_rate"],
+        cfg["dark_count_rate"], cfg.get("node_loss_db_tbb84", cfg["node_loss_db"]), cfg["source_error_rate"], cfg["dephasing_rate"],
     )
 
     # Build tasks: user-relay links first, then backbone links
