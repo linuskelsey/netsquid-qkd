@@ -1,8 +1,8 @@
 """
 Cost analysis --- user count sweep. All monetary values in GBP.
 
-Runs the three-protocol simulation (BB84, MDI, Trusted BB84), computes
-deployment cost using network/cost.py, and produces figures:
+Runs the two-protocol simulation (BB84, MDI), computes deployment cost using
+network/cost.py, and produces figures:
 
   Figure 1: Total deployment cost vs N
   Figure 2: Key rate / cost vs N  (cost-efficiency, kbps per M-GBP)
@@ -16,8 +16,6 @@ Component model
 ---------------
   BB84 mesh    : N sources, 2N SPDs, N PBS, N EOMs, N(N-1)/2 links      O(N^2) fibre
   MDI          : N sources, 4K SPDs, K BS, 2K PBS, K switches,           O(N) fibre
-                 N + K(K-1)/2 links
-  Trusted BB84 : N+K sources, 2K SPDs, K PBS, K EOMs, K switches,       O(N) fibre
                  N + K(K-1)/2 links
 
 Usage:
@@ -70,7 +68,6 @@ from lib.progress import Progress
 from topology import place_users, optimise_relays, Topology
 from bb84_network import run_bb84_network
 from mdi_network import run_mdi_network
-from trusted_bb84_network import run_trusted_bb84_network
 from cost import component_counts, total_cost, spd_cost_from_efficiency, DETECTOR_TECH, DEFAULT_COSTS
 from lib.db import update_network_cost
 
@@ -112,7 +109,7 @@ def main():
     parser.add_argument("--pbs-cost",      type=float, default=None,
                         help="GBP per polarising beam splitter")
     parser.add_argument("--eom-cost",      type=float, default=None,
-                        help="GBP per EOM (BB84 and trusted BB84 receivers)")
+                        help="GBP per EOM (BB84 receivers)")
     parser.add_argument("--switch-cost",   type=float, default=None,
                         help="GBP per optical switch at MDI relay")
     parser.add_argument("--fibre-cost",    type=float, default=None,
@@ -162,12 +159,10 @@ def main():
         rng   = np.random.default_rng(args.seed)
         seeds = rng.integers(0, 100_000, size=args.seeds).tolist()
 
-    bb84_rate_s    = {N: [] for N in N_values}
-    mdi_rate_s     = {N: [] for N in N_values}
-    trusted_rate_s = {N: [] for N in N_values}
-    bb84_cost_s    = {N: [] for N in N_values}
-    mdi_cost_s     = {N: [] for N in N_values}
-    trusted_cost_s = {N: [] for N in N_values}
+    bb84_rate_s = {N: [] for N in N_values}
+    mdi_rate_s  = {N: [] for N in N_values}
+    bb84_cost_s = {N: [] for N in N_values}
+    mdi_cost_s  = {N: [] for N in N_values}
 
     total_start = time.time()
 
@@ -194,9 +189,8 @@ def main():
                 bb84_fibre = _fibre_km_bb84(topo_bb84)
                 mdi_fibre  = _fibre_km_mdi(topo_mdi)
                 t = args.tortuosity
-                bb84_cost_s[N].append(total_cost(component_counts(N, 0,       "BB84"),          bb84_fibre * t, det_eff, **cost_kw)["total_gbp"])
-                mdi_cost_s[N].append( total_cost(component_counts(N, args.k,  "MDI"),           mdi_fibre  * t, det_eff, **cost_kw)["total_gbp"])
-                trusted_cost_s[N].append(total_cost(component_counts(N, args.k, "trusted_BB84"), mdi_fibre * t, det_eff, **cost_kw)["total_gbp"])
+                bb84_cost_s[N].append(total_cost(component_counts(N, 0,      "BB84"), bb84_fibre * t, det_eff, **cost_kw)["total_gbp"])
+                mdi_cost_s[N].append( total_cost(component_counts(N, args.k, "MDI"),  mdi_fibre  * t, det_eff, **cost_kw)["total_gbp"])
             else:
                 prog.update(step, f"N={N}/{N_values[-1]}  running simulations...")
                 bb84_res = run_bb84_network(
@@ -211,29 +205,18 @@ def main():
                     net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
                     experiment="cost_sweep", seed=seed, area_km=args.area,
                     config_preset=args.config)
-                trusted_res = run_trusted_bb84_network(
-                    topo_mdi, cfg, runtimes=args.runtimes, workers=args.workers,
-                    p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
-                    net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
-                    experiment="cost_sweep", seed=seed, area_km=args.area,
-                    config_preset=args.config)
                 bb84_rate_s[N].append(bb84_res["avg_key_rate"])
                 mdi_rate_s[N].append(mdi_res["avg_key_rate"])
-                trusted_rate_s[N].append(trusted_res["avg_key_rate"])
                 _db_path = None if args.no_net_db else DEFAULT_DB_PATH
-                # total_fibre_km from runners already reflects per-link tortuosity via cfg["tortuosity_mean"]
-                _bc = total_cost(component_counts(N, 0,       "BB84"),         bb84_res["total_fibre_km"],    det_eff, **cost_kw)
-                _mc = total_cost(component_counts(N, args.k,  "MDI"),          mdi_res["total_fibre_km"],     det_eff, **cost_kw)
-                _tc = total_cost(component_counts(N, args.k,  "trusted_BB84"), trusted_res["total_fibre_km"], det_eff, **cost_kw)
+                _bc = total_cost(component_counts(N, 0,      "BB84"), bb84_res["total_fibre_km"], det_eff, **cost_kw)
+                _mc = total_cost(component_counts(N, args.k, "MDI"),  mdi_res["total_fibre_km"],  det_eff, **cost_kw)
                 bb84_cost_s[N].append(_bc["total_gbp"])
                 mdi_cost_s[N].append(_mc["total_gbp"])
-                trusted_cost_s[N].append(_tc["total_gbp"])
-                update_network_cost(_db_path, bb84_res.get("net_run_id"),    det_eff, _bc["hardware_gbp"], _bc["fibre_gbp"], _bc["total_gbp"])
-                update_network_cost(_db_path, mdi_res.get("net_run_id"),     det_eff, _mc["hardware_gbp"], _mc["fibre_gbp"], _mc["total_gbp"])
-                update_network_cost(_db_path, trusted_res.get("net_run_id"), det_eff, _tc["hardware_gbp"], _tc["fibre_gbp"], _tc["total_gbp"])
+                update_network_cost(_db_path, bb84_res.get("net_run_id"), det_eff, _bc["hardware_gbp"], _bc["fibre_gbp"], _bc["total_gbp"])
+                update_network_cost(_db_path, mdi_res.get("net_run_id"),  det_eff, _mc["hardware_gbp"], _mc["fibre_gbp"], _mc["total_gbp"])
 
             step += 1
-            prog.update(step, f"N={N}  costs: BB84 ${bb84_cost_s[N][-1]/1e6:.2f}M  MDI ${mdi_cost_s[N][-1]/1e6:.2f}M  TBB84 ${trusted_cost_s[N][-1]/1e6:.2f}M")
+            prog.update(step, f"N={N}  costs: BB84 £{bb84_cost_s[N][-1]/1e6:.2f}M  MDI £{mdi_cost_s[N][-1]/1e6:.2f}M")
 
         prog.stop()
         m, s = divmod(int(time.time() - seed_start), 60)
@@ -247,34 +230,27 @@ def main():
     def _means(d):
         return np.array([np.mean(d[N]) for N in N_arr])
 
-    def _stds(d):
-        return np.array([np.std(d[N]) for N in N_arr])
-
-    bb84_cost  = _means(bb84_cost_s)    / 1e6
-    mdi_cost   = _means(mdi_cost_s)     / 1e6
-    t_cost     = _means(trusted_cost_s) / 1e6
+    bb84_cost = _means(bb84_cost_s) / 1e6
+    mdi_cost  = _means(mdi_cost_s)  / 1e6
 
     if not args.cost_only:
-        bb84_rate = _means(bb84_rate_s)    / 1000
-        mdi_rate  = _means(mdi_rate_s)     / 1000
-        t_rate    = _means(trusted_rate_s) / 1000
+        bb84_rate = _means(bb84_rate_s) / 1000
+        mdi_rate  = _means(mdi_rate_s)  / 1000
         bb84_eff  = np.where(bb84_cost > 0, bb84_rate / bb84_cost, 0.0)
         mdi_eff   = np.where(mdi_cost  > 0, mdi_rate  / mdi_cost,  0.0)
-        t_eff     = np.where(t_cost    > 0, t_rate    / t_cost,    0.0)
 
     # --- summary table ---
     if args.cost_only:
-        print(f"\n{'N':>3}  {'BB84 cost':>11}  {'MDI cost':>10}  {'TBB84 cost':>12}")
-        print("-" * 42)
+        print(f"\n{'N':>3}  {'BB84 cost':>11}  {'MDI cost':>10}")
+        print("-" * 28)
         for i, N in enumerate(N_arr):
-            print(f"{int(N):>3}  £{bb84_cost[i]:>9.2f}M  £{mdi_cost[i]:>8.2f}M  £{t_cost[i]:>10.2f}M")
+            print(f"{int(N):>3}  £{bb84_cost[i]:>9.2f}M  £{mdi_cost[i]:>8.2f}M")
     else:
-        print(f"\n{'N':>3}  {'BB84 cost':>11}  {'MDI cost':>10}  {'TBB84 cost':>12}  "
-              f"{'BB84 eff':>10}  {'MDI eff':>9}  {'TBB84 eff':>11}")
-        print("-" * 90)
+        print(f"\n{'N':>3}  {'BB84 cost':>11}  {'MDI cost':>10}  {'BB84 eff':>10}  {'MDI eff':>9}")
+        print("-" * 52)
         for i, N in enumerate(N_arr):
-            print(f"{int(N):>3}  £{bb84_cost[i]:>9.2f}M  £{mdi_cost[i]:>8.2f}M  £{t_cost[i]:>10.2f}M  "
-                  f"{bb84_eff[i]:>9.2f}  {mdi_eff[i]:>8.2f}  {t_eff[i]:>10.2f}  kbps/M£")
+            print(f"{int(N):>3}  £{bb84_cost[i]:>9.2f}M  £{mdi_cost[i]:>8.2f}M  "
+                  f"{bb84_eff[i]:>9.2f}  {mdi_eff[i]:>8.2f}  kbps/M£")
 
     if args.no_figure:
         return
@@ -292,7 +268,6 @@ def main():
     fig1, ax = plt.subplots(figsize=(8, 5))
     ax.plot(N_arr, bb84_cost, "--", color="#377eb8", lw=1.5, label="BB84 (direct mesh)")
     ax.plot(N_arr, mdi_cost,  "-",  color="#e41a1c", lw=1.5, marker="o", label="MDI")
-    ax.plot(N_arr, t_cost,    "-",  color="#4daf4a", lw=1.5, marker="s", label="Trusted BB84")
     ax.set_xlabel("User count $N$")
     ax.set_ylabel("Total deployment cost (M\pounds)")
     ax.set_xticks(N_arr)
@@ -314,7 +289,6 @@ def main():
         fig2, ax2 = plt.subplots(figsize=(8, 5))
         ax2.plot(N_arr, bb84_eff, "--", color="#377eb8", lw=1.5, label="BB84 (direct mesh)")
         ax2.plot(N_arr, mdi_eff,  "-",  color="#e41a1c", lw=1.5, marker="o", label="MDI")
-        ax2.plot(N_arr, t_eff,    "-",  color="#4daf4a", lw=1.5, marker="s", label="Trusted BB84")
         ax2.set_xlabel("User count $N$")
         ax2.set_ylabel("Cost-efficiency (kbps / M\pounds)")
         ax2.set_xticks(N_arr)
@@ -333,16 +307,14 @@ def main():
 
     # --- Figure 3: marginal cost vs N ---
     if len(N_arr) > 1:
-        step_arr   = np.diff(N_arr)
-        N_mid      = N_arr[1:]
-        bb84_marg  = np.diff(bb84_cost) / step_arr
-        mdi_marg   = np.diff(mdi_cost)  / step_arr
-        t_marg     = np.diff(t_cost)    / step_arr
+        step_arr  = np.diff(N_arr)
+        N_mid     = N_arr[1:]
+        bb84_marg = np.diff(bb84_cost) / step_arr
+        mdi_marg  = np.diff(mdi_cost)  / step_arr
 
         fig3, ax3 = plt.subplots(figsize=(8, 5))
         ax3.plot(N_mid, bb84_marg, "--", color="#377eb8", lw=1.5, label="BB84 (direct mesh)")
         ax3.plot(N_mid, mdi_marg,  "-",  color="#e41a1c", lw=1.5, marker="o", label="MDI")
-        ax3.plot(N_mid, t_marg,    "-",  color="#4daf4a", lw=1.5, marker="s", label="Trusted BB84")
         ax3.set_xlabel("User count $N$")
         ax3.set_ylabel(r"Marginal cost $\Delta C\,/\,\Delta N$ (M\pounds)")
         ax3.set_xticks(N_mid)

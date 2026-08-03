@@ -46,19 +46,18 @@ All parameters below are unverified placeholders or indicative midpoints. Verify
 
 ### 4a. Hardware Physics Parameters (`lib/functions.py` DEFAULTS)
 
-| Parameter | Current default | Realistic range | Graph-swept? | Verify against |
-|---|---|---|---|---|
-| `fibre_loss_db_per_km` | **0.18 dB/km** ✓ | 0.15–0.25 dB/km | **Yes** | Corning SMF-28 datasheet (max at 1550 nm, confirmed) |
-| `init_loss` | 0.15 (15%) | 0.05–0.30 | Possibly | Fibre-pigtailed QD coupling efficiency; Bozzio 2022 |
-| `detector_efficiency` η_Z | **0.90** ✓ | SPAD: 10–25% (IDQ ID230); SNSPD: 80–95% (IDQ ID281) | **Yes** | IDQ ID230 datasheet (SPAD default 20%); IDQ ID281 datasheet (SNSPD default 90%). Multi-channel note: 1 unit covers 4 channels per relay → cost model overestimates MDI relay SPD cost. IDQ quote requested for pricing. |
-| `dark_count_rate` | **50 cps** ✓ | SNSPD: 25–100 cps (ID281); SPAD: 70–90 cps at η=10%, 150–250 cps at η=20% (ID230) | **Yes** | IDQ datasheets. SPAD d_c is COUPLED to η — realistic SPAD point = η=0.20 + d_c=200 together; layer model treats them independently for marginal analysis. |
-| `node_loss_db` (BB84) | 2.0 dB | 1.0–4.0 dB (EOM 0.5–3 dB + PBS 0.3–1.0 dB) | No | EOM datasheet (Thorlabs/iXblue); PBS datasheet |
-| `node_loss_db_mdi` (MDI/arm) | 1.0 dB | 0.5–2.0 dB (BS excess 0.1–0.5 dB + PBS 0.3–1.0 dB) | No | HOM BS datasheet; Lo 2012 |
-| `node_loss_db_tbb84` (TBB84) | 3.0 dB | 2.0–5.5 dB (switch 0.5–2 dB + EOM 0.5–3 dB + PBS 0.3–1.0 dB) | No | Same as BB84 + switch; confirm switch loss |
-| `source_error_rate` | **0.02 (2%)** ✓ | 0.001–0.05 | **Yes** | Bozzio 2022 (confirmed); Yang 2024 (QD g² measurements) |
-| `det_eff_x` η_X | 0.85 | same as η_Z (shared device) | Partially (basis_bias sweep) | Same as η_Z |
-| `dephasing_rate` | 0.0001 /ns | 0.00001–0.001 (PMD-dominated) | Possibly | PMD spec of SMF-28; Dynes 2019 |
-| `bs_eff` | 0.97 (3% excess loss) | 0.90–0.99 | **Yes** (MDI compare) | Fibre coupler datasheet; Tang 2016 |
+| Parameter | Current default | Realistic range | Graph-swept? | Verify against | Datasheet / link |
+|---|---|---|---|---|---|
+| `fibre_loss_db_per_km` | **0.18 dB/km** ✓ | 0.15–0.25 dB/km | **Yes** | Corning SMF-28 datasheet (max at 1550 nm, confirmed) | https://www.corning.com/media/worldwide/coc/documents/Fiber/product-information-sheets/PI-1424-AEN.pdf|
+| `init_loss` | 0.15 (15%) | 0.05–0.30 | Possibly | Abstracted: source brightness (Prometheus 40%) folded into `source_freq`; init_loss models separate optical path losses only. Model limitation — note in dissertation. | https://www.quandela.com/products-and-services/prometheus/ |
+| `detector_efficiency` η_Z | **0.90** ✓ | SPAD: 10–25% (IDQ ID230); SNSPD: 80–95% (IDQ ID281) | **Yes** | IDQ ID230 (SPAD, default 20%); IDQ ID281 (SNSPD, default 90%). Multi-channel: 1 unit = 4 ch per relay. Quote requested. | IDQ ID230: https://www.idquantique.com/quantum-detection-systems/products/id230/ IDQ ID281: https://www.idquantique.com/quantum-detection-systems/products/id281-snspd-system/|
+| `dark_count_rate` | **50 cps** ✓ | SNSPD: 25–100 cps (ID281); SPAD: 70–90 cps at η=10%, 150–250 cps at η=20% (ID230) | **Yes** | IDQ datasheets. SPAD d_c coupled to η — realistic SPAD point = η=0.20 + d_c=200 together. | (same as η_Z links) |
+| `node_loss_db` (BB84) | 2.0 dB | 1.0–4.0 dB (EOM 0.5–3 dB + PBS 0.3–1.0 dB) | No | EOM datasheet (Thorlabs/iXblue); PBS datasheet | EOM: <br> PBS: |
+| `node_loss_db_mdi` (MDI/arm) | 1.0 dB | 0.5–2.0 dB (BS excess 0.1–0.5 dB + PBS 0.3–1.0 dB) | No | HOM BS datasheet; Lo 2012 | HOM BS: |
+| `source_error_rate` | **0.015 (1.5%)** ✓ | 0.001–0.05 | **Yes** | Quandela Prometheus: g²(0) < 3% → ε_s < 0.015. Bozzio 2022 upper bound 2%. | Prometheus datasheet: https://www.quandela.com/products-and-services/prometheus/|
+| `det_eff_x` η_X | 0.85 | same as η_Z | Partially (basis_bias sweep) | Same device as η_Z; 5% inter-basis differential assumed | (same as η_Z links) |
+| `dephasing_rate` | 0.0001 /ns | 0.00001–0.001 (PMD-dominated) | Possibly | SMF-28 PMD spec; Dynes 2019 | SMF-28 PMD spec: |
+| `bs_eff` | 0.97 (3% excess loss) | 0.87–0.99 | **Yes** (MDI compare) | Prometheus M ≥ 0.90 → η_BS_eff = 0.97×0.90 = 0.873; fibre coupler datasheet | Coupler datasheet: |
 
 - [ ] **Confirm sweep ranges** used in compare figures match the realistic ranges above. Where they differ, update the compare script x-ranges and re-shade. Pay particular attention to `node_loss_db` — not currently swept but should be for the realistic-region overlay.
 - [ ] **`node_loss_db` family** (2.0 / 1.0 / 3.0 dB): verify component insertion losses from datasheets (EOM, PBS, optical switch). Update `lib/functions.py` DEFAULTS and `configs/layer5_node_loss.json` once confirmed.

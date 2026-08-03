@@ -35,7 +35,6 @@ from db import ERROR_MODES, NET_X_COLS, NET_Y_COLS, NET_Y_LABELS, query_network
 
 _BB84_COL  = "#377eb8"
 _MDI_COL   = "#e41a1c"
-_TBB84_COL = "#4daf4a"
 
 _RATE_COLS = {"avg_key_rate", "min_key_rate", "max_key_rate"}
 _COST_COLS = {"total_cost_gbp", "hardware_cost_gbp", "fibre_cost_gbp"}
@@ -59,8 +58,8 @@ def _parse() -> argparse.Namespace:
                    help="X-axis column")
     p.add_argument("--y",         default="avg_key_rate",  choices=NET_Y_COLS,
                    help="Y-axis column")
-    p.add_argument("--protocols", nargs="+", default=["BB84", "MDI", "trusted_BB84"],
-                   choices=["BB84", "MDI", "trusted_BB84"], metavar="PROTO")
+    p.add_argument("--protocols", nargs="+", default=["BB84", "MDI"],
+                   choices=["BB84", "MDI"], metavar="PROTO")
     p.add_argument("--error",     default="shade",         choices=ERROR_MODES,
                    help="Error mode for MDI series (BB84 always uses shade with linear std)")
     p.add_argument("--n-users",   type=int,   default=None, metavar="N",
@@ -219,10 +218,6 @@ def main() -> None:
     if "MDI" in protos:
         _plot_proto(ax1, data.get("MDI", {"x": []}), args.error, scale,
                     label="MDI", color=_MDI_COL, marker="o")
-    if "trusted_BB84" in protos:
-        _plot_proto(ax1, data.get("trusted_BB84", {"x": []}), args.error, scale,
-                    label="Trusted BB84", color=_TBB84_COL, marker="s")
-
     # Collect stats for axis decoration
     sc     = _sc(scale)
     all_x  = sorted({xv for d in data.values() for xv in d["x"]})

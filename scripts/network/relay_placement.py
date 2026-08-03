@@ -3,13 +3,13 @@ Relay placement analysis.
 
 Experiment 1 — single cluster, K=1 relay.
     Sweeps relay position over a grid for several user counts.
-    Validates that centroid placement maximises average key rate.
+    Validates that centroid placement maximises average MDI-QKD key rate.
 
 Experiment 2 — two clusters, K=2 relays.
     Fixed cluster geometry, sweeps total user count N.
     Compares centroid placement (relay at cluster centroid) vs
     boundary placement (relay displaced 1σ toward opposing cluster).
-    Run for both MDI-QKD and trusted-node BB84.
+    Run for MDI-QKD.
 
 Usage:
     python scripts/network/relay_placement.py --exp 1 [options]
@@ -52,7 +52,6 @@ sys.path.insert(0, _network)
 from lib.functions import load_config
 from topology import Topology
 from mdi_network import run_mdi_network
-from trusted_bb84_network import run_trusted_bb84_network
 
 
 # ─── shared ────────────────────────────────────────────────────────────────────
@@ -67,7 +66,7 @@ def _avg_rate(pair_rates):
 def exp1_grid(n, area, grid_res, cfg, runtimes, seed, workers):
     """
     Sweep relay position over a grid_res×grid_res grid for K=1, N users.
-    Returns (xs, ys, mdi_grid, tb84_grid, centroid, user_pos).
+    Returns (xs, ys, mdi_grid, centroid, user_pos).
     """
     rng = np.random.default_rng(seed)
     user_pos = rng.uniform(0, area, size=(n, 2))
@@ -75,54 +74,49 @@ def exp1_grid(n, area, grid_res, cfg, runtimes, seed, workers):
 
     xs = np.linspace(0, area, grid_res)
     ys = np.linspace(0, area, grid_res)
-    mdi_grid  = np.zeros((grid_res, grid_res))
-    tb84_grid = np.zeros((grid_res, grid_res))
+    mdi_grid = np.zeros((grid_res, grid_res))
     total = grid_res * grid_res
 
     for ix, rx in enumerate(xs):
         for iy, ry in enumerate(ys):
-            topo     = Topology(user_pos, np.array([[rx, ry]]))
-            mdi_res  = run_mdi_network(topo, cfg, runtimes=runtimes, workers=workers,
-                                       p2p_db_path=None, net_db_path=None)
-            tb84_res = run_trusted_bb84_network(topo, cfg, runtimes=runtimes, workers=workers,
-                                                p2p_db_path=None, net_db_path=None)
-            mdi_grid[iy, ix]  = _avg_rate(mdi_res["pair_rates"])
-            tb84_grid[iy, ix] = _avg_rate(tb84_res["pair_rates"])
+            topo    = Topology(user_pos, np.array([[rx, ry]]))
+            mdi_res = run_mdi_network(topo, cfg, runtimes=runtimes, workers=workers,
+                                      p2p_db_path=None, net_db_path=None)
+            mdi_grid[iy, ix] = _avg_rate(mdi_res["pair_rates"])
             done = ix * grid_res + iy + 1
             print(f"  [{done:3d}/{total}] ({rx:.1f},{ry:.1f})  "
-                  f"MDI={mdi_grid[iy,ix]/1000:.2f}k  TB84={tb84_grid[iy,ix]/1000:.2f}k bps", end="\r")
+                  f"MDI={mdi_grid[iy,ix]/1000:.2f}k bps", end="\r")
 
     print()
-    return xs, ys, mdi_grid, tb84_grid, centroid, user_pos
+    return xs, ys, mdi_grid, centroid, user_pos
 
 
 def plot_exp1(results_by_n, area, save):
     n_vals = list(results_by_n.keys())
-    fig, axes = plt.subplots(2, len(n_vals), figsize=(4 * len(n_vals), 8))
+    fig, axes = plt.subplots(1, len(n_vals), figsize=(4 * len(n_vals), 4))
     if len(n_vals) == 1:
-        axes = axes[:, np.newaxis]
+        axes = [axes]
 
     for col, n in enumerate(n_vals):
-        xs, ys, mdi_grid, tb84_grid, centroid, user_pos = results_by_n[n]
+        xs, ys, mdi_grid, centroid, user_pos = results_by_n[n]
         extent = [0, area, 0, area]
 
-        for row, (grid, proto) in enumerate([(mdi_grid, "MDI-QKD"), (tb84_grid, "TN-BB84")]):
-            ax = axes[row, col]
-            im = ax.imshow(grid / 1000, origin="lower", extent=extent, aspect="auto", cmap="viridis")
-            plt.colorbar(im, ax=ax, label="kbps")
-            ax.scatter(user_pos[:, 0], user_pos[:, 1], c="white", s=20, zorder=3,
-                       edgecolors="grey", linewidths=0.5, label="Users")
-            ax.scatter(*centroid, marker="*", s=200, c="red", zorder=5, label="Centroid")
-            peak_iy, peak_ix = np.unravel_index(np.argmax(grid), grid.shape)
-            ax.scatter(xs[peak_ix], ys[peak_iy], marker="X", s=150, c="yellow",
-                       zorder=6, label="Peak")
-            ax.set_title(f"{proto}  N={n}")
-            ax.set_xlabel("x (km)")
-            ax.set_ylabel("y (km)")
-            if col == 0:
-                ax.legend(fontsize=7)
+        ax = axes[col]
+        im = ax.imshow(mdi_grid / 1000, origin="lower", extent=extent, aspect="auto", cmap="viridis")
+        plt.colorbar(im, ax=ax, label="kbps")
+        ax.scatter(user_pos[:, 0], user_pos[:, 1], c="white", s=20, zorder=3,
+                   edgecolors="grey", linewidths=0.5, label="Users")
+        ax.scatter(*centroid, marker="*", s=200, c="red", zorder=5, label="Centroid")
+        peak_iy, peak_ix = np.unravel_index(np.argmax(mdi_grid), mdi_grid.shape)
+        ax.scatter(xs[peak_ix], ys[peak_iy], marker="X", s=150, c="yellow",
+                   zorder=6, label="Peak")
+        ax.set_title(f"MDI-QKD  N={n}")
+        ax.set_xlabel("x (km)")
+        ax.set_ylabel("y (km)")
+        if col == 0:
+            ax.legend(fontsize=7)
 
-    plt.suptitle("Key rate vs relay position (K=1, single cluster)", fontsize=12)
+    plt.suptitle("MDI-QKD key rate vs relay position (K=1, single cluster)", fontsize=12)
     plt.tight_layout()
     _save_or_show(save)
 
@@ -160,14 +154,14 @@ def _relay_boundary(user_pos, labels):
 
 def exp2(n_values, area, spread, cfg, runtimes, seed, n_seeds, workers):
     """
-    Sweep N, compare centroid vs boundary relay placement for MDI and TN-BB84.
-    Returns dict: strategy → protocol → list[list[float]] (seeds × N).
+    Sweep N, compare centroid vs boundary relay placement for MDI-QKD.
+    Returns dict: strategy → list[list[float]] (seeds × N).
     """
     rng   = np.random.default_rng(seed)
     seeds = rng.integers(0, 100_000, size=n_seeds).tolist()
 
     data = {
-        strat: {"mdi": [[] for _ in n_values], "tb84": [[] for _ in n_values]}
+        strat: {"mdi": [[] for _ in n_values]}
         for strat in ("centroid", "boundary")
     }
 
@@ -180,19 +174,14 @@ def exp2(n_values, area, spread, cfg, runtimes, seed, n_seeds, workers):
                 relay_pos = relay_fn(user_pos, labels)
                 topo      = Topology(user_pos, relay_pos)
 
-                mdi_res  = run_mdi_network(topo, cfg, runtimes=runtimes, workers=workers,
-                                           p2p_db_path=None, net_db_path=None)
-                tb84_res = run_trusted_bb84_network(topo, cfg, runtimes=runtimes, workers=workers,
-                                                    p2p_db_path=None, net_db_path=None)
+                mdi_res = run_mdi_network(topo, cfg, runtimes=runtimes, workers=workers,
+                                          p2p_db_path=None, net_db_path=None)
 
                 data[strat]["mdi"][ni].append(_avg_rate(mdi_res["pair_rates"]))
-                data[strat]["tb84"][ni].append(_avg_rate(tb84_res["pair_rates"]))
 
             print(f"  N={n:3d}  "
                   f"MDI  cent={np.mean(data['centroid']['mdi'][ni])/1000:.2f}k  "
-                  f"bnd={np.mean(data['boundary']['mdi'][ni])/1000:.2f}k  "
-                  f"TBB84 cent={np.mean(data['centroid']['tb84'][ni])/1000:.2f}k  "
-                  f"bnd={np.mean(data['boundary']['tb84'][ni])/1000:.2f}k bps")
+                  f"bnd={np.mean(data['boundary']['mdi'][ni])/1000:.2f}k bps")
 
     return data
 
@@ -202,20 +191,19 @@ def plot_exp2(data, n_values, save):
     colors = {"centroid": "#e41a1c", "boundary": "#377eb8"}
     labels = {"centroid": "Centroid", "boundary": "Boundary (1σ toward opposing cluster)"}
 
-    fig, (ax_mdi, ax_tb84) = plt.subplots(1, 2, figsize=(12, 5))
+    fig, ax = plt.subplots(figsize=(7, 5))
 
-    for ax, proto, title in [(ax_mdi, "mdi", "MDI-QKD"), (ax_tb84, "tb84", "Trusted-node BB84")]:
-        for strat in ("centroid", "boundary"):
-            means = np.array([np.mean(data[strat][proto][i]) for i in range(len(N))]) / 1000
-            stds  = np.array([np.std( data[strat][proto][i]) for i in range(len(N))]) / 1000
-            ax.errorbar(N, means, yerr=stds, label=labels[strat],
-                        color=colors[strat], marker="o" if strat == "centroid" else "s",
-                        capsize=4, lw=1.5)
-        ax.set_xlabel("Total users N")
-        ax.set_ylabel("Avg key rate (kbps)")
-        ax.set_title(title)
-        ax.legend()
-        ax.grid(True, alpha=0.3)
+    for strat in ("centroid", "boundary"):
+        means = np.array([np.mean(data[strat]["mdi"][i]) for i in range(len(N))]) / 1000
+        stds  = np.array([np.std( data[strat]["mdi"][i]) for i in range(len(N))]) / 1000
+        ax.errorbar(N, means, yerr=stds, label=labels[strat],
+                    color=colors[strat], marker="o" if strat == "centroid" else "s",
+                    capsize=4, lw=1.5)
+    ax.set_xlabel("Total users N")
+    ax.set_ylabel("Avg key rate (kbps)")
+    ax.set_title("MDI-QKD")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
 
     plt.suptitle("Relay placement: centroid vs boundary (K=2, two clusters)", fontsize=12)
     plt.tight_layout()
