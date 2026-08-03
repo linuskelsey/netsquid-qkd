@@ -1,5 +1,5 @@
 """
-Network hardware and fibre cost model.
+Network hardware and fibre cost model. All monetary values in GBP.
 
 Component model
 ---------------
@@ -7,52 +7,55 @@ BB84 mesh      : N sources, 2N SPDs, N(N-1)/2 fibre links
 MDI            : N sources (users only), 2K SPDs + K 50:50 BSs (relays), N + K(K-1)/2 links
 Trusted BB84   : N+K sources, 2K SPDs, N + K(K-1)/2 links
 
-MDI relay nodes are passive (BSM only: 2 SPDs + 1 50:50 fibre beam splitter per relay, no source).
-Trusted BB84 relay nodes are active (source + SPDs, no BSM required).
-BB84 and trusted BB84 nodes use passive basis-choice splitters internal to detectors — not
-counted separately as the cost is negligible vs SPDs.
+MDI relay nodes are passive BSM stations: 2 SPDs + 1 50:50 BS (HOM) + 2 PBS (polarisation
+analysis) + 1 optical switch (cross-relay photon routing) per relay. No source at MDI relays.
+Trusted BB84 relay nodes are active: source + 2 SPDs per relay. No BSM required.
+BB84 nodes use passive basis-choice splitters internal to detectors — negligible cost, not counted.
 
-Default unit costs (USD, indicative literature values):
-  Photon source      : $20,000   (WCP laser + intensity modulator)
-  SPD                : $50,000   (SNSPD, per detector)
-  50:50 beam splitter: $5,000    (precision fibre coupler, per BSM relay)
-  Fibre              : $10,000   per km (installed dark fibre)
+Classical communication (synchronisation, key forwarding) is assumed free and not included
+in the cost model. Only quantum-layer hardware and fibre are costed.
+
+SPD cost is modelled as a linear function of detector efficiency, anchored at:
+  InGaAs SPAD : eta = 0.20  ->  GBP 15,000
+  SNSPD        : eta = 0.85  ->  GBP 100,000
+Valid for eta >= 0.20; raises ValueError below this threshold.
 """
 
-# Indicative unit costs in USD — used when no CLI override is given
 DEFAULT_COSTS = {
-    "source_usd":       20_000,
-    "spd_usd":          50_000,
-    "bs_usd":            1_000,
-    "fibre_per_km_usd": 10_000,
+    "source_gbp":       150_000,  # quantum dot SPS + cryostat (amortised per channel)
+    "bs_gbp":             1_000,  # 50:50 fibre coupler (HOM BS at MDI relay)
+    "pbs_gbp":              500,  # polarising beam splitter
+    "eom_gbp":            2_000,  # electro-optic modulator (active basis choice, BB84/TBB84 receivers)
+    "switch_gbp":         5_000,  # optical switch for cross-relay photon routing (MDI relay)
+    "fibre_per_km_gbp":  10_000,
 }
 
-# Named detector technology presets: (efficiency, cost_usd per SPD).
-# Presets set defaults only — all values remain overridable via CLI flags.
-#   SPAD    : Si/InGaAs avalanche diode, room/TE-cooled, low cost, moderate efficiency
-#   InGaAs  : InGaAs SPAD, telecom-band (1550 nm), moderate cost and efficiency
-#   SNSPD   : superconducting nanowire, cryogenic (~2 K), highest efficiency; cost
-#             includes amortised cryostat share (~$80k–$150k system / 4–8 channels)
+# Two supported detector classes. Efficiency drives SPD cost via linear model.
 DETECTOR_TECH = {
-    "SPAD":   {"efficiency": 0.30, "cost_usd":  5_000},
-    "InGaAs": {"efficiency": 0.25, "cost_usd": 15_000},
-    "SNSPD":  {"efficiency": 0.85, "cost_usd": 100_000},
+    "SPAD":  {"efficiency": 0.20, "cost_gbp":  15_000},  # InGaAs SPAD, telecom-band (1550 nm)
+    "SNSPD": {"efficiency": 0.85, "cost_gbp": 100_000},  # superconducting nanowire, cryogenic (~2 K)
 }
 
-# Named source technology presets: cost_usd per source node.
-# The simulation assumes ideal single-photon sources throughout (no WCP / decoy state).
-# Presets reflect real single-photon source technologies for cost modelling only;
-# source_error_rate and other physics parameters must be set separately in the config.
-#   QD      : semiconductor quantum dot, typically cryogenic (~4 K), high purity
-#   NV      : nitrogen-vacancy centre in diamond, room-temperature capable, lower brightness
-#   hSPDC   : heralded SPDC — probabilistic, non-ideal single photon; cheaper but higher error rate
-#   ideal   : theoretical baseline (zero cost), matches simulation assumption
-SOURCE_TECH = {
-    "QD":    {"cost_usd": 150_000},  # QD + cryostat (amortised per channel)
-    "NV":    {"cost_usd":  80_000},  # NV centre system
-    "hSPDC": {"cost_usd":  25_000},  # heralded SPDC, no cryogenics
-    "ideal": {"cost_usd":       0},  # theoretical baseline
-}
+# Linear SPD cost model derived from the two anchor points above
+_ETA_LO,  _COST_LO = DETECTOR_TECH["SPAD"]["efficiency"],  DETECTOR_TECH["SPAD"]["cost_gbp"]
+_ETA_HI,  _COST_HI = DETECTOR_TECH["SNSPD"]["efficiency"], DETECTOR_TECH["SNSPD"]["cost_gbp"]
+_SPD_SLOPE     = (_COST_HI - _COST_LO) / (_ETA_HI - _ETA_LO)
+_SPD_INTERCEPT = _COST_LO - _SPD_SLOPE * _ETA_LO
+
+
+def spd_cost_from_efficiency(eta):
+    """
+    Return SPD cost per detector (GBP) for detector efficiency eta.
+
+    Linear interpolation anchored at SPAD (eta=0.20, GBP 15k) and
+    SNSPD (eta=0.85, GBP 100k). Raises ValueError for eta < 0.20.
+    """
+    if eta < _ETA_LO:
+        raise ValueError(
+            f"Detector efficiency {eta:.3f} is below the minimum supported "
+            f"value of {_ETA_LO} (InGaAs SPAD baseline)."
+        )
+    return _SPD_SLOPE * eta + _SPD_INTERCEPT
 
 
 def component_counts(N, K, protocol):
@@ -67,71 +70,96 @@ def component_counts(N, K, protocol):
 
     Returns
     -------
-    dict with keys: n_sources, n_spd, n_links
+    dict with keys: n_sources, n_spd, n_bs, n_links
     """
     if protocol == "BB84":
         return {
-            "n_sources": N,
-            "n_spd":     2 * N,
-            "n_bs":      0,
-            "n_links":   N * (N - 1) // 2,
+            "n_sources":  N,
+            "n_spd":      2 * N,  # 2 per user (Bob: 1 PBS → 2 outputs)
+            "n_bs":       0,
+            "n_pbs":      N,      # 1 per user (Bob: polarisation analysis after EOM)
+            "n_eom":      N,      # 1 per user (Bob: active basis choice)
+            "n_switches": 0,
+            "n_links":    N * (N - 1) // 2,
         }
     elif protocol == "MDI":
         return {
-            "n_sources": N,
-            "n_spd":     2 * K,
-            "n_bs":      K,
-            "n_links":   N + K * (K - 1) // 2,
+            "n_sources":  N,
+            "n_spd":      4 * K,  # 4 per relay (2 PBS × 2 outputs = full BSM)
+            "n_bs":       K,      # 1 per relay (HOM 50:50 BS)
+            "n_pbs":      2 * K,  # 2 per relay (one per BSM arm)
+            "n_eom":      0,
+            "n_switches": K,      # 1 per relay (cross-relay photon routing)
+            "n_links":    N + K * (K - 1) // 2,
         }
     elif protocol == "trusted_BB84":
         return {
-            "n_sources": N + K,
-            "n_spd":     2 * K,
-            "n_bs":      0,
-            "n_links":   N + K * (K - 1) // 2,
+            "n_sources":  N + K,  # N user sources + K relay sources (backbone QKD)
+            "n_spd":      2 * K,  # 2 per relay (shared detector array)
+            "n_bs":       0,
+            "n_pbs":      K,      # 1 per relay (Bob: polarisation analysis after EOM)
+            "n_eom":      K,      # 1 per relay (Bob: active basis choice)
+            "n_switches": K,      # 1 per relay (routes multiple users to shared SPD array)
+            "n_links":    N + K * (K - 1) // 2,
         }
     else:
         raise ValueError(f"Unknown protocol: {protocol!r}")
 
 
-def total_cost(counts, total_fibre_km, source_usd=None, spd_usd=None, bs_usd=None,
-               fibre_per_km_usd=None):
+def total_cost(counts, total_fibre_km, detector_efficiency,
+               source_gbp=None, bs_gbp=None, pbs_gbp=None,
+               eom_gbp=None, switch_gbp=None, fibre_per_km_gbp=None):
     """
-    Compute total deployment cost and a per-category breakdown.
+    Compute total deployment cost and a per-category breakdown (GBP).
+
+    SPD cost is derived from detector_efficiency via the linear model in
+    spd_cost_from_efficiency(); there is no explicit spd_gbp override.
 
     Parameters
     ----------
-    counts          : dict from component_counts()
-    total_fibre_km  : total fibre deployed (km), from network simulator result
-    source_usd      : cost per photon source (USD)
-    spd_usd         : cost per SPD (USD)
-    bs_usd          : cost per 50:50 beam splitter (USD); only applies to MDI relays
-    fibre_per_km_usd: cost per km of installed fibre (USD)
+    counts               : dict from component_counts()
+    total_fibre_km       : total fibre deployed (km), from network simulator result
+    detector_efficiency  : detector efficiency eta; must be >= 0.20
+    source_gbp           : cost per photon source (GBP)
+    bs_gbp               : cost per 50:50 beam splitter (GBP); MDI only
+    pbs_gbp              : cost per polarising beam splitter (GBP)
+    eom_gbp              : cost per EOM (GBP); BB84 and trusted BB84 receivers
+    switch_gbp           : cost per optical switch (GBP); MDI only
+    fibre_per_km_gbp     : cost per km of installed fibre (GBP)
 
     Returns
     -------
-    dict with keys: hardware_usd, fibre_usd, total_usd, breakdown
+    dict with keys: hardware_gbp, fibre_gbp, total_gbp, breakdown
     """
-    C_s = source_usd       if source_usd       is not None else DEFAULT_COSTS["source_usd"]
-    C_d = spd_usd          if spd_usd          is not None else DEFAULT_COSTS["spd_usd"]
-    C_b = bs_usd           if bs_usd           is not None else DEFAULT_COSTS["bs_usd"]
-    C_f = fibre_per_km_usd if fibre_per_km_usd is not None else DEFAULT_COSTS["fibre_per_km_usd"]
+    C_s   = source_gbp       if source_gbp       is not None else DEFAULT_COSTS["source_gbp"]
+    C_d   = spd_cost_from_efficiency(detector_efficiency)
+    C_b   = bs_gbp           if bs_gbp           is not None else DEFAULT_COSTS["bs_gbp"]
+    C_pb  = pbs_gbp          if pbs_gbp          is not None else DEFAULT_COSTS["pbs_gbp"]
+    C_eom = eom_gbp          if eom_gbp          is not None else DEFAULT_COSTS["eom_gbp"]
+    C_sw  = switch_gbp       if switch_gbp        is not None else DEFAULT_COSTS["switch_gbp"]
+    C_f   = fibre_per_km_gbp if fibre_per_km_gbp is not None else DEFAULT_COSTS["fibre_per_km_gbp"]
 
-    source_cost = counts["n_sources"] * C_s
-    spd_cost    = counts["n_spd"]     * C_d
-    bs_cost     = counts["n_bs"]      * C_b
-    fibre_cost  = total_fibre_km      * C_f
-    hardware    = source_cost + spd_cost + bs_cost
+    source_cost = counts["n_sources"]  * C_s
+    spd_cost    = counts["n_spd"]      * C_d
+    bs_cost     = counts["n_bs"]       * C_b
+    pbs_cost    = counts["n_pbs"]      * C_pb
+    eom_cost    = counts["n_eom"]      * C_eom
+    switch_cost = counts["n_switches"] * C_sw
+    fibre_cost  = total_fibre_km       * C_f
+    hardware    = source_cost + spd_cost + bs_cost + pbs_cost + eom_cost + switch_cost
     total       = hardware + fibre_cost
 
     return {
-        "hardware_usd": hardware,
-        "fibre_usd":    fibre_cost,
-        "total_usd":    total,
+        "hardware_gbp": hardware,
+        "fibre_gbp":    fibre_cost,
+        "total_gbp":    total,
         "breakdown": {
-            "sources_usd": source_cost,
-            "spd_usd":     spd_cost,
-            "bs_usd":      bs_cost,
-            "fibre_usd":   fibre_cost,
+            "sources_gbp": source_cost,
+            "spd_gbp":     spd_cost,
+            "bs_gbp":      bs_cost,
+            "pbs_gbp":     pbs_cost,
+            "eom_gbp":     eom_cost,
+            "switch_gbp":  switch_cost,
+            "fibre_gbp":   fibre_cost,
         },
     }

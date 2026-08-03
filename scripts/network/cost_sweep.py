@@ -1,21 +1,23 @@
 """
-Cost analysis — user count sweep.
+Cost analysis --- user count sweep. All monetary values in GBP.
 
-Runs the same three-protocol simulation as user_sweep.py, then computes
-deployment cost per configuration using the hardware cost model in
-network/cost.py. Produces two figures:
+Runs the three-protocol simulation (BB84, MDI, Trusted BB84), computes
+deployment cost using network/cost.py, and produces figures:
 
-  Figure 1: Total deployment cost vs N  (fibre + hardware, all three protocols)
-  Figure 2: Avg key rate / cost vs N    (cost-efficiency, kbps per M$)
+  Figure 1: Total deployment cost vs N
+  Figure 2: Key rate / cost vs N  (cost-efficiency, kbps per M-GBP)
+  Figure 3: Marginal deployment cost vs N  (requires --seeds > 1 or N range)
+
+SPD cost is derived from detector efficiency via a linear model anchored at
+SPAD (eta=0.20, GBP 15k) and SNSPD (eta=0.85, GBP 100k). There is no
+explicit --spd-cost flag; pass --detector-tech to set efficiency.
 
 Component model
 ---------------
-  BB84 mesh     : N sources, 2N SPDs, N(N-1)/2 fibre links  →  O(N²) fibre cost
-  MDI           : N sources, 2K SPDs, N + K(K-1)/2 links    →  O(N)  fibre cost
-  Trusted BB84  : N+K sources, 2K SPDs, N + K(K-1)/2 links  →  O(N)  fibre cost
-
-Default unit costs from network/cost.py DEFAULT_COSTS; overridden by tech presets,
-then further overridden by explicit CLI cost flags.
+  BB84 mesh    : N sources, 2N SPDs, N(N-1)/2 links      O(N^2) fibre
+  MDI          : N sources, 2K SPDs, K BS, 2K PBS,        O(N) fibre
+                 K switches, N + K(K-1)/2 links
+  Trusted BB84 : N+K sources, 2K SPDs, N + K(K-1)/2 links O(N) fibre
 
 Usage:
     python scripts/network/cost_sweep.py [options]
@@ -30,24 +32,21 @@ Options:
     --seeds INT              Topologies to average over (default: 1)
     --runtimes INT           MC runs per pair (default: 20)
     --config PATH            JSON config preset
-    --detector-tech TECH     Detector preset: SPAD | InGaAs | SNSPD
-                               Sets detector_efficiency in sim AND spd_usd in cost model.
-                               Explicit --spd-cost overrides the preset cost.
+    --detector-tech TECH     Detector preset: SPAD | SNSPD
+                               Sets detector_efficiency in sim; SPD cost derived
+                               from efficiency via linear model.
     --source-tech TECH       Source preset: QD | NV | hSPDC | ideal
-                               Sets source_usd in cost model.
-                               Explicit --source-cost overrides the preset cost.
-    --source-cost FLOAT      USD per photon source (overrides --source-tech cost)
-    --spd-cost FLOAT         USD per SPD (overrides --detector-tech cost)
-    --bs-cost FLOAT          USD per 50:50 beam splitter at MDI relay (default: 1000)
-    --fibre-cost FLOAT       USD per km of installed fibre (default: 10000)
+    --source-cost FLOAT      GBP per photon source (overrides --source-tech cost)
+    --bs-cost FLOAT          GBP per 50:50 beam splitter at MDI relay
+    --pbs-cost FLOAT         GBP per polarising beam splitter at MDI relay
+    --switch-cost FLOAT      GBP per optical switch at MDI relay
+    --fibre-cost FLOAT       GBP per km of installed fibre
     --workers INT            Worker processes (default: 80% of cores)
-    --save PATH              Save figure base path (suffix _cost / _efficiency added)
+    --save PATH              Save figure base path (suffixes _cost/_efficiency/_marginal added)
     --no-figure              Suppress all figure output
     --no-p2p-db              Disable P2P DB writing
     --no-net-db              Disable network DB writing
-    --cost-only              Skip QKD simulation; compute cost from topology geometry only.
-                               Produces cost and marginal cost figures instantly (no MC runs).
-                               Key rate and cost-efficiency figures are suppressed.
+    --cost-only              Skip simulation; compute cost from topology geometry only
 """
 import argparse
 import os
@@ -68,12 +67,12 @@ from topology import place_users, optimise_relays, Topology
 from bb84_network import run_bb84_network
 from mdi_network import run_mdi_network
 from trusted_bb84_network import run_trusted_bb84_network
-from cost import component_counts, total_cost, DETECTOR_TECH, SOURCE_TECH, DEFAULT_COSTS
+from cost import component_counts, total_cost, spd_cost_from_efficiency, DETECTOR_TECH, DEFAULT_COSTS
 
 
-def _compute_cost(res, N, K, protocol, cost_kw):
+def _compute_cost(res, N, K, protocol, det_eff, cost_kw):
     counts = component_counts(N, K, protocol)
-    return total_cost(counts, res["total_fibre_km"], **cost_kw)["total_usd"]
+    return total_cost(counts, res["total_fibre_km"], det_eff, **cost_kw)["total_gbp"]
 
 
 def _fibre_km_bb84(topo):
@@ -105,14 +104,18 @@ def main():
     parser.add_argument("--config",        type=str,   default=None)
     parser.add_argument("--detector-tech", type=str,   default=None,
                         choices=list(DETECTOR_TECH))
-    parser.add_argument("--source-tech",   type=str,   default=None,
-                        choices=list(SOURCE_TECH))
     parser.add_argument("--source-cost",   type=float, default=None,
-                        help="USD per source (overrides --source-tech cost)")
-    parser.add_argument("--spd-cost",      type=float, default=None,
-                        help="USD per SPD (overrides --detector-tech cost)")
-    parser.add_argument("--bs-cost",       type=float, default=None)
-    parser.add_argument("--fibre-cost",    type=float, default=None)
+                        help="GBP per photon source (default: QD preset, GBP 150k)")
+    parser.add_argument("--bs-cost",       type=float, default=None,
+                        help="GBP per 50:50 beam splitter at MDI relay")
+    parser.add_argument("--pbs-cost",      type=float, default=None,
+                        help="GBP per polarising beam splitter")
+    parser.add_argument("--eom-cost",      type=float, default=None,
+                        help="GBP per EOM (BB84 and trusted BB84 receivers)")
+    parser.add_argument("--switch-cost",   type=float, default=None,
+                        help="GBP per optical switch at MDI relay")
+    parser.add_argument("--fibre-cost",    type=float, default=None,
+                        help="GBP per km of installed fibre")
     parser.add_argument("--workers",       type=int,   default=None)
     parser.add_argument("--save",          type=str,   default=None)
     parser.add_argument("--no-figure",     action="store_true")
@@ -130,19 +133,21 @@ def main():
 
     # --- resolve cost parameters: DEFAULT_COSTS → tech preset → explicit CLI flag ---
     det_preset = DETECTOR_TECH[args.detector_tech] if args.detector_tech else {}
-    src_preset = SOURCE_TECH[args.source_tech]     if args.source_tech   else {}
 
-    spd_usd    = args.spd_cost    if args.spd_cost    is not None else det_preset.get("cost_usd",    DEFAULT_COSTS["spd_usd"])
-    source_usd = args.source_cost if args.source_cost is not None else src_preset.get("cost_usd",    DEFAULT_COSTS["source_usd"])
-    bs_usd     = args.bs_cost     if args.bs_cost     is not None else DEFAULT_COSTS["bs_usd"]
-    fibre_usd  = args.fibre_cost  if args.fibre_cost  is not None else DEFAULT_COSTS["fibre_per_km_usd"]
+    source_gbp = args.source_cost if args.source_cost is not None else DEFAULT_COSTS["source_gbp"]
+    bs_gbp     = args.bs_cost     if args.bs_cost     is not None else DEFAULT_COSTS["bs_gbp"]
+    pbs_gbp    = args.pbs_cost    if args.pbs_cost    is not None else DEFAULT_COSTS["pbs_gbp"]
+    fibre_gbp  = args.fibre_cost  if args.fibre_cost  is not None else DEFAULT_COSTS["fibre_per_km_gbp"]
 
-    # apply detector efficiency from preset to simulation config (unless config already sets it)
+    # apply detector efficiency from preset to simulation config
     if args.detector_tech and "efficiency" in det_preset:
         cfg["detector_efficiency"] = det_preset["efficiency"]
+    det_eff = cfg["detector_efficiency"]
 
-    cost_kw = dict(source_usd=source_usd, spd_usd=spd_usd,
-                   bs_usd=bs_usd, fibre_per_km_usd=fibre_usd)
+    eom_gbp    = args.eom_cost    if args.eom_cost    is not None else DEFAULT_COSTS["eom_gbp"]
+    switch_gbp = args.switch_cost if args.switch_cost is not None else DEFAULT_COSTS["switch_gbp"]
+    cost_kw = dict(source_gbp=source_gbp, bs_gbp=bs_gbp, pbs_gbp=pbs_gbp,
+                   eom_gbp=eom_gbp, switch_gbp=switch_gbp, fibre_per_km_gbp=fibre_gbp)
 
     if args.seeds == 1:
         seeds = [args.seed]
@@ -181,9 +186,9 @@ def main():
                 prog.update(step, f"N={N}/{N_values[-1]}  computing cost from geometry...")
                 bb84_fibre = _fibre_km_bb84(topo_bb84)
                 mdi_fibre  = _fibre_km_mdi(topo_mdi)
-                bb84_cost_s[N].append(total_cost(component_counts(N, 0,       "BB84"),       bb84_fibre, **cost_kw)["total_usd"])
-                mdi_cost_s[N].append( total_cost(component_counts(N, args.k,  "MDI"),        mdi_fibre,  **cost_kw)["total_usd"])
-                trusted_cost_s[N].append(total_cost(component_counts(N, args.k, "trusted_BB84"), mdi_fibre, **cost_kw)["total_usd"])
+                bb84_cost_s[N].append(total_cost(component_counts(N, 0,       "BB84"),       bb84_fibre, det_eff, **cost_kw)["total_gbp"])
+                mdi_cost_s[N].append( total_cost(component_counts(N, args.k,  "MDI"),        mdi_fibre,  det_eff, **cost_kw)["total_gbp"])
+                trusted_cost_s[N].append(total_cost(component_counts(N, args.k, "trusted_BB84"), mdi_fibre, det_eff, **cost_kw)["total_gbp"])
             else:
                 prog.update(step, f"N={N}/{N_values[-1]}  running simulations...")
                 bb84_res = run_bb84_network(
@@ -207,9 +212,9 @@ def main():
                 bb84_rate_s[N].append(bb84_res["avg_key_rate"])
                 mdi_rate_s[N].append(mdi_res["avg_key_rate"])
                 trusted_rate_s[N].append(trusted_res["avg_key_rate"])
-                bb84_cost_s[N].append(_compute_cost(bb84_res, N, 0, "BB84", cost_kw))
-                mdi_cost_s[N].append(_compute_cost(mdi_res, N, args.k, "MDI", cost_kw))
-                trusted_cost_s[N].append(_compute_cost(trusted_res, N, args.k, "trusted_BB84", cost_kw))
+                bb84_cost_s[N].append(_compute_cost(bb84_res, N, 0, "BB84", det_eff, cost_kw))
+                mdi_cost_s[N].append(_compute_cost(mdi_res, N, args.k, "MDI", det_eff, cost_kw))
+                trusted_cost_s[N].append(_compute_cost(trusted_res, N, args.k, "trusted_BB84", det_eff, cost_kw))
 
             step += 1
             prog.update(step, f"N={N}  costs: BB84 ${bb84_cost_s[N][-1]/1e6:.2f}M  MDI ${mdi_cost_s[N][-1]/1e6:.2f}M  TBB84 ${trusted_cost_s[N][-1]/1e6:.2f}M")
@@ -246,25 +251,25 @@ def main():
         print(f"\n{'N':>3}  {'BB84 cost':>11}  {'MDI cost':>10}  {'TBB84 cost':>12}")
         print("-" * 42)
         for i, N in enumerate(N_arr):
-            print(f"{int(N):>3}  ${bb84_cost[i]:>9.2f}M  ${mdi_cost[i]:>8.2f}M  ${t_cost[i]:>10.2f}M")
+            print(f"{int(N):>3}  £{bb84_cost[i]:>9.2f}M  £{mdi_cost[i]:>8.2f}M  £{t_cost[i]:>10.2f}M")
     else:
         print(f"\n{'N':>3}  {'BB84 cost':>11}  {'MDI cost':>10}  {'TBB84 cost':>12}  "
               f"{'BB84 eff':>10}  {'MDI eff':>9}  {'TBB84 eff':>11}")
         print("-" * 90)
         for i, N in enumerate(N_arr):
-            print(f"{int(N):>3}  ${bb84_cost[i]:>9.2f}M  ${mdi_cost[i]:>8.2f}M  ${t_cost[i]:>10.2f}M  "
-                  f"{bb84_eff[i]:>9.2f}  {mdi_eff[i]:>8.2f}  {t_eff[i]:>10.2f}  kbps/M$")
+            print(f"{int(N):>3}  £{bb84_cost[i]:>9.2f}M  £{mdi_cost[i]:>8.2f}M  £{t_cost[i]:>10.2f}M  "
+                  f"{bb84_eff[i]:>9.2f}  {mdi_eff[i]:>8.2f}  {t_eff[i]:>10.2f}  kbps/M£")
 
     if args.no_figure:
         return
 
     seed_label = f"seed={args.seed}" if args.seeds == 1 else f"{args.seeds} seeds (base={args.seed})"
-    det_label = args.detector_tech or "custom"
-    src_label = args.source_tech   or "custom"
+    det_label  = args.detector_tech or "custom"
+    spd_gbp    = spd_cost_from_efficiency(det_eff)
     top_label  = (f"K={args.k}, {args.area}×{args.area} km, {seed_label}  |  "
-                  f"det={det_label} (η={cfg['detector_efficiency']:.2f}, ${spd_usd/1e3:.0f}k)  "
-                  f"src={src_label} (${source_usd/1e3:.0f}k)  "
-                  f"fibre=${fibre_usd/1e3:.0f}k/km")
+                  f"det={det_label} (η={det_eff:.2f}, £{spd_gbp/1e3:.0f}k/SPD)  "
+                  f"src=QD (£{source_gbp/1e3:.0f}k)  "
+                  f"fibre=£{fibre_gbp/1e3:.0f}k/km")
 
     # --- Figure 1: total cost vs N ---
     fig1, ax = plt.subplots(figsize=(8, 5))
@@ -272,7 +277,7 @@ def main():
     ax.plot(N_arr, mdi_cost,  "-",  color="#e41a1c", lw=1.5, marker="o", label="MDI")
     ax.plot(N_arr, t_cost,    "-",  color="#4daf4a", lw=1.5, marker="s", label="Trusted BB84")
     ax.set_xlabel("User count $N$")
-    ax.set_ylabel("Total deployment cost (M\$)")
+    ax.set_ylabel("Total deployment cost (M\pounds)")
     ax.set_xticks(N_arr)
     ax.legend()
     ax.grid(True, alpha=0.3)
@@ -294,7 +299,7 @@ def main():
         ax2.plot(N_arr, mdi_eff,  "-",  color="#e41a1c", lw=1.5, marker="o", label="MDI")
         ax2.plot(N_arr, t_eff,    "-",  color="#4daf4a", lw=1.5, marker="s", label="Trusted BB84")
         ax2.set_xlabel("User count $N$")
-        ax2.set_ylabel("Cost-efficiency (kbps / M\$)")
+        ax2.set_ylabel("Cost-efficiency (kbps / M\pounds)")
         ax2.set_xticks(N_arr)
         ax2.legend()
         ax2.grid(True, alpha=0.3)
@@ -322,7 +327,7 @@ def main():
         ax3.plot(N_mid, mdi_marg,  "-",  color="#e41a1c", lw=1.5, marker="o", label="MDI")
         ax3.plot(N_mid, t_marg,    "-",  color="#4daf4a", lw=1.5, marker="s", label="Trusted BB84")
         ax3.set_xlabel("User count $N$")
-        ax3.set_ylabel(r"Marginal cost $\Delta C\,/\,\Delta N$ (M\$)")
+        ax3.set_ylabel(r"Marginal cost $\Delta C\,/\,\Delta N$ (M\pounds)")
         ax3.set_xticks(N_mid)
         ax3.legend()
         ax3.grid(True, alpha=0.3)
