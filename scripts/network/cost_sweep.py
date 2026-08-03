@@ -69,11 +69,8 @@ from bb84_network import run_bb84_network
 from mdi_network import run_mdi_network
 from trusted_bb84_network import run_trusted_bb84_network
 from cost import component_counts, total_cost, spd_cost_from_efficiency, DETECTOR_TECH, DEFAULT_COSTS
+from lib.db import update_network_cost
 
-
-def _compute_cost(res, N, K, protocol, det_eff, cost_kw):
-    counts = component_counts(N, K, protocol)
-    return total_cost(counts, res["total_fibre_km"], det_eff, **cost_kw)["total_gbp"]
 
 
 def _fibre_km_bb84(topo):
@@ -216,9 +213,16 @@ def main():
                 bb84_rate_s[N].append(bb84_res["avg_key_rate"])
                 mdi_rate_s[N].append(mdi_res["avg_key_rate"])
                 trusted_rate_s[N].append(trusted_res["avg_key_rate"])
-                bb84_cost_s[N].append(_compute_cost(bb84_res, N, 0, "BB84", det_eff, cost_kw))
-                mdi_cost_s[N].append(_compute_cost(mdi_res, N, args.k, "MDI", det_eff, cost_kw))
-                trusted_cost_s[N].append(_compute_cost(trusted_res, N, args.k, "trusted_BB84", det_eff, cost_kw))
+                _db_path = None if args.no_net_db else DEFAULT_DB_PATH
+                _bc = total_cost(component_counts(N, 0,       "BB84"),        bb84_res["total_fibre_km"], det_eff, **cost_kw)
+                _mc = total_cost(component_counts(N, args.k,  "MDI"),         mdi_res["total_fibre_km"],  det_eff, **cost_kw)
+                _tc = total_cost(component_counts(N, args.k,  "trusted_BB84"),trusted_res["total_fibre_km"], det_eff, **cost_kw)
+                bb84_cost_s[N].append(_bc["total_gbp"])
+                mdi_cost_s[N].append(_mc["total_gbp"])
+                trusted_cost_s[N].append(_tc["total_gbp"])
+                update_network_cost(_db_path, bb84_res.get("net_run_id"),    det_eff, _bc["hardware_gbp"], _bc["fibre_gbp"], _bc["total_gbp"])
+                update_network_cost(_db_path, mdi_res.get("net_run_id"),     det_eff, _mc["hardware_gbp"], _mc["fibre_gbp"], _mc["total_gbp"])
+                update_network_cost(_db_path, trusted_res.get("net_run_id"), det_eff, _tc["hardware_gbp"], _tc["fibre_gbp"], _tc["total_gbp"])
 
             step += 1
             prog.update(step, f"N={N}  costs: BB84 ${bb84_cost_s[N][-1]/1e6:.2f}M  MDI ${mdi_cost_s[N][-1]/1e6:.2f}M  TBB84 ${trusted_cost_s[N][-1]/1e6:.2f}M")

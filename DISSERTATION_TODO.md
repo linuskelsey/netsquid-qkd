@@ -21,8 +21,8 @@
   - Visualisation: `visualise_network.py` should render the loaded topology correctly alongside simulation output.
   - Cost model: `total_fibre_km` must be computed from the fixed link distances rather than Euclidean node positions.
 
-- [ ] **Cost columns in DB**: implement `ALTER TABLE network_results ADD COLUMN ...` for `detector_efficiency`, `hardware_cost_gbp`, `fibre_cost_gbp`, `total_cost_gbp`, `spd_cost_gbp`, etc. (see proposed SQL in `cost rethink/cost_analysis.tex` §8). Insert cost breakdown at simulation write time in `cost_sweep.py`.
-- [ ] **DB cost reconstruction**: `--cost` flag on `scripts/analyse/network.py` — query `total_fibre_km` from historical `network_results` rows, apply `component_counts` + `total_cost` from `network/cost.py`, produce cost/efficiency curves without re-running simulations. (ROADMAP Planned)
+- [x] **Cost columns in DB**: 4 cost columns added to `network_results` schema (`detector_efficiency`, `hardware_cost_gbp`, `fibre_cost_gbp`, `total_cost_gbp`). Written via `update_network_cost()` from all three sweep scripts after each run.
+- [x] **DB cost reconstruction**: `scripts/analyse/network.py` now supports `--y total_cost_gbp / hardware_cost_gbp / fibre_cost_gbp` (M£, linear scale) and `--protocols trusted_BB84`. Cost columns written to DB by all sweep scripts.
 - [ ] **Cost–rate optimisation sweep**: sweep relay count K at fixed N and area; extract (total_cost_gbp, avg_key_rate) per configuration per protocol; identify cost-optimal and rate-optimal configurations; plot cost vs rate for each protocol. Needed for the Deployment Recommendations section in the dissertation. (ROADMAP Planned, dissertation §4)
 - [ ] **`--tortuosity FLOAT` flag** on `cost_sweep.py` (default 1.0) to scale all fibre distances before cost computation without affecting simulation physics. Useful for sensitivity analysis; note typical urban values 1.2–1.5×.
 

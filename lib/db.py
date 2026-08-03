@@ -60,7 +60,11 @@ def init_db(path=DEFAULT_DB_PATH):
             std_key_rate         REAL,
             success_rate         REAL,
             min_key_rate         REAL,
-            max_key_rate         REAL
+            max_key_rate         REAL,
+            detector_efficiency  REAL,
+            hardware_cost_gbp    REAL,
+            fibre_cost_gbp       REAL,
+            total_cost_gbp       REAL
         )
     """)
     conn.commit()
@@ -124,3 +128,21 @@ def insert_network_row(conn, net_run_id, run_timestamp, experiment, protocol,
         avg_key_rate, std_key_rate, success_rate, min_key_rate, max_key_rate,
     ))
     conn.commit()
+
+
+def update_network_cost(path, net_run_id, detector_efficiency,
+                        hardware_cost_gbp, fibre_cost_gbp, total_cost_gbp):
+    """Write cost columns to an existing network_results row by net_run_id."""
+    if path is None or net_run_id is None:
+        return
+    conn = sqlite3.connect(path)
+    conn.execute("""
+        UPDATE network_results
+        SET detector_efficiency = ?,
+            hardware_cost_gbp   = ?,
+            fibre_cost_gbp      = ?,
+            total_cost_gbp      = ?
+        WHERE net_run_id = ?
+    """, (detector_efficiency, hardware_cost_gbp, fibre_cost_gbp, total_cost_gbp, net_run_id))
+    conn.commit()
+    conn.close()

@@ -33,8 +33,17 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from db import ERROR_MODES, NET_X_COLS, NET_Y_COLS, NET_Y_LABELS, query_network
 
-_BB84_COL = "#377eb8"
-_MDI_COL  = "#e41a1c"
+_BB84_COL  = "#377eb8"
+_MDI_COL   = "#e41a1c"
+_TBB84_COL = "#4daf4a"
+
+_RATE_COLS = {"avg_key_rate", "min_key_rate", "max_key_rate"}
+_COST_COLS = {"total_cost_gbp", "hardware_cost_gbp", "fibre_cost_gbp"}
+
+def _y_scale(y_col):
+    if y_col in _RATE_COLS:   return "rate"     # log scale, bps → kbps (÷1000)
+    if y_col in _COST_COLS:   return "cost"     # linear, £ → M£ (÷1e6)
+    return "fraction"                            # linear, no conversion
 _TOPO_COLOURS = [
     "#e41a1c", "#377eb8", "#4daf4a", "#984ea3",
     "#ff7f00", "#a65628", "#f781bf", "#999999",
@@ -50,8 +59,8 @@ def _parse() -> argparse.Namespace:
                    help="X-axis column")
     p.add_argument("--y",         default="avg_key_rate",  choices=NET_Y_COLS,
                    help="Y-axis column")
-    p.add_argument("--protocols", nargs="+", default=["BB84", "MDI"],
-                   choices=["BB84", "MDI"], metavar="PROTO")
+    p.add_argument("--protocols", nargs="+", default=["BB84", "MDI", "trusted_BB84"],
+                   choices=["BB84", "MDI", "trusted_BB84"], metavar="PROTO")
     p.add_argument("--error",     default="shade",         choices=ERROR_MODES,
                    help="Error mode for MDI series (BB84 always uses shade with linear std)")
     p.add_argument("--n-users",   type=int,   default=None, metavar="N",
@@ -142,60 +151,56 @@ def _topology_fig(x_col: str, data: dict, fixed_dict: dict, seed: int,
 
 # ── plotting ──────────────────────────────────────────────────────────────────
 
-def _plot_bb84(ax, d: dict, is_rate: bool) -> None:
-    """
-    BB84 always: dashed line + linear-std shade band.
-    Matches relay_sweep.py and user_sweep.py behaviour exactly.
-    """
+def _sc(scale: str) -> float:
+    return 1000 if scale == "rate" else (1e6 if scale == "cost" else 1)
+
+
+def _plot_bb84(ax, d: dict, scale: str) -> None:
     if not d["x"]:
         return
-    sc    = 1000 if is_rate else 1
-    x     = np.array(d["x"])
-    y     = np.array([v / sc for v in d["mean"]])
-    std   = np.array([v / sc for v in d["std"]])
+    sc  = _sc(scale)
+    x   = np.array(d["x"])
+    y   = np.array([v / sc for v in d["mean"]])
+    std = np.array([v / sc for v in d["std"]])
     ax.plot(x, y, '--', color=_BB84_COL, lw=1.5, label="BB84")
     ax.fill_between(x, y - std, y + std, alpha=0.2, color=_BB84_COL)
 
 
-def _plot_mdi(ax, d: dict, error_mode: str, is_rate: bool) -> None:
-    """
-    MDI: solid line with marker o. Error mode controls the band/bar type.
-    For shade/sigma/iqr/sem: fill_between with linear std (matching network scripts).
-    For bars: errorbar with linear std.
-    """
+def _plot_proto(ax, d: dict, error_mode: str, scale: str,
+                label: str, color: str, marker: str) -> None:
     if not d["x"]:
         return
-    sc  = 1000 if is_rate else 1
+    sc  = _sc(scale)
     x   = np.array(d["x"])
     y   = np.array([v / sc for v in d["mean"]])
     std = np.array([v / sc for v in d["std"]])
 
     if error_mode == "bars":
-        ax.errorbar(x, y, yerr=std, label="MDI", color=_MDI_COL,
-                    marker="o", capsize=4, lw=1.5)
+        ax.errorbar(x, y, yerr=std, label=label, color=color,
+                    marker=marker, capsize=4, lw=1.5)
     elif error_mode == "iqr":
         lo = np.array([max(y[i] - d["q25"][i] / sc, 0) for i in range(len(x))])
         hi = np.array([max(d["q75"][i] / sc - y[i], 0) for i in range(len(x))])
-        ax.errorbar(x, y, yerr=[lo, hi], label="MDI", color=_MDI_COL,
-                    marker="o", capsize=4, lw=1.5)
+        ax.errorbar(x, y, yerr=[lo, hi], label=label, color=color,
+                    marker=marker, capsize=4, lw=1.5)
     elif error_mode == "sem":
         sem = np.array([v / sc for v in d["sem"]])
-        ax.errorbar(x, y, yerr=sem, label="MDI", color=_MDI_COL,
-                    marker="o", capsize=4, lw=1.5)
-    else:  # shade / sigma — use linear std to match network scripts
-        ax.plot(x, y, color=_MDI_COL, marker="o", lw=1.5, label="MDI")
-        ax.fill_between(x, y - std, y + std, alpha=0.2, color=_MDI_COL)
+        ax.errorbar(x, y, yerr=sem, label=label, color=color,
+                    marker=marker, capsize=4, lw=1.5)
+    else:
+        ax.plot(x, y, color=color, marker=marker, lw=1.5, label=label)
+        ax.fill_between(x, y - std, y + std, alpha=0.2, color=color)
 
 
 def main() -> None:
     args    = _parse()
     fixed   = _fixed(args)
     protos  = args.protocols
-    is_rate = args.y != "success_rate"
 
     t0   = time.time()
     data = query_network(args.x, args.y, fixed, protos)
     dt   = time.time() - t0
+    scale = _y_scale(args.y)
 
     seed_label = f"seed={args.seed}" if args.seed is not None else "all seeds"
     print(
@@ -210,17 +215,22 @@ def main() -> None:
     fig, ax1 = plt.subplots(figsize=(8, 5))
 
     if "BB84" in protos:
-        _plot_bb84(ax1, data.get("BB84", {"x": []}), is_rate)
+        _plot_bb84(ax1, data.get("BB84", {"x": []}), scale)
     if "MDI" in protos:
-        _plot_mdi(ax1, data.get("MDI", {"x": []}), args.error, is_rate)
+        _plot_proto(ax1, data.get("MDI", {"x": []}), args.error, scale,
+                    label="MDI", color=_MDI_COL, marker="o")
+    if "trusted_BB84" in protos:
+        _plot_proto(ax1, data.get("trusted_BB84", {"x": []}), args.error, scale,
+                    label="Trusted BB84", color=_TBB84_COL, marker="s")
 
     # Collect stats for axis decoration
+    sc     = _sc(scale)
     all_x  = sorted({xv for d in data.values() for xv in d["x"]})
     all_ns = [n for d in data.values() for n in d["n"]]
-    all_y_mean = [v / (1000 if is_rate else 1) for d in data.values() for v in d["mean"]]
+    all_y_mean = [v / sc for d in data.values() for v in d["mean"]]
     ref_y = all_y_mean[0] if all_y_mean else 1.0
 
-    if is_rate:
+    if scale == "rate":
         ax1.set_yscale("log")
     ax1.set_xlabel(args.x.replace("_", " ").title())
     ax1.set_ylabel(NET_Y_LABELS[args.y])
@@ -233,10 +243,10 @@ def main() -> None:
     ax2 = ax1.twinx()
     for proto, d in data.items():
         if d["x"]:
-            y_rel = [v / (1000 if is_rate else 1) / ref_y for v in d["mean"]]
+            y_rel = [v / sc / ref_y for v in d["mean"]]
             ax2.plot(d["x"], y_rel, alpha=0)
-    ax2.set_ylabel("Relative key rate")
-    if is_rate:
+    ax2.set_ylabel("Relative value")
+    if scale == "rate":
         ax2.set_yscale("log")
 
     # Title
