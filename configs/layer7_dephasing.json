@@ -1,6 +1,6 @@
 {
     "layer": 7,
-    "description": "Layer 6 + fibre dephasing. \u03b2 = 1e-4 /km (SMF polarisation stability, uncompensated).",
+    "description": "Layer 6 + fibre dephasing. β = 1e-4 /km (SMF polarisation stability, uncompensated).",
     "fibre_loss_db_per_km": 0.18,
     "init_loss": 0.1,
     "detector_efficiency": 0.90,

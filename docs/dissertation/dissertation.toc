@@ -21,8 +21,8 @@
 \contentsline {subsection}{\numberline {5.1}The Security--Rate Trade-off}{19}{subsection.5.1}%
 \contentsline {subsection}{\numberline {5.2}Cost Model Limitations}{19}{subsection.5.2}%
 \contentsline {subsection}{\numberline {5.3}Simulation Model Limitations}{20}{subsection.5.3}%
-\contentsline {subsection}{\numberline {5.4}Implications for Protocol Selection}{21}{subsection.5.4}%
-\contentsline {section}{\numberline {6}Conclusion}{22}{section.6}%
-\contentsline {subsection}{\numberline {6.1}Summary of Contributions}{22}{subsection.6.1}%
-\contentsline {subsection}{\numberline {6.2}Findings}{22}{subsection.6.2}%
-\contentsline {subsection}{\numberline {6.3}Future Work}{23}{subsection.6.3}%
+\contentsline {subsection}{\numberline {5.4}Implications for Protocol Selection}{22}{subsection.5.4}%
+\contentsline {section}{\numberline {6}Conclusion}{23}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Summary of Contributions}{23}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Findings}{23}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Future Work}{24}{subsection.6.3}%

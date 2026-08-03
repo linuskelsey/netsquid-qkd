@@ -8,7 +8,7 @@
 
 - [x] **`mdi_network.py`**: return dict has `"n_spd": 2 * topo.K` — stale, cost model uses 4K. Update to `4 * topo.K`. (cost_analysis.tex Inconsistency IV)
 - [x] **`cost_sweep.py`**: when `--detector-tech SPAD`, `dark_count_rate` stays at 100 cps (SNSPD-tier). Couple dark count to detector class: SPAD → ~10,000 cps, SNSPD → ~100 cps. (cost_analysis.tex Inconsistency II)
-- [x] **`lib/functions.py` / JSON configs**: protocol-specific node loss implemented. BB84=2.0 dB, MDI=1.0 dB per arm, TBB84=3.0 dB. Fallback pattern: runners use `cfg.get("node_loss_db_mdi/tbb84", cfg["node_loss_db"])`. (cost_analysis.tex Inconsistency I)
+- [x] **`lib/functions.py` / JSON configs**: node loss unified to single `node_loss_db = 2.0 dB` for both BB84 and MDI. Protocol-specific split reverted (too complex to verify; noted as limitation in §5). `node_loss_db_mdi` removed. `SWITCH_LOSS_DB = 0.0` (switch abstracted). (cost_analysis.tex Inconsistency I — partially addressed)
 
 ---
 
@@ -30,9 +30,9 @@
 
 ## 3. Simulations to Run (data collection)
 
-- [ ] **[HIGH PRIORITY] Regenerate all figures** — node_loss_db (now protocol-specific) and dark_count_rate (now coupled to detector class) both affect simulated key rate. All existing P2P and network figures are stale and must be rerun before thesis submission.
-- [ ] **Cost sweep — SPAD and SNSPD** at representative N range (e.g. N=2..16, K=2): cost vs N and cost-efficiency vs N for all three protocols → figure for thesis §4.
-- [ ] **Cost–rate optimisation sweep** (K grid at fixed N, multi-seed): (cost, avg_key_rate) pairs for BB84/MDI/TBB84 → cost vs rate figures per protocol.
+- [ ] **[HIGH PRIORITY] Regenerate all figures** — hardware defaults updated (fibre_loss 0.2→0.18, detector_efficiency 0.65→0.90, dark_count_rate 100→50, source_error_rate 0.005→0.015) and node_loss_db unified across protocols. All existing P2P and network figures are stale and must be rerun before thesis submission.
+- [ ] **Cost sweep — SPAD and SNSPD** at representative N range (e.g. N=2..16, K=2): cost vs N and cost-efficiency vs N for BB84 and MDI → figure for thesis §4.
+- [ ] **Cost–rate optimisation sweep** (K grid at fixed N, multi-seed): (cost, avg_key_rate) pairs for BB84/MDI → cost vs rate figures per protocol.
 - [ ] **Realistic hardware region shading**: finalise hardware parameter values from Lo 2012 (`\cite{Lo_2012}`), Tang 2016 (`\cite{Tang_2016}`), Berrevoets 2022 (`\cite{Berrevoets_2022}`); add to all P2P compare figures as shaded region. (TODO.md §1)
 - [ ] **Literature validation on `layers.py`**: identify 2–3 published key rate vs distance curves per protocol; overlay as scatter markers on layers figure. (TODO.md §2)
 - [ ] **MC run count audit**: for rates of order 10⁻ˣ target 10^(x+1) samples per point; audit all scripts and increase where under-sampled. (ROADMAP Analysis)
@@ -52,15 +52,14 @@ All parameters below are unverified placeholders or indicative midpoints. Verify
 | `init_loss` | 0.15 (15%) | 0.05–0.30 | Possibly | Abstracted: source brightness (Prometheus 40%) folded into `source_freq`; init_loss models separate optical path losses only. Model limitation — note in dissertation. | https://www.quandela.com/products-and-services/prometheus/ |
 | `detector_efficiency` η_Z | **0.90** ✓ | SPAD: 10–25% (IDQ ID230); SNSPD: 80–95% (IDQ ID281) | **Yes** | IDQ ID230 (SPAD, default 20%); IDQ ID281 (SNSPD, default 90%). Multi-channel: 1 unit = 4 ch per relay. Quote requested. | IDQ ID230: https://www.idquantique.com/quantum-detection-systems/products/id230/ IDQ ID281: https://www.idquantique.com/quantum-detection-systems/products/id281-snspd-system/|
 | `dark_count_rate` | **50 cps** ✓ | SNSPD: 25–100 cps (ID281); SPAD: 70–90 cps at η=10%, 150–250 cps at η=20% (ID230) | **Yes** | IDQ datasheets. SPAD d_c coupled to η — realistic SPAD point = η=0.20 + d_c=200 together. | (same as η_Z links) |
-| `node_loss_db` (BB84) | 2.0 dB | 1.0–4.0 dB (EOM 0.5–3 dB + PBS 0.3–1.0 dB) | No | EOM datasheet (Thorlabs/iXblue); PBS datasheet | EOM: <br> PBS: |
-| `node_loss_db_mdi` (MDI/arm) | 1.0 dB | 0.5–2.0 dB (BS excess 0.1–0.5 dB + PBS 0.3–1.0 dB) | No | HOM BS datasheet; Lo 2012 | HOM BS: |
+| `node_loss_db` (both protocols) | 2.0 dB | 1.0–4.0 dB | No | Lumped approximation; EOM+PBS for BB84, HOM coupler+PBS for MDI — not modelled separately. Discussed as limitation in §5. Protocol-specific breakdown is future work. | — |
 | `source_error_rate` | **0.015 (1.5%)** ✓ | 0.001–0.05 | **Yes** | Quandela Prometheus: g²(0) < 3% → ε_s < 0.015. Bozzio 2022 upper bound 2%. | Prometheus datasheet: https://www.quandela.com/products-and-services/prometheus/|
 | `det_eff_x` η_X | 0.85 | same as η_Z | Partially (basis_bias sweep) | Same device as η_Z; 5% inter-basis differential assumed | (same as η_Z links) |
 | `dephasing_rate` | 0.0001 /ns | 0.00001–0.001 (PMD-dominated) | Possibly | SMF-28 PMD spec; Dynes 2019 | SMF-28 PMD spec: |
 | `bs_eff` | 0.97 (3% excess loss) | 0.87–0.99 | **Yes** (MDI compare) | Prometheus M ≥ 0.90 → η_BS_eff = 0.97×0.90 = 0.873; fibre coupler datasheet | Coupler datasheet: |
 
-- [ ] **Confirm sweep ranges** used in compare figures match the realistic ranges above. Where they differ, update the compare script x-ranges and re-shade. Pay particular attention to `node_loss_db` — not currently swept but should be for the realistic-region overlay.
-- [ ] **`node_loss_db` family** (2.0 / 1.0 / 3.0 dB): verify component insertion losses from datasheets (EOM, PBS, optical switch). Update `lib/functions.py` DEFAULTS and `configs/layer5_node_loss.json` once confirmed.
+- [ ] **Confirm sweep ranges** used in compare figures match the realistic ranges above. Where they differ, update the compare script x-ranges and re-shade.
+- [ ] **`node_loss_db`** (2.0 dB unified): noted as unverified limitation in §5; datasheet verification deferred to future work.
 
 ### 4b. Cost Model Parameters (`network/cost.py` DEFAULT_COSTS and DETECTOR_TECH)
 
@@ -75,8 +74,8 @@ All parameters below are unverified placeholders or indicative midpoints. Verify
 | SNSPD dark count | 100 cps | Now coupled to detector class (bug fixed) | Datasheet; expected 1–300 cps |
 | HOM 50:50 BS (MDI relay) | £1,000 | — | Thorlabs / OFR fibre coupler price |
 | PBS | £500 | — | Thorlabs / OFR price |
-| EOM (BB84 & TBB84 RX) | £2,000 | Also check insertion loss 0.5–3 dB for node_loss | iXblue / Thorlabs EOM datasheet |
-| Optical switch (MDI relay) | £5,000 | Also check insertion loss 0.5–2 dB for node_loss | DiCon / Agiltron datasheet |
+| EOM (BB84 RX) | £2,000 | Insertion loss abstracted into lumped node_loss_db | iXblue / Thorlabs EOM datasheet |
+| Optical switch (MDI relay) | £5,000 | Insertion loss abstracted (SWITCH_LOSS_DB=0); cost entry retained | DiCon / Agiltron datasheet |
 | Dark fibre installed | £10,000/km | Highly region-dependent; UK duct availability varies | Ofcom / BT Openreach infrastructure reports |
 
 - [ ] Once all values verified: update `DEFAULT_COSTS` / `DETECTOR_TECH` in `network/cost.py`, update `PARAMS.md`, and cite all sources in dissertation cost methodology section.
@@ -87,7 +86,7 @@ All parameters below are unverified placeholders or indicative midpoints. Verify
 
 ### §3 Methodology — Cost Analysis (currently: two-line stub)
 - [ ] Write full algebraic cost model section: component counts per protocol, SPD linear model (η → cost), total cost formula, cost-rate optimisation framing (fixed budget / fixed rate dual problems). Reference `network/cost.py` and `cost rethink/cost_analysis.tex`.
-- [ ] State all cost model assumptions explicitly: Euclidean topology (no tortuosity), CapEx only (no OpEx), classical comms free, QD source fixed, TBB84 backbone source count simplified (1 per relay vs K−1 strict).
+- [ ] State all cost model assumptions explicitly: Euclidean topology (no tortuosity), CapEx only (no OpEx), classical comms free, QD source fixed, node loss not individually costed per component.
 - [ ] Mention and cite the ONDM 2025 paper (`\cite{DBLP:conf/ondm/KaraviasHBLP25}`) as the most directly related prior cost work; note it covers PM and entanglement-based QKD but not MDI.
 
 ### §3 Methodology — NetSquid / Simulation Architecture (currently: stub)
@@ -106,8 +105,8 @@ All parameters below are unverified placeholders or indicative midpoints. Verify
 - [ ] Describe topology generator: random user placement on A×A km grid, k-means relay placement.
 - [ ] **Justify k-means relay placement**: argue from grid-search results already in `relay_placement.py` outputs; centroid ≈ optimal for single relay, k-means generalises this.
 - [ ] **Justify multi-seeding**: state seed count, explain why averaging over random topologies gives more representative results than a single fixed topology.
-- [ ] Describe BB84 mesh, MDI, TBB84 network simulators: what each computes, how pairs are aggregated.
-- [ ] Describe cross-relay routing model and key dilution for TBB84.
+- [ ] Describe BB84 mesh and MDI network simulators: what each computes, how pairs are aggregated.
+- [ ] Describe cross-relay routing model for MDI (cross-cluster path via relay backbone).
 
 ### §4 Results (currently: "bunch of graphs...")
 - [ ] **P2P performance**: present layers figure + selected parameter sweeps; refer to parameter impact table.

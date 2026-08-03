@@ -7,7 +7,7 @@ import numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from lib.db import init_db, insert_p2p_rows, insert_network_row, new_run_id, DEFAULT_DB_PATH
 
-SWITCH_LOSS_DB = 1.0  # insertion loss for cross-cluster passive optical router
+SWITCH_LOSS_DB = 0.0  # optical switch abstracted away; see simulation limitations
 
 
 def _sample_link_tortuosity(rng, mean, n):
@@ -80,8 +80,7 @@ def run_mdi_network(topo, cfg, runtimes=10, workers=None, switch_loss_db=SWITCH_
             bob_km += float(np.linalg.norm(topo.relay_pos[rj] - topo.relay_pos[ri])) * t_relay[(min(ri, rj), max(ri, rj))]
         total_km    = alice_km + bob_km
         charlie_pos = alice_km / total_km if total_km > 0 else 0.5
-        mdi_base    = cfg.get("node_loss_db_mdi", cfg["node_loss_db"])
-        node_loss   = mdi_base + (switch_loss_db if cross_cluster else 0.0)
+        node_loss   = cfg["node_loss_db"] + (switch_loss_db if cross_cluster else 0.0)
         tasks.append((
             i, j, total_km, charlie_pos, runtimes,
             cfg["fibre_loss_db_per_km"], cfg["init_loss"], cfg["detector_efficiency"],
