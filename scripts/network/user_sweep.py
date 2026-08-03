@@ -77,7 +77,9 @@ def main():
     parser.add_argument("--seed",     type=int,   default=None, help="Base random seed (random if omitted)")
     parser.add_argument("--seeds",    type=int,   default=1,    help="Number of random topologies to average over")
     parser.add_argument("--runtimes", type=int,   default=20,   help="Monte Carlo runs per pair")
-    parser.add_argument("--config",   type=str,   default=None, help="Path to JSON config")
+    parser.add_argument("--config",     type=str,   default=None, help="Path to JSON config")
+    parser.add_argument("--tortuosity", type=float, default=1.2,
+                        help="Mean fibre tortuosity (cable/Euclidean ratio). 1.0 = Euclidean; ~1.2 typical urban.")
     parser.add_argument("--error",     type=str,   default="bars", choices=["bars", "shade", "iqr"])
     parser.add_argument("--output-dir", type=str,   default=None, help="Directory to save figures into (skips interactive display)")
     parser.add_argument("--placement",  type=str,   default="random", choices=["random", "clustered"],
@@ -92,6 +94,7 @@ def main():
         args.seed = int.from_bytes(os.urandom(4), "big") % 100000
 
     cfg      = load_config(args.config)
+    cfg["tortuosity_mean"] = args.tortuosity
     N_values = list(range(args.n_min, args.n_max + 1, args.n_step))
     ref_n    = args.ref_n if args.ref_n is not None else args.n_max
 
@@ -293,8 +296,8 @@ def main():
         topo_mid   = Topology(user_mid, relay_mid)
 
         fig2, (axA, axB) = plt.subplots(1, 2, figsize=(12, 5))
-        draw_mdi(axA, topo_mid)
-        draw_bb84(axB, topo_mid)
+        draw_mdi(axA, topo_mid, tortuosity_mean=args.tortuosity)
+        draw_bb84(axB, topo_mid, tortuosity_mean=args.tortuosity)
         plt.suptitle(
             f"Network topology at N={N_mid}  (K={args.k}, {seed_label})",
             fontsize=11

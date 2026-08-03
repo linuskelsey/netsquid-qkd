@@ -5,13 +5,20 @@ from datetime import datetime
 from multiprocessing import get_context
 
 import sys
+import numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from lib.db import init_db, insert_p2p_rows, insert_network_row, new_run_id, DEFAULT_DB_PATH
 
 
 def _dist(a, b):
-    import numpy as np
     return float(np.linalg.norm(a - b))
+
+
+def _sample_link_tortuosity(rng, mean, n):
+    """Sample n per-link tortuosity factors: truncated normal(mean, 0.1), min 1.0."""
+    if mean <= 1.0:
+        return np.ones(n)
+    return np.maximum(1.0, rng.normal(mean, 0.1, size=n))
 
 
 def _link_task(args):
@@ -50,6 +57,17 @@ def run_trusted_bb84_network(topo, cfg, runtimes=10, workers=None, verbose=False
     pairs = topo.all_pairs()
     n_pairs = len(pairs)
 
+    # Per-physical-cable tortuosity: N user-relay cables + K(K-1)/2 backbone cables.
+    t_mean   = cfg.get("tortuosity_mean", 1.0)
+    topo_rng = np.random.default_rng(seed)
+    t_user   = _sample_link_tortuosity(topo_rng, t_mean, N)
+    t_bb_arr = _sample_link_tortuosity(topo_rng, t_mean, K * (K - 1) // 2)
+    t_relay  = {}
+    _bi = 0
+    for _j in range(K):
+        for _k in range(_j + 1, K):
+            t_relay[(_j, _k)] = t_bb_arr[_bi]; _bi += 1
+
     link_params = (
         cfg["fibre_loss_db_per_km"], cfg["init_loss"], cfg["detector_efficiency"],
         cfg["dark_count_rate"], cfg.get("node_loss_db_tbb84", cfg["node_loss_db"]), cfg["source_error_rate"], cfg["dephasing_rate"],
@@ -59,11 +77,11 @@ def run_trusted_bb84_network(topo, cfg, runtimes=10, workers=None, verbose=False
     tasks = []
     for i in range(N):
         ri   = int(topo.user_relay[i])
-        dist = _dist(topo.user_pos[i], topo.relay_pos[ri])
+        dist = _dist(topo.user_pos[i], topo.relay_pos[ri]) * t_user[i]
         tasks.append((("u", i), dist, runtimes) + link_params)
     for j in range(K):
         for k in range(j + 1, K):
-            dist = _dist(topo.relay_pos[j], topo.relay_pos[k])
+            dist = _dist(topo.relay_pos[j], topo.relay_pos[k]) * t_relay[(j, k)]
             tasks.append((("b", j, k), dist, runtimes) + link_params)
 
     n_links   = len(tasks)
@@ -115,18 +133,21 @@ def run_trusted_bb84_network(topo, cfg, runtimes=10, workers=None, verbose=False
     std_key_rate = statistics.stdev(all_valid) if len(all_valid) > 1 else 0.0
     success_rate = len(all_valid) / n_pairs if n_pairs > 0 else 0.0
 
-    # Fibre: N user-relay links + K(K-1)/2 backbone links
-    user_relay_fibre = sum(_dist(topo.user_pos[i], topo.relay_pos[int(topo.user_relay[i])]) for i in range(N))
-    backbone_fibre   = sum(_dist(topo.relay_pos[j], topo.relay_pos[k])
+    # Fibre: N user-relay links + K(K-1)/2 backbone links (tortuous lengths)
+    user_relay_fibre = sum(_dist(topo.user_pos[i], topo.relay_pos[int(topo.user_relay[i])]) * t_user[i] for i in range(N))
+    backbone_fibre   = sum(_dist(topo.relay_pos[j], topo.relay_pos[k]) * t_relay[(j, k)]
                            for j in range(K) for k in range(j + 1, K))
     total_fibre_km   = user_relay_fibre + backbone_fibre
 
-    # Average chain length per pair (sum of link distances traversed)
+    # Average chain length per pair (tortuous link distances traversed)
     def _chain_km(i, l):
         ri, rl = int(topo.user_relay[i]), int(topo.user_relay[l])
-        d_i = _dist(topo.user_pos[i], topo.relay_pos[ri])
-        d_l = _dist(topo.user_pos[l], topo.relay_pos[rl])
-        return d_i + d_l if ri == rl else d_i + _dist(topo.relay_pos[ri], topo.relay_pos[rl]) + d_l
+        d_i = _dist(topo.user_pos[i], topo.relay_pos[ri]) * t_user[i]
+        d_l = _dist(topo.user_pos[l], topo.relay_pos[rl]) * t_user[l]
+        if ri == rl:
+            return d_i + d_l
+        rk = (min(ri, rl), max(ri, rl))
+        return d_i + _dist(topo.relay_pos[ri], topo.relay_pos[rl]) * t_relay[rk] + d_l
 
     avg_pair_dist = sum(_chain_km(i, l) for (i, l) in pairs) / n_pairs if n_pairs > 0 else 0.0
     cross_ratio   = sum(1 for (i, l) in pairs
@@ -139,7 +160,7 @@ def run_trusted_bb84_network(topo, cfg, runtimes=10, workers=None, verbose=False
         if p2p_db_path is not None:
             for i in range(N):
                 ri   = int(topo.user_relay[i])
-                dist = _dist(topo.user_pos[i], topo.relay_pos[ri])
+                dist = _dist(topo.user_pos[i], topo.relay_pos[ri]) * t_user[i]
                 kR, kQ, kL = user_raw[i]
                 params = {
                     "protocol": "BB84", "fibre_len": dist, "photon_count": 1024,

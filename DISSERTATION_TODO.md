@@ -24,7 +24,7 @@
 - [x] **Cost columns in DB**: 4 cost columns added to `network_results` schema (`detector_efficiency`, `hardware_cost_gbp`, `fibre_cost_gbp`, `total_cost_gbp`). Written via `update_network_cost()` from all three sweep scripts after each run.
 - [x] **DB cost reconstruction**: `scripts/analyse/network.py` now supports `--y total_cost_gbp / hardware_cost_gbp / fibre_cost_gbp` (M£, linear scale) and `--protocols trusted_BB84`. Cost columns written to DB by all sweep scripts.
 - [ ] **Cost–rate optimisation sweep**: sweep relay count K at fixed N and area; extract (total_cost_gbp, avg_key_rate) per configuration per protocol; identify cost-optimal and rate-optimal configurations; plot cost vs rate for each protocol. Needed for the Deployment Recommendations section in the dissertation. (ROADMAP Planned, dissertation §4)
-- [ ] **`--tortuosity FLOAT` flag** on `cost_sweep.py` (default 1.0) to scale all fibre distances before cost computation without affecting simulation physics. Useful for sensitivity analysis; note typical urban values 1.2–1.5×.
+- [x] **`--tortuosity FLOAT` flag** on all network sweep scripts (default 1.0 = off). When enabled, each physical cable gets an independent factor drawn from truncated normal(mean, σ=0.1), min 1.0. Per-cable (not per-pair): user i's cable reused across N-1 pairs; backbone (j,k) reused across all cross-cluster pairs through it. Affects both simulated key rate (longer fibre → more loss) and cost (total_fibre_km). Cost-only path in cost_sweep.py uses a deterministic mean multiplier.
 
 ---
 
@@ -40,20 +40,47 @@
 
 ---
 
-## 4. Cost Model — Verification
+## 4. Model Parameters — Verification
 
-All default costs in `network/cost.py` are unverified placeholders. Verify each against literature or supplier datasheets before citing in thesis.
+All parameters below are unverified placeholders or indicative midpoints. Verify each against literature or supplier datasheets before citing in thesis. Entries marked **[graph range]** are swept in existing compare/P2P figures and the realistic range stated here should be confirmed and used as the shaded region boundary.
 
-- [ ] **QD photon source £150,000**: check against Quandela Prometheus (already in bib as `\cite{QuandelaSPS}`) or equivalent; confirm includes cryostat amortisation.
-- [ ] **InGaAs SPAD η=0.20, £15,000**: verify efficiency and price; check dark count rate (expected ~1,000–50,000 cps) for Inconsistency II fix.
-- [ ] **SNSPD η=0.85, £100,000**: verify efficiency and price; check dark count rate (expected ~1–100 cps).
-- [ ] **50:50 fibre coupler (HOM BS) £1,000**: verify.
-- [ ] **PBS £500**: verify.
-- [ ] **EOM £2,000**: verify; also check insertion loss (0.5–3 dB, needed for Inconsistency I fix).
-- [ ] **Optical switch £5,000**: verify; check insertion loss (0.5–2 dB, needed for Inconsistency I fix).
-- [ ] **Dark fibre installed £10,000/km**: this varies significantly by region and duct availability; find a UK-relevant citation or acknowledge the range.
-- [ ] **Verify per-protocol node_loss_db values against literature**: BB84 (EOM+PBS), MDI per arm (BS excess+PBS), TBB84 (switch+EOM+PBS). Current values (2.0 / 1.0 / 3.0 dB) are indicative midpoints. Update `lib/functions.py` DEFAULTS and `configs/layer5_node_loss.json` once confirmed.
-- [ ] Once values verified: update `PARAMS.md` and `DEFAULT_COSTS` in `network/cost.py`, and cite sources in dissertation cost methodology section.
+### 4a. Hardware Physics Parameters (`lib/functions.py` DEFAULTS)
+
+| Parameter | Current default | Realistic range | Graph-swept? | Verify against |
+|---|---|---|---|---|
+| `fibre_loss_db_per_km` | 0.20 dB/km | 0.17–0.35 dB/km (SMF-28 fresh; ageing/splices push higher) | **Yes** | Corning SMF-28 datasheet; Dynes 2019 |
+| `init_loss` | 0.15 (15%) | 0.05–0.30 | Possibly | Fibre-pigtailed QD coupling efficiency; Bozzio 2022 |
+| `detector_efficiency` η_Z | 0.85 | SPAD 0.20–SNSPD 0.85 | **Yes** | ID Quantique / Single Quantum datasheets |
+| `dark_count_rate` | 100 cps | SNSPD 10–300; SPAD 1,000–50,000 cps | **Yes** | ID Quantique / Single Quantum datasheets |
+| `node_loss_db` (BB84) | 2.0 dB | 1.0–4.0 dB (EOM 0.5–3 dB + PBS 0.3–1.0 dB) | No | EOM datasheet (Thorlabs/iXblue); PBS datasheet |
+| `node_loss_db_mdi` (MDI/arm) | 1.0 dB | 0.5–2.0 dB (BS excess 0.1–0.5 dB + PBS 0.3–1.0 dB) | No | HOM BS datasheet; Lo 2012 |
+| `node_loss_db_tbb84` (TBB84) | 3.0 dB | 2.0–5.5 dB (switch 0.5–2 dB + EOM 0.5–3 dB + PBS 0.3–1.0 dB) | No | Same as BB84 + switch; confirm switch loss |
+| `source_error_rate` | 0.005 (0.5%) | 0.001–0.05 | **Yes** | Bozzio 2022; Yang 2024 (QD g² measurements) |
+| `det_eff_x` η_X | 0.85 | same as η_Z (shared device) | Partially (basis_bias sweep) | Same as η_Z |
+| `dephasing_rate` | 0.0001 /ns | 0.00001–0.001 (PMD-dominated) | Possibly | PMD spec of SMF-28; Dynes 2019 |
+| `bs_eff` | 0.97 (3% excess loss) | 0.90–0.99 | **Yes** (MDI compare) | Fibre coupler datasheet; Tang 2016 |
+
+- [ ] **Confirm sweep ranges** used in compare figures match the realistic ranges above. Where they differ, update the compare script x-ranges and re-shade. Pay particular attention to `node_loss_db` — not currently swept but should be for the realistic-region overlay.
+- [ ] **`node_loss_db` family** (2.0 / 1.0 / 3.0 dB): verify component insertion losses from datasheets (EOM, PBS, optical switch). Update `lib/functions.py` DEFAULTS and `configs/layer5_node_loss.json` once confirmed.
+
+### 4b. Cost Model Parameters (`network/cost.py` DEFAULT_COSTS and DETECTOR_TECH)
+
+| Parameter | Current value | Notes | Verify against |
+|---|---|---|---|
+| QD photon source | £150,000 | Includes cryostat amortisation; placeholder | Quandela SPS `\cite{QuandelaSPS}`; confirm cryostat share |
+| InGaAs SPAD efficiency | η = 0.20 | Lower anchor of SPD cost model | ID Quantique ID230; Excelitas SPCM datasheet |
+| InGaAs SPAD cost | £15,000 | Placeholder | ID Quantique / Excelitas list price |
+| InGaAs SPAD dark count | 10,000 cps | Now coupled to detector class (bug fixed) | Datasheet; expected 1,000–50,000 cps |
+| SNSPD efficiency | η = 0.85 | Upper anchor of SPD cost model | Single Quantum / Photon Spot; NIST publications |
+| SNSPD cost | £100,000 | Placeholder | Single Quantum list price |
+| SNSPD dark count | 100 cps | Now coupled to detector class (bug fixed) | Datasheet; expected 1–300 cps |
+| HOM 50:50 BS (MDI relay) | £1,000 | — | Thorlabs / OFR fibre coupler price |
+| PBS | £500 | — | Thorlabs / OFR price |
+| EOM (BB84 & TBB84 RX) | £2,000 | Also check insertion loss 0.5–3 dB for node_loss | iXblue / Thorlabs EOM datasheet |
+| Optical switch (MDI relay) | £5,000 | Also check insertion loss 0.5–2 dB for node_loss | DiCon / Agiltron datasheet |
+| Dark fibre installed | £10,000/km | Highly region-dependent; UK duct availability varies | Ofcom / BT Openreach infrastructure reports |
+
+- [ ] Once all values verified: update `DEFAULT_COSTS` / `DETECTOR_TECH` in `network/cost.py`, update `PARAMS.md`, and cite all sources in dissertation cost methodology section.
 
 ---
 

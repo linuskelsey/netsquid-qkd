@@ -42,6 +42,9 @@ Options:
     --pbs-cost FLOAT         GBP per polarising beam splitter at MDI relay
     --switch-cost FLOAT      GBP per optical switch at MDI relay
     --fibre-cost FLOAT       GBP per km of installed fibre
+    --tortuosity FLOAT       Cable route / straight-line ratio (default: 1.0)
+                               Scale fibre distances before cost; physics unchanged.
+                               Typical urban value ~1.3–1.5.
     --workers INT            Worker processes (default: 80% of cores)
     --save PATH              Save figure base path (suffixes _cost/_efficiency/_marginal added)
     --no-figure              Suppress all figure output
@@ -114,6 +117,8 @@ def main():
                         help="GBP per optical switch at MDI relay")
     parser.add_argument("--fibre-cost",    type=float, default=None,
                         help="GBP per km of installed fibre")
+    parser.add_argument("--tortuosity",    type=float, default=1.2,
+                        help="Mean fibre tortuosity (cable/Euclidean ratio). 1.0 = Euclidean; ~1.2 typical urban.")
     parser.add_argument("--workers",       type=int,   default=None)
     parser.add_argument("--save",          type=str,   default=None)
     parser.add_argument("--no-figure",     action="store_true")
@@ -126,6 +131,7 @@ def main():
         args.seed = int.from_bytes(os.urandom(4), "big") % 100_000
 
     cfg   = load_config(args.config)
+    cfg["tortuosity_mean"] = args.tortuosity
     ref_n = args.n_max
     N_values = list(range(args.n_min, args.n_max + 1, args.n_step))
 
@@ -187,9 +193,10 @@ def main():
                 prog.update(step, f"N={N}/{N_values[-1]}  computing cost from geometry...")
                 bb84_fibre = _fibre_km_bb84(topo_bb84)
                 mdi_fibre  = _fibre_km_mdi(topo_mdi)
-                bb84_cost_s[N].append(total_cost(component_counts(N, 0,       "BB84"),       bb84_fibre, det_eff, **cost_kw)["total_gbp"])
-                mdi_cost_s[N].append( total_cost(component_counts(N, args.k,  "MDI"),        mdi_fibre,  det_eff, **cost_kw)["total_gbp"])
-                trusted_cost_s[N].append(total_cost(component_counts(N, args.k, "trusted_BB84"), mdi_fibre, det_eff, **cost_kw)["total_gbp"])
+                t = args.tortuosity
+                bb84_cost_s[N].append(total_cost(component_counts(N, 0,       "BB84"),          bb84_fibre * t, det_eff, **cost_kw)["total_gbp"])
+                mdi_cost_s[N].append( total_cost(component_counts(N, args.k,  "MDI"),           mdi_fibre  * t, det_eff, **cost_kw)["total_gbp"])
+                trusted_cost_s[N].append(total_cost(component_counts(N, args.k, "trusted_BB84"), mdi_fibre * t, det_eff, **cost_kw)["total_gbp"])
             else:
                 prog.update(step, f"N={N}/{N_values[-1]}  running simulations...")
                 bb84_res = run_bb84_network(
@@ -214,9 +221,10 @@ def main():
                 mdi_rate_s[N].append(mdi_res["avg_key_rate"])
                 trusted_rate_s[N].append(trusted_res["avg_key_rate"])
                 _db_path = None if args.no_net_db else DEFAULT_DB_PATH
-                _bc = total_cost(component_counts(N, 0,       "BB84"),        bb84_res["total_fibre_km"], det_eff, **cost_kw)
-                _mc = total_cost(component_counts(N, args.k,  "MDI"),         mdi_res["total_fibre_km"],  det_eff, **cost_kw)
-                _tc = total_cost(component_counts(N, args.k,  "trusted_BB84"),trusted_res["total_fibre_km"], det_eff, **cost_kw)
+                # total_fibre_km from runners already reflects per-link tortuosity via cfg["tortuosity_mean"]
+                _bc = total_cost(component_counts(N, 0,       "BB84"),         bb84_res["total_fibre_km"],    det_eff, **cost_kw)
+                _mc = total_cost(component_counts(N, args.k,  "MDI"),          mdi_res["total_fibre_km"],     det_eff, **cost_kw)
+                _tc = total_cost(component_counts(N, args.k,  "trusted_BB84"), trusted_res["total_fibre_km"], det_eff, **cost_kw)
                 bb84_cost_s[N].append(_bc["total_gbp"])
                 mdi_cost_s[N].append(_mc["total_gbp"])
                 trusted_cost_s[N].append(_tc["total_gbp"])
@@ -274,10 +282,11 @@ def main():
     seed_label = f"seed={args.seed}" if args.seeds == 1 else f"{args.seeds} seeds (base={args.seed})"
     det_label  = args.detector_tech or "custom"
     spd_gbp    = spd_cost_from_efficiency(det_eff)
+    tort_str   = f"  tort={args.tortuosity:.2f}" if args.tortuosity != 1.0 else ""
     top_label  = (f"K={args.k}, {args.area}×{args.area} km, {seed_label}  |  "
                   f"det={det_label} (η={det_eff:.2f}, £{spd_gbp/1e3:.0f}k/SPD)  "
                   f"src=QD (£{source_gbp/1e3:.0f}k)  "
-                  f"fibre=£{fibre_gbp/1e3:.0f}k/km")
+                  f"fibre=£{fibre_gbp/1e3:.0f}k/km{tort_str}")
 
     # --- Figure 1: total cost vs N ---
     fig1, ax = plt.subplots(figsize=(8, 5))

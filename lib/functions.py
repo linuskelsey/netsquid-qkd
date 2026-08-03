@@ -19,6 +19,7 @@ DEFAULTS = {
     "det_eff_x": 0.85,
     "dephasing_rate": 0.0001,
     "bs_eff": 0.97,
+    "tortuosity_mean": 1.0,     # 1.0 = Euclidean (off); set >1.0 to enable per-link stochastic routing factor
 }
 
 

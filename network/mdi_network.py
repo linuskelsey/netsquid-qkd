@@ -10,17 +10,11 @@ from lib.db import init_db, insert_p2p_rows, insert_network_row, new_run_id, DEF
 SWITCH_LOSS_DB = 1.0  # insertion loss for cross-cluster passive optical router
 
 
-def _mdi_fibre_cost(topo):
-    """Total fibre deployed (km): N user-relay links + K(K-1)/2 relay-relay links."""
-    user_relay_km = sum(
-        float(np.linalg.norm(topo.user_pos[i] - topo.relay_pos[topo.user_relay[i]]))
-        for i in range(topo.N)
-    )
-    relay_relay_km = sum(
-        float(np.linalg.norm(topo.relay_pos[k1] - topo.relay_pos[k2]))
-        for k1 in range(topo.K) for k2 in range(k1 + 1, topo.K)
-    )
-    return user_relay_km + relay_relay_km
+def _sample_link_tortuosity(rng, mean, n):
+    """Sample n per-link tortuosity factors: truncated normal(mean, 0.1), min 1.0."""
+    if mean <= 1.0:
+        return np.ones(n)
+    return np.maximum(1.0, rng.normal(mean, 0.1, size=n))
 
 
 def _mdi_pair_task(args):
@@ -61,11 +55,29 @@ def run_mdi_network(topo, cfg, runtimes=10, workers=None, switch_loss_db=SWITCH_
     n_workers = max(1, int(os.cpu_count() * 0.8)) if workers is None else workers
     n_workers = min(n_workers, n_pairs) if n_pairs > 0 else 1
 
+    # Per-physical-cable tortuosity: N user-relay cables + K(K-1)/2 backbone cables.
+    # Each cable sampled once; all pairs traversing that cable share its factor.
+    t_mean   = cfg.get("tortuosity_mean", 1.0)
+    topo_rng = np.random.default_rng(seed)
+    t_user   = _sample_link_tortuosity(topo_rng, t_mean, topo.N)
+    t_bb_arr = _sample_link_tortuosity(topo_rng, t_mean, topo.K * (topo.K - 1) // 2)
+    t_relay  = {}
+    _bi = 0
+    for _j in range(topo.K):
+        for _k in range(_j + 1, topo.K):
+            t_relay[(_j, _k)] = t_bb_arr[_bi]; _bi += 1
+
     tasks = []
     cross_cluster_flags = []
     pair_distances      = []
     for (i, j) in pairs:
-        alice_km, bob_km, charlie_idx, cross_cluster = topo.mdi_link(i, j)
+        ri = int(topo.user_relay[i])
+        rj = int(topo.user_relay[j])
+        cross_cluster = (ri != rj)
+        alice_km = float(np.linalg.norm(topo.user_pos[i] - topo.relay_pos[ri])) * t_user[i]
+        bob_km   = float(np.linalg.norm(topo.user_pos[j] - topo.relay_pos[rj])) * t_user[j]
+        if cross_cluster:
+            bob_km += float(np.linalg.norm(topo.relay_pos[rj] - topo.relay_pos[ri])) * t_relay[(min(ri, rj), max(ri, rj))]
         total_km    = alice_km + bob_km
         charlie_pos = alice_km / total_km if total_km > 0 else 0.5
         mdi_base    = cfg.get("node_loss_db_mdi", cfg["node_loss_db"])
@@ -78,6 +90,13 @@ def run_mdi_network(topo, cfg, runtimes=10, workers=None, switch_loss_db=SWITCH_
         ))
         cross_cluster_flags.append(cross_cluster)
         pair_distances.append(total_km)
+
+    total_fibre_km = (
+        sum(float(np.linalg.norm(topo.user_pos[i] - topo.relay_pos[int(topo.user_relay[i])])) * t_user[i]
+            for i in range(topo.N))
+        + sum(float(np.linalg.norm(topo.relay_pos[j] - topo.relay_pos[k])) * t_relay[(j, k)]
+              for j in range(topo.K) for k in range(j + 1, topo.K))
+    )
 
     net_run_id    = new_run_id()
     run_timestamp = datetime.now().isoformat()
@@ -93,14 +112,13 @@ def run_mdi_network(topo, cfg, runtimes=10, workers=None, switch_loss_db=SWITCH_
 
     if verbose:
         for idx, (i, j) in enumerate(pairs):
-            alice_km, bob_km, charlie_idx, cross_cluster = topo.mdi_link(i, j)
-            tag = " [cross]" if cross_cluster else ""
-            print(f"  [{idx+1}/{n_pairs}] pair ({i},{j}): {alice_km+bob_km:.2f} km, charlie={charlie_idx}{tag}")
+            _, _, charlie_idx, _ = topo.mdi_link(i, j)
+            tag = " [cross]" if cross_cluster_flags[idx] else ""
+            print(f"  [{idx+1}/{n_pairs}] pair ({i},{j}): {pair_distances[idx]:.2f} km, charlie={charlie_idx}{tag}")
 
     all_valid  = [r for rates in pair_rates.values() for r in rates if r != "nan"]
     total_runs = sum(len(rates) for rates in pair_rates.values())
 
-    total_fibre_km    = _mdi_fibre_cost(topo)
     avg_pair_dist     = sum(pair_distances) / len(pair_distances) if pair_distances else 0.0
     cross_relay_ratio = sum(cross_cluster_flags) / len(cross_cluster_flags) if cross_cluster_flags else 0.0
     avg_key_rate      = sum(all_valid) / len(all_valid) if all_valid else 0.0

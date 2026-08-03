@@ -17,7 +17,27 @@ def _colour(k):
     return CLUSTER_COLOURS[k % len(CLUSTER_COLOURS)]
 
 
-def draw_mdi(ax, topo):
+def _plot_wavy(ax, p1, p2, tortuosity, **kw):
+    """Draw link p1→p2 as a half-sine curve whose arc length ≈ tortuosity × straight distance.
+
+    Amplitude A = 2L√(τ-1)/π derived from arc-length integral of y=A·sin(πx/L).
+    Falls back to a straight line when tortuosity ≤ 1.0 or link is degenerate.
+    """
+    p1, p2 = np.asarray(p1, float), np.asarray(p2, float)
+    d      = float(np.linalg.norm(p2 - p1))
+    if d < 1e-9 or tortuosity <= 1.0:
+        ax.plot([p1[0], p2[0]], [p1[1], p2[1]], **kw)
+        return
+    A    = 2.0 * d * np.sqrt(max(tortuosity - 1.0, 0.0)) / np.pi
+    t    = np.linspace(0.0, 1.0, 40)
+    tang = (p2 - p1) / d
+    perp = np.array([-tang[1], tang[0]])
+    pts  = (p1[None, :] + t[:, None] * (p2 - p1)[None, :]
+            + (A * np.sin(np.pi * t))[:, None] * perp[None, :])
+    ax.plot(pts[:, 0], pts[:, 1], **kw)
+
+
+def draw_mdi(ax, topo, tortuosity_mean=1.0):
     G = nx.Graph()
 
     for i in range(topo.N):
@@ -44,15 +64,13 @@ def draw_mdi(ax, topo):
 
     for i in range(topo.N):
         r = int(topo.user_relay[i])
-        xs = [topo.user_pos[i][0], topo.relay_pos[r][0]]
-        ys = [topo.user_pos[i][1], topo.relay_pos[r][1]]
-        ax.plot(xs, ys, color=_colour(r), lw=0.8, alpha=0.6)
+        _plot_wavy(ax, topo.user_pos[i], topo.relay_pos[r], tortuosity_mean,
+                   color=_colour(r), lw=0.8, alpha=0.6)
 
     for k1 in range(topo.K):
         for k2 in range(k1 + 1, topo.K):
-            xs = [topo.relay_pos[k1][0], topo.relay_pos[k2][0]]
-            ys = [topo.relay_pos[k1][1], topo.relay_pos[k2][1]]
-            ax.plot(xs, ys, "k--", lw=0.8, alpha=0.4)
+            _plot_wavy(ax, topo.relay_pos[k1], topo.relay_pos[k2], tortuosity_mean,
+                       color="k", lw=0.8, alpha=0.4, linestyle="--")
 
     ax.set_title(f"MDI-QKD  (N={topo.N}, K={topo.K})")
     ax.set_xlabel("x (km)")
@@ -61,13 +79,12 @@ def draw_mdi(ax, topo):
     ax.set_aspect("equal")
 
 
-def draw_bb84(ax, topo):
+def draw_bb84(ax, topo, tortuosity_mean=1.0):
     ax.scatter(*topo.user_pos.T, color="#377eb8", s=60, zorder=3, label="User")
 
     for i, j in topo.all_pairs():
-        xs = [topo.user_pos[i][0], topo.user_pos[j][0]]
-        ys = [topo.user_pos[i][1], topo.user_pos[j][1]]
-        ax.plot(xs, ys, color="#377eb8", lw=0.4, alpha=0.25)
+        _plot_wavy(ax, topo.user_pos[i], topo.user_pos[j], tortuosity_mean,
+                   color="#377eb8", lw=0.4, alpha=0.25)
 
     ax.set_title(f"BB84  (N={topo.N}, {topo.N*(topo.N-1)//2} direct links)")
     ax.set_xlabel("x (km)")
@@ -78,11 +95,12 @@ def draw_bb84(ax, topo):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--n",    type=int,   default=20,   help="Number of users")
-    parser.add_argument("--k",    type=int,   default=3,    help="Number of relays (MDI)")
-    parser.add_argument("--area", type=float, default=10.0, help="Area side length (km)")
-    parser.add_argument("--seed", type=int,   default=None, help="Random seed (random if omitted)")
-    parser.add_argument("--save", type=str,   default=None, help="Save path (png/pdf)")
+    parser.add_argument("--n",          type=int,   default=20,   help="Number of users")
+    parser.add_argument("--k",          type=int,   default=3,    help="Number of relays (MDI)")
+    parser.add_argument("--area",       type=float, default=10.0, help="Area side length (km)")
+    parser.add_argument("--seed",       type=int,   default=None, help="Random seed (random if omitted)")
+    parser.add_argument("--tortuosity", type=float, default=1.2,  help="Mean fibre tortuosity for wavy links (1.0 = straight)")
+    parser.add_argument("--save",       type=str,   default=None, help="Save path (png/pdf)")
     args = parser.parse_args()
 
     if args.seed is None:
@@ -92,8 +110,8 @@ def main():
     topo = build_topology(args.n, args.k, area_km=args.area, seed=args.seed)
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-    draw_mdi(ax1, topo)
-    draw_bb84(ax2, topo)
+    draw_mdi(ax1, topo, tortuosity_mean=args.tortuosity)
+    draw_bb84(ax2, topo, tortuosity_mean=args.tortuosity)
     plt.suptitle(f"Network topology  (area={args.area}×{args.area} km, seed={args.seed})",
                  fontsize=11)
     plt.tight_layout()

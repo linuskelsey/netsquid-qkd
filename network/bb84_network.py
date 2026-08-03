@@ -3,8 +3,16 @@ import os
 import statistics
 from multiprocessing import get_context
 from datetime import datetime
+import numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from lib.db import init_db, insert_p2p_rows, insert_network_row, new_run_id, DEFAULT_DB_PATH
+
+
+def _sample_link_tortuosity(rng, mean, n):
+    """Sample n per-link tortuosity factors: truncated normal(mean, 0.1), min 1.0."""
+    if mean <= 1.0:
+        return np.ones(n)
+    return np.maximum(1.0, rng.normal(mean, 0.1, size=n))
 
 
 def _bb84_pair_task(args):
@@ -38,14 +46,20 @@ def run_bb84_network(topo, cfg, runtimes=10, workers=None, verbose=False,
     if verbose:
         print(f"BB84 network: {topo.N} users, {n_pairs} pairs")
 
+    # Per-link tortuosity: one factor per cable (each BB84 pair has its own dedicated link)
+    t_mean   = cfg.get("tortuosity_mean", 1.0)
+    topo_rng = np.random.default_rng(seed)
+    t_link   = _sample_link_tortuosity(topo_rng, t_mean, n_pairs)
+    link_km  = [topo.bb84_link(i, j) * t_link[k] for k, (i, j) in enumerate(pairs)]
+
     n_workers = max(1, int(os.cpu_count() * 0.8)) if workers is None else workers
     n_workers = min(n_workers, n_pairs) if n_pairs > 0 else 1
 
     tasks = [
-        (i, j, topo.bb84_link(i, j), runtimes,
+        (i, j, link_km[k], runtimes,
          cfg["fibre_loss_db_per_km"], cfg["init_loss"], cfg["detector_efficiency"],
          cfg["dark_count_rate"], cfg["node_loss_db"], cfg["source_error_rate"], cfg["dephasing_rate"])
-        for (i, j) in pairs
+        for k, (i, j) in enumerate(pairs)
     ]
 
     net_run_id    = new_run_id()
@@ -62,12 +76,12 @@ def run_bb84_network(topo, cfg, runtimes=10, workers=None, verbose=False,
 
     if verbose:
         for idx, (i, j) in enumerate(pairs):
-            print(f"  [{idx+1}/{n_pairs}] pair ({i},{j}): {topo.bb84_link(i, j):.2f} km")
+            print(f"  [{idx+1}/{n_pairs}] pair ({i},{j}): {link_km[idx]:.2f} km")
 
     all_valid  = [r for rates in pair_rates.values() for r in rates if r != "nan"]
     total_runs = sum(len(rates) for rates in pair_rates.values())
 
-    pair_distances    = [topo.bb84_link(i, j) for (i, j) in pairs]
+    pair_distances    = link_km
     avg_pair_dist     = sum(pair_distances) / len(pair_distances) if pair_distances else 0.0
     avg_key_rate      = sum(all_valid) / len(all_valid) if all_valid else 0.0
     std_key_rate      = statistics.stdev(all_valid) if len(all_valid) > 1 else 0.0
