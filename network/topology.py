@@ -7,22 +7,29 @@ def place_users(N, area_km=10.0, seed=None):
     return rng.uniform(0, area_km, size=(N, 2))
 
 
-def place_users_clustered(N, relay_pos, area_km=10.0, seed=None):
+def place_users_clustered(N, relay_pos, area_km=10.0, seed=None, max_radius_km=None):
     """Place N users in Voronoi-aware catchment areas around relays.
 
     Each user is assigned a relay uniformly at random, then placed uniformly
     within a circle of radius min(0.25*area_km, half_dist_to_nearest_relay).
+    If max_radius_km is set, the catchment radius is additionally capped at
+    that value (use for real-topology deployments with known service radius).
     """
     rng = np.random.default_rng(seed)
     relay_pos = np.array(relay_pos)
     K = len(relay_pos)
 
-    catchment = np.full(K, 0.25 * area_km)
-    if K > 1:
-        for r in range(K):
-            dists = np.linalg.norm(relay_pos[r] - relay_pos, axis=1)
-            dists[r] = np.inf
-            catchment[r] = min(catchment[r], np.min(dists) / 2.0)
+    if max_radius_km is not None:
+        # fixed radius for each relay; overlapping catchments allowed — Topology assigns by proximity
+        catchment = np.full(K, max_radius_km)
+    else:
+        # Voronoi-aware: cap at half-distance to nearest relay to avoid cross-catchment placement
+        catchment = np.full(K, 0.25 * area_km)
+        if K > 1:
+            for r in range(K):
+                dists = np.linalg.norm(relay_pos[r] - relay_pos, axis=1)
+                dists[r] = np.inf
+                catchment[r] = min(catchment[r], np.min(dists) / 2.0)
 
     relay_indices = rng.integers(0, K, size=N)
     positions = np.empty((N, 2))

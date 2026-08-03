@@ -65,9 +65,11 @@ sys.path.insert(0, _network)
 from lib.functions import load_config
 from lib.db import DEFAULT_DB_PATH
 from lib.progress import Progress
-from topology import place_users, optimise_relays, Topology
+from topology import place_users, place_users_clustered, optimise_relays, Topology
 from bb84_network import run_bb84_network
 from mdi_network import run_mdi_network
+from trusted_bb84_network import run_trusted_bb84_network
+from real_topology import load_real_topology
 from cost import component_counts, total_cost, spd_cost_from_efficiency, DETECTOR_TECH, DEFAULT_COSTS
 from lib.db import update_network_cost
 
@@ -116,6 +118,10 @@ def main():
                         help="GBP per km of installed fibre")
     parser.add_argument("--tortuosity",    type=float, default=1.2,
                         help="Mean fibre tortuosity (cable/Euclidean ratio). 1.0 = Euclidean; ~1.2 typical urban.")
+    parser.add_argument("--placement",     type=str,   default="random", choices=["random", "clustered"],
+                        help="User placement mode (clustered uses Voronoi catchment areas around relays)")
+    parser.add_argument("--real",          type=str,   default=None, metavar="NAME",
+                        help="Load fixed relay positions from data/real_topologies/NAME.json; K determined by file")
     parser.add_argument("--workers",       type=int,   default=None)
     parser.add_argument("--save",          type=str,   default=None)
     parser.add_argument("--no-figure",     action="store_true")
@@ -131,6 +137,25 @@ def main():
     cfg["tortuosity_mean"] = args.tortuosity
     ref_n = args.n_max
     N_values = list(range(args.n_min, args.n_max + 1, args.n_step))
+
+    # resolve real-topology fixed relays (if requested)
+    if args.real:
+        _rt_path = os.path.join(_root, "data", "real_topologies", f"{args.real}.json")
+        _rt_topo, _rt_meta = load_real_topology(_rt_path)
+        _fixed_relay_pos = _rt_topo.relay_pos
+        _w, _h = _rt_meta["bbox_km"]
+        _area_km    = max(_w, _h) + 60.0
+        _max_radius = 30.0
+        _K          = _rt_topo.K
+        _protocols  = _rt_meta["protocols"]
+        print(f"Real topology '{args.real}': {_K} relays, bbox {_w:.1f}×{_h:.1f} km → area={_area_km:.1f} km")
+        print(f"  Protocols: {_protocols}")
+    else:
+        _fixed_relay_pos = None
+        _area_km    = args.area
+        _max_radius = None
+        _K          = args.k
+        _protocols  = ["BB84", "MDI"]
 
     # --- resolve cost parameters: DEFAULT_COSTS → tech preset → explicit CLI flag ---
     det_preset = DETECTOR_TECH[args.detector_tech] if args.detector_tech else {}
@@ -159,10 +184,13 @@ def main():
         rng   = np.random.default_rng(args.seed)
         seeds = rng.integers(0, 100_000, size=args.seeds).tolist()
 
-    bb84_rate_s = {N: [] for N in N_values}
-    mdi_rate_s  = {N: [] for N in N_values}
-    bb84_cost_s = {N: [] for N in N_values}
-    mdi_cost_s  = {N: [] for N in N_values}
+    bb84_rate_s  = {N: [] for N in N_values}
+    mdi_rate_s   = {N: [] for N in N_values}
+    tbb84_rate_s = {N: [] for N in N_values}
+    bb84_cost_s  = {N: [] for N in N_values}
+    mdi_cost_s   = {N: [] for N in N_values}
+    tbb84_cost_s = {N: [] for N in N_values}
+    _run_tbb84   = "TBB84" in _protocols
 
     total_start = time.time()
 
@@ -172,15 +200,25 @@ def main():
         prog = Progress(len(N_values))
         step = 0
 
-        ref_pos   = place_users(ref_n, area_km=args.area, seed=seed)
-        relay_pos = optimise_relays(ref_pos, args.k, seed=seed)
+        if _fixed_relay_pos is not None:
+            relay_pos = _fixed_relay_pos
+        else:
+            ref_pos   = place_users(ref_n, area_km=_area_km, seed=seed)
+            relay_pos = optimise_relays(ref_pos, _K, seed=seed)
+
+        # generate all users up front; slice [:N] per data point for incremental placement
+        if args.placement == "clustered":
+            all_user_pos = place_users_clustered(args.n_max, relay_pos, area_km=_area_km,
+                                                 seed=seed, max_radius_km=_max_radius)
+        else:
+            all_user_pos = place_users(args.n_max, area_km=_area_km, seed=seed)
 
         for N in N_values:
-            if N < args.k:
+            if N < _K:
                 step += 1
                 continue
 
-            user_pos  = place_users(N, area_km=args.area, seed=seed)
+            user_pos = all_user_pos[:N]
             topo_bb84 = Topology(user_pos)
             topo_mdi  = Topology(user_pos, relay_pos)
 
@@ -189,31 +227,44 @@ def main():
                 bb84_fibre = _fibre_km_bb84(topo_bb84)
                 mdi_fibre  = _fibre_km_mdi(topo_mdi)
                 t = args.tortuosity
-                bb84_cost_s[N].append(total_cost(component_counts(N, 0,      "BB84"), bb84_fibre * t, det_eff, **cost_kw)["total_gbp"])
-                mdi_cost_s[N].append( total_cost(component_counts(N, args.k, "MDI"),  mdi_fibre  * t, det_eff, **cost_kw)["total_gbp"])
+                bb84_cost_s[N].append(total_cost(component_counts(N, 0,  "BB84"),        bb84_fibre * t, det_eff, **cost_kw)["total_gbp"])
+                mdi_cost_s[N].append( total_cost(component_counts(N, _K, "MDI"),         mdi_fibre  * t, det_eff, **cost_kw)["total_gbp"])
+                if _run_tbb84:
+                    tbb84_cost_s[N].append(total_cost(component_counts(N, _K, "trusted_BB84"), mdi_fibre * t, det_eff, **cost_kw)["total_gbp"])
             else:
                 prog.update(step, f"N={N}/{N_values[-1]}  running simulations...")
                 bb84_res = run_bb84_network(
                     topo_bb84, cfg, runtimes=args.runtimes, workers=args.workers,
                     p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
                     net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
-                    experiment="cost_sweep", seed=seed, area_km=args.area,
+                    experiment="cost_sweep", seed=seed, area_km=_area_km,
                     config_preset=args.config)
                 mdi_res = run_mdi_network(
                     topo_mdi, cfg, runtimes=args.runtimes, workers=args.workers,
                     p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
                     net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
-                    experiment="cost_sweep", seed=seed, area_km=args.area,
+                    experiment="cost_sweep", seed=seed, area_km=_area_km,
                     config_preset=args.config)
                 bb84_rate_s[N].append(bb84_res["avg_key_rate"])
                 mdi_rate_s[N].append(mdi_res["avg_key_rate"])
                 _db_path = None if args.no_net_db else DEFAULT_DB_PATH
-                _bc = total_cost(component_counts(N, 0,      "BB84"), bb84_res["total_fibre_km"], det_eff, **cost_kw)
-                _mc = total_cost(component_counts(N, args.k, "MDI"),  mdi_res["total_fibre_km"],  det_eff, **cost_kw)
+                _bc = total_cost(component_counts(N, 0,  "BB84"), bb84_res["total_fibre_km"], det_eff, **cost_kw)
+                _mc = total_cost(component_counts(N, _K, "MDI"),  mdi_res["total_fibre_km"],  det_eff, **cost_kw)
                 bb84_cost_s[N].append(_bc["total_gbp"])
                 mdi_cost_s[N].append(_mc["total_gbp"])
                 update_network_cost(_db_path, bb84_res.get("net_run_id"), det_eff, _bc["hardware_gbp"], _bc["fibre_gbp"], _bc["total_gbp"])
                 update_network_cost(_db_path, mdi_res.get("net_run_id"),  det_eff, _mc["hardware_gbp"], _mc["fibre_gbp"], _mc["total_gbp"])
+                if _run_tbb84:
+                    tbb84_res = run_trusted_bb84_network(
+                        topo_mdi, cfg, runtimes=args.runtimes, workers=args.workers,
+                        p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
+                        net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
+                        experiment="cost_sweep", seed=seed, area_km=_area_km,
+                        config_preset=args.config)
+                    tbb84_rate_s[N].append(tbb84_res["avg_key_rate"])
+                    _tc = total_cost(component_counts(N, _K, "trusted_BB84"), tbb84_res["total_fibre_km"], det_eff, **cost_kw)
+                    tbb84_cost_s[N].append(_tc["total_gbp"])
+                    update_network_cost(_db_path, tbb84_res.get("net_run_id"), det_eff, _tc["hardware_gbp"], _tc["fibre_gbp"], _tc["total_gbp"])
 
             step += 1
             prog.update(step, f"N={N}  costs: BB84 £{bb84_cost_s[N][-1]/1e6:.2f}M  MDI £{mdi_cost_s[N][-1]/1e6:.2f}M")
@@ -230,27 +281,44 @@ def main():
     def _means(d):
         return np.array([np.mean(d[N]) for N in N_arr])
 
-    bb84_cost = _means(bb84_cost_s) / 1e6
-    mdi_cost  = _means(mdi_cost_s)  / 1e6
+    bb84_cost  = _means(bb84_cost_s)  / 1e6
+    mdi_cost   = _means(mdi_cost_s)   / 1e6
+    if _run_tbb84:
+        tbb84_cost = _means(tbb84_cost_s) / 1e6
 
     if not args.cost_only:
-        bb84_rate = _means(bb84_rate_s) / 1000
-        mdi_rate  = _means(mdi_rate_s)  / 1000
-        bb84_eff  = np.where(bb84_cost > 0, bb84_rate / bb84_cost, 0.0)
-        mdi_eff   = np.where(mdi_cost  > 0, mdi_rate  / mdi_cost,  0.0)
+        bb84_rate  = _means(bb84_rate_s)  / 1000
+        mdi_rate   = _means(mdi_rate_s)   / 1000
+        bb84_eff   = np.where(bb84_cost  > 0, bb84_rate  / bb84_cost,  0.0)
+        mdi_eff    = np.where(mdi_cost   > 0, mdi_rate   / mdi_cost,   0.0)
+        if _run_tbb84:
+            tbb84_rate = _means(tbb84_rate_s) / 1000
+            tbb84_eff  = np.where(tbb84_cost > 0, tbb84_rate / tbb84_cost, 0.0)
 
     # --- summary table ---
     if args.cost_only:
-        print(f"\n{'N':>3}  {'BB84 cost':>11}  {'MDI cost':>10}")
-        print("-" * 28)
+        hdr = f"{'N':>3}  {'BB84 cost':>11}  {'MDI cost':>10}"
+        sep = "-" * 28
+        if _run_tbb84:
+            hdr += f"  {'TBB84 cost':>12}"; sep = "-" * 42
+        print(f"\n{hdr}"); print(sep)
         for i, N in enumerate(N_arr):
-            print(f"{int(N):>3}  £{bb84_cost[i]:>9.2f}M  £{mdi_cost[i]:>8.2f}M")
+            row = f"{int(N):>3}  £{bb84_cost[i]:>9.2f}M  £{mdi_cost[i]:>8.2f}M"
+            if _run_tbb84:
+                row += f"  £{tbb84_cost[i]:>10.2f}M"
+            print(row)
     else:
-        print(f"\n{'N':>3}  {'BB84 cost':>11}  {'MDI cost':>10}  {'BB84 eff':>10}  {'MDI eff':>9}")
-        print("-" * 52)
+        hdr = f"{'N':>3}  {'BB84 cost':>11}  {'MDI cost':>10}  {'BB84 eff':>10}  {'MDI eff':>9}"
+        sep = "-" * 52
+        if _run_tbb84:
+            hdr += f"  {'TBB84 cost':>12}  {'TBB84 eff':>10}"; sep = "-" * 76
+        print(f"\n{hdr}"); print(sep)
         for i, N in enumerate(N_arr):
-            print(f"{int(N):>3}  £{bb84_cost[i]:>9.2f}M  £{mdi_cost[i]:>8.2f}M  "
-                  f"{bb84_eff[i]:>9.2f}  {mdi_eff[i]:>8.2f}  kbps/M£")
+            row = (f"{int(N):>3}  £{bb84_cost[i]:>9.2f}M  £{mdi_cost[i]:>8.2f}M  "
+                   f"{bb84_eff[i]:>9.2f}  {mdi_eff[i]:>8.2f}  kbps/M£")
+            if _run_tbb84:
+                row += f"  £{tbb84_cost[i]:>10.2f}M  {tbb84_eff[i]:>9.2f}"
+            print(row)
 
     if args.no_figure:
         return
@@ -259,7 +327,8 @@ def main():
     det_label  = args.detector_tech or "custom"
     spd_gbp    = spd_cost_from_efficiency(det_eff)
     tort_str   = f"  tort={args.tortuosity:.2f}" if args.tortuosity != 1.0 else ""
-    top_label  = (f"K={args.k}, {args.area}×{args.area} km, {seed_label}  |  "
+    area_label = args.real if args.real else f"{_area_km}×{_area_km} km"
+    top_label  = (f"K={_K}, {area_label}, {seed_label}  |  "
                   f"det={det_label} (η={det_eff:.2f}, £{spd_gbp/1e3:.0f}k/SPD)  "
                   f"src=QD (£{source_gbp/1e3:.0f}k)  "
                   f"fibre=£{fibre_gbp/1e3:.0f}k/km{tort_str}")
@@ -268,6 +337,8 @@ def main():
     fig1, ax = plt.subplots(figsize=(8, 5))
     ax.plot(N_arr, bb84_cost, "--", color="#377eb8", lw=1.5, label="BB84 (direct mesh)")
     ax.plot(N_arr, mdi_cost,  "-",  color="#e41a1c", lw=1.5, marker="o", label="MDI")
+    if _run_tbb84:
+        ax.plot(N_arr, tbb84_cost, ":", color="#4daf4a", lw=1.5, marker="s", label="TBB84")
     ax.set_xlabel("User count $N$")
     ax.set_ylabel("Total deployment cost (M\pounds)")
     ax.set_xticks(N_arr)
@@ -289,6 +360,8 @@ def main():
         fig2, ax2 = plt.subplots(figsize=(8, 5))
         ax2.plot(N_arr, bb84_eff, "--", color="#377eb8", lw=1.5, label="BB84 (direct mesh)")
         ax2.plot(N_arr, mdi_eff,  "-",  color="#e41a1c", lw=1.5, marker="o", label="MDI")
+        if _run_tbb84:
+            ax2.plot(N_arr, tbb84_eff, ":", color="#4daf4a", lw=1.5, marker="s", label="TBB84")
         ax2.set_xlabel("User count $N$")
         ax2.set_ylabel("Cost-efficiency (kbps / M\pounds)")
         ax2.set_xticks(N_arr)
@@ -315,6 +388,9 @@ def main():
         fig3, ax3 = plt.subplots(figsize=(8, 5))
         ax3.plot(N_mid, bb84_marg, "--", color="#377eb8", lw=1.5, label="BB84 (direct mesh)")
         ax3.plot(N_mid, mdi_marg,  "-",  color="#e41a1c", lw=1.5, marker="o", label="MDI")
+        if _run_tbb84:
+            tbb84_marg = np.diff(tbb84_cost) / step_arr
+            ax3.plot(N_mid, tbb84_marg, ":", color="#4daf4a", lw=1.5, marker="s", label="TBB84")
         ax3.set_xlabel("User count $N$")
         ax3.set_ylabel(r"Marginal cost $\Delta C\,/\,\Delta N$ (M\pounds)")
         ax3.set_xticks(N_mid)

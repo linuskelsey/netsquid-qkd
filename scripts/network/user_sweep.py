@@ -52,6 +52,8 @@ from lib.progress import Progress
 from topology import place_users, place_users_clustered, optimise_relays, Topology
 from bb84_network import run_bb84_network
 from mdi_network import run_mdi_network
+from trusted_bb84_network import run_trusted_bb84_network
+from real_topology import load_real_topology
 from visualise_network import draw_mdi, draw_bb84
 from cost import component_counts, total_cost
 
@@ -83,6 +85,8 @@ def main():
     parser.add_argument("--output-dir", type=str,   default=None, help="Directory to save figures into (skips interactive display)")
     parser.add_argument("--placement",  type=str,   default="random", choices=["random", "clustered"],
                         help="User placement mode: random (uniform grid) or clustered (Voronoi catchment areas)")
+    parser.add_argument("--real",       type=str,   default=None, metavar="NAME",
+                        help="Load fixed relay positions from data/real_topologies/NAME.json; K is determined by file")
     parser.add_argument("--no-figure", action="store_true", help="Skip all figure output (no show, no save)")
     parser.add_argument("--no-p2p-db", action="store_true", help="Disable P2P DB writing")
     parser.add_argument("--no-net-db", action="store_true", help="Disable network DB writing")
@@ -97,6 +101,25 @@ def main():
     N_values = list(range(args.n_min, args.n_max + 1, args.n_step))
     ref_n    = args.ref_n if args.ref_n is not None else args.n_max
 
+    # resolve real-topology fixed relays (if requested)
+    if args.real:
+        _rt_path = os.path.join(_root, "data", "real_topologies", f"{args.real}.json")
+        _rt_topo, _rt_meta = load_real_topology(_rt_path)
+        _fixed_relay_pos = _rt_topo.relay_pos
+        _w, _h = _rt_meta["bbox_km"]
+        _area_km    = max(_w, _h) + 60.0   # 30 km buffer on each side
+        _max_radius = 30.0
+        _K          = _rt_topo.K
+        _protocols  = _rt_meta["protocols"]
+        print(f"Real topology '{args.real}': {_K} relays, bbox {_w:.1f}×{_h:.1f} km → area={_area_km:.1f} km")
+        print(f"  Protocols: {_protocols}")
+    else:
+        _fixed_relay_pos = None
+        _area_km    = args.area
+        _max_radius = None
+        _K          = args.k
+        _protocols  = ["BB84", "MDI"]
+
     if args.seeds == 1:
         seeds = [args.seed]
     else:
@@ -105,10 +128,13 @@ def main():
 
     bb84_per_seed        = {N: [] for N in N_values}
     mdi_per_seed         = {N: [] for N in N_values}
+    tbb84_per_seed       = {N: [] for N in N_values}
     bb84_ok_per_seed     = {N: [] for N in N_values}
     mdi_ok_per_seed      = {N: [] for N in N_values}
+    tbb84_ok_per_seed    = {N: [] for N in N_values}
     bb84_fibre_per_seed  = {N: [] for N in N_values}
     mdi_fibre_per_seed   = {N: [] for N in N_values}
+    tbb84_fibre_per_seed = {N: [] for N in N_values}
 
     seed_total  = len(N_values)
     total_start = time.time()
@@ -118,31 +144,38 @@ def main():
         seed_start = time.time()
         prog = Progress(seed_total)
         step = 0
-        ref_pos   = place_users(ref_n, area_km=args.area, seed=seed)
-        relay_pos = optimise_relays(ref_pos, args.k, seed=seed)
+        if _fixed_relay_pos is not None:
+            relay_pos = _fixed_relay_pos
+        else:
+            ref_pos   = place_users(ref_n, area_km=_area_km, seed=seed)
+            relay_pos = optimise_relays(ref_pos, _K, seed=seed)
+
+        # generate all users up front; slice [:N] per data point for incremental placement
+        if args.placement == "clustered":
+            all_user_pos = place_users_clustered(args.n_max, relay_pos, area_km=_area_km,
+                                                 seed=seed, max_radius_km=_max_radius)
+        else:
+            all_user_pos = place_users(args.n_max, area_km=_area_km, seed=seed)
 
         for N in N_values:
-            if N < args.k:
+            if N < _K:
                 step += 1
                 continue
 
             prog.update(step, f"User count: {N}/{N_values[-1]}  Both protocols running...")
-            if args.placement == "clustered":
-                user_pos = place_users_clustered(N, relay_pos, area_km=args.area, seed=seed + N)
-            else:
-                user_pos = place_users(N, area_km=args.area, seed=seed)
+            user_pos = all_user_pos[:N]
             topo_bb84 = Topology(user_pos)
             topo_mdi  = Topology(user_pos, relay_pos)
 
             bb84_res = run_bb84_network(topo_bb84, cfg, runtimes=args.runtimes, workers=args.workers,
                               p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
                               net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
-                              experiment="user_sweep", seed=seed, area_km=args.area,
+                              experiment="user_sweep", seed=seed, area_km=_area_km,
                               config_preset=args.config)
             mdi_res  = run_mdi_network(topo_mdi,  cfg, runtimes=args.runtimes, workers=args.workers,
                                        p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
                                        net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
-                                       experiment="user_sweep", seed=seed, area_km=args.area,
+                                       experiment="user_sweep", seed=seed, area_km=_area_km,
                                        config_preset=args.config)
 
             bp = _pair_avgs(bb84_res["pair_rates"])
@@ -157,10 +190,24 @@ def main():
 
             _det_eff  = cfg["detector_efficiency"]
             _db_path  = None if args.no_net_db else DEFAULT_DB_PATH
-            _bc = total_cost(component_counts(N, 0,       "BB84"), bb84_res["total_fibre_km"], _det_eff)
-            _mc = total_cost(component_counts(N, args.k,  "MDI"),  mdi_res["total_fibre_km"],  _det_eff)
+            _bc = total_cost(component_counts(N, 0,  "BB84"), bb84_res["total_fibre_km"], _det_eff)
+            _mc = total_cost(component_counts(N, _K, "MDI"),  mdi_res["total_fibre_km"],  _det_eff)
             update_network_cost(_db_path, bb84_res.get("net_run_id"), _det_eff, _bc["hardware_gbp"], _bc["fibre_gbp"], _bc["total_gbp"])
             update_network_cost(_db_path, mdi_res.get("net_run_id"),  _det_eff, _mc["hardware_gbp"], _mc["fibre_gbp"], _mc["total_gbp"])
+
+            if "TBB84" in _protocols:
+                tbb84_res = run_trusted_bb84_network(
+                    topo_mdi, cfg, runtimes=args.runtimes, workers=args.workers,
+                    p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
+                    net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
+                    experiment="user_sweep", seed=seed, area_km=_area_km,
+                    config_preset=args.config)
+                tp = _pair_avgs(tbb84_res["pair_rates"])
+                tbb84_per_seed[N].append(np.mean(tp) if tp else 0.0)
+                tbb84_ok_per_seed[N].append(tbb84_res["success_rate"] * 100)
+                tbb84_fibre_per_seed[N].append(tbb84_res["total_fibre_km"])
+                _tc = total_cost(component_counts(N, _K, "trusted_BB84"), tbb84_res["total_fibre_km"], _det_eff)
+                update_network_cost(_db_path, tbb84_res.get("net_run_id"), _det_eff, _tc["hardware_gbp"], _tc["fibre_gbp"], _tc["total_gbp"])
 
             step += 1
             prog.update(step, f"User count: {N}/{N_values[-1]}  BB84 {bb84_per_seed[N][-1]/1000:.2f} | MDI {mdi_per_seed[N][-1]/1000:.2f} kbps")
@@ -181,17 +228,32 @@ def main():
     mdi_stds       = [np.std(mdi_per_seed[N])           for N in N_arr_final]
     mdi_ok         = [np.mean(mdi_ok_per_seed[N])       for N in N_arr_final]
     mdi_fibre      = [np.mean(mdi_fibre_per_seed[N])    for N in N_arr_final]
+    _run_tbb84 = "TBB84" in _protocols
+    if _run_tbb84:
+        tbb84_means = [np.mean(tbb84_per_seed[N])        for N in N_arr_final]
+        tbb84_stds  = [np.std(tbb84_per_seed[N])         for N in N_arr_final]
+        tbb84_ok    = [np.mean(tbb84_ok_per_seed[N])     for N in N_arr_final]
+        tbb84_fibre = [np.mean(tbb84_fibre_per_seed[N])  for N in N_arr_final]
 
-    print(f"\n{'N':>3}  {'BB84 kbps':>10}  {'MDI kbps':>9}  {'BB84 ok%':>9}  {'MDI ok%':>8}  {'BB84 km':>8}  {'MDI km':>7}")
-    print("-" * 68)
-    for N, b_r, m_r, b_ok, m_ok, b_km, m_km in zip(
-            N_arr_final, bb84_means, mdi_means,
-            bb84_ok, mdi_ok, bb84_fibre, mdi_fibre):
-        print(
-            f"{N:>3}  {b_r/1000:>10.2f}  {m_r/1000:>9.2f}  "
-            f"{b_ok:>8.0f}%  {m_ok:>7.0f}%  "
-            f"{b_km:>8.1f}  {m_km:>7.1f}"
-        )
+    if _run_tbb84:
+        print(f"\n{'N':>3}  {'BB84 kbps':>10}  {'MDI kbps':>9}  {'TBB84 kbps':>11}  {'BB84 ok%':>9}  {'MDI ok%':>8}  {'TBB84 ok%':>10}")
+        print("-" * 88)
+        for i, N in enumerate(N_arr_final):
+            print(
+                f"{N:>3}  {bb84_means[i]/1000:>10.2f}  {mdi_means[i]/1000:>9.2f}  "
+                f"{tbb84_means[i]/1000:>11.2f}  {bb84_ok[i]:>8.0f}%  {mdi_ok[i]:>7.0f}%  {tbb84_ok[i]:>9.0f}%"
+            )
+    else:
+        print(f"\n{'N':>3}  {'BB84 kbps':>10}  {'MDI kbps':>9}  {'BB84 ok%':>9}  {'MDI ok%':>8}  {'BB84 km':>8}  {'MDI km':>7}")
+        print("-" * 68)
+        for N, b_r, m_r, b_ok, m_ok, b_km, m_km in zip(
+                N_arr_final, bb84_means, mdi_means,
+                bb84_ok, mdi_ok, bb84_fibre, mdi_fibre):
+            print(
+                f"{N:>3}  {b_r/1000:>10.2f}  {m_r/1000:>9.2f}  "
+                f"{b_ok:>8.0f}%  {m_ok:>7.0f}%  "
+                f"{b_km:>8.1f}  {m_km:>7.1f}"
+            )
 
     N_arr  = np.array(N_arr_final)
     b_mean = np.array(bb84_means) / 1000
@@ -202,6 +264,11 @@ def main():
     m_std  = np.array(mdi_stds)   / 1000
     m_q1   = np.array([np.percentile(mdi_per_seed[N], 25) for N in N_arr_final]) / 1000
     m_q3   = np.array([np.percentile(mdi_per_seed[N], 75) for N in N_arr_final]) / 1000
+    if _run_tbb84:
+        t_mean = np.array(tbb84_means) / 1000
+        t_std  = np.array(tbb84_stds)  / 1000
+        t_q1   = np.array([np.percentile(tbb84_per_seed[N], 25) for N in N_arr_final]) / 1000
+        t_q3   = np.array([np.percentile(tbb84_per_seed[N], 75) for N in N_arr_final]) / 1000
 
     bb84_ref = b_mean[0] if b_mean[0] > 0 else 1.0
 
@@ -213,16 +280,25 @@ def main():
                      linestyle="--", capsize=4, lw=1.5)
         ax1.errorbar(N_arr, m_mean, yerr=m_std, label="MDI", color="#e41a1c",
                      marker="o", capsize=4, lw=1.5)
+        if _run_tbb84:
+            ax1.errorbar(N_arr, t_mean, yerr=t_std, label="TBB84", color="#4daf4a",
+                         marker="s", capsize=4, lw=1.5, linestyle=":")
     elif args.error == "shade":
         ax1.plot(N_arr, b_mean, '--', color="#377eb8", lw=1.5, label="BB84")
         ax1.fill_between(N_arr, b_mean - b_std, b_mean + b_std, alpha=0.2, color="#377eb8")
         ax1.plot(N_arr, m_mean, color="#e41a1c", marker="o", lw=1.5, label="MDI")
         ax1.fill_between(N_arr, m_mean - m_std, m_mean + m_std, alpha=0.2, color="#e41a1c")
+        if _run_tbb84:
+            ax1.plot(N_arr, t_mean, ':', color="#4daf4a", marker="s", lw=1.5, label="TBB84")
+            ax1.fill_between(N_arr, t_mean - t_std, t_mean + t_std, alpha=0.2, color="#4daf4a")
     else:  # iqr
         ax1.plot(N_arr, b_mean, '--', color="#377eb8", lw=1.5, label="BB84")
         ax1.fill_between(N_arr, b_q1, b_q3, alpha=0.2, color="#377eb8")
         ax1.plot(N_arr, m_mean, color="#e41a1c", marker="o", lw=1.5, label="MDI")
         ax1.fill_between(N_arr, m_q1, m_q3, alpha=0.2, color="#e41a1c")
+        if _run_tbb84:
+            ax1.plot(N_arr, t_mean, ':', color="#4daf4a", marker="s", lw=1.5, label="TBB84")
+            ax1.fill_between(N_arr, t_q1, t_q3, alpha=0.2, color="#4daf4a")
 
     ax1.set_yscale("log")
     ax1.set_xlabel("User count N")
@@ -238,8 +314,9 @@ def main():
     ax2.set_yscale("log")
 
     seed_label = f"seed={args.seed}" if args.seeds == 1 else f"{args.seeds} seeds (base={args.seed})"
+    area_label = f"{args.real}" if args.real else f"{_area_km}×{_area_km} km"
     plt.title(
-        f"Key rate vs user count  (K={args.k}, area={args.area}×{args.area} km, {seed_label})",
+        f"Key rate vs user count  (K={_K}, area={area_label}, {seed_label})",
         fontsize=10
     )
     plt.tight_layout()
@@ -256,20 +333,25 @@ def main():
 
     # --- Figure 2: topology at midpoint N (single seed only) ---
     if args.seeds == 1 and not args.no_figure:
-        N_mid      = N_arr_final[len(N_arr_final) // 2]
-        ref_mid    = place_users(ref_n, area_km=args.area, seed=seeds[0])
-        relay_mid  = optimise_relays(ref_mid, args.k, seed=seeds[0])
-        if args.placement == "clustered":
-            user_mid = place_users_clustered(N_mid, relay_mid, area_km=args.area, seed=seeds[0] + N_mid)
+        N_mid    = N_arr_final[len(N_arr_final) // 2]
+        # reuse the incremental user pool from the single seed run
+        if _fixed_relay_pos is not None:
+            relay_mid = _fixed_relay_pos
         else:
-            user_mid = place_users(N_mid, area_km=args.area, seed=seeds[0])
-        topo_mid   = Topology(user_mid, relay_mid)
+            ref_mid   = place_users(ref_n, area_km=_area_km, seed=seeds[0])
+            relay_mid = optimise_relays(ref_mid, _K, seed=seeds[0])
+        if args.placement == "clustered":
+            _mid_all = place_users_clustered(args.n_max, relay_mid, area_km=_area_km,
+                                             seed=seeds[0], max_radius_km=_max_radius)
+        else:
+            _mid_all = place_users(args.n_max, area_km=_area_km, seed=seeds[0])
+        topo_mid = Topology(_mid_all[:N_mid], relay_mid)
 
         fig2, (axA, axB) = plt.subplots(1, 2, figsize=(12, 5))
         draw_mdi(axA, topo_mid, tortuosity_mean=args.tortuosity)
         draw_bb84(axB, topo_mid, tortuosity_mean=args.tortuosity)
         plt.suptitle(
-            f"Network topology at N={N_mid}  (K={args.k}, {seed_label})",
+            f"Network topology at N={N_mid}  (K={_K}, {seed_label})",
             fontsize=11
         )
         plt.tight_layout()
