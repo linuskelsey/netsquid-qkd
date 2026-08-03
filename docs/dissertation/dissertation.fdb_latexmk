@@ -1,14 +1,14 @@
 # Fdb version 4
-["bibtex dissertation"] 1785751201.35686 "dissertation.aux" "dissertation.bbl" "dissertation" 1785751202.55846 0
+["bibtex dissertation"] 1785752665.02553 "dissertation.aux" "dissertation.bbl" "dissertation" 1785752671.387 0
   "./IEEEabrv.bib" 1785598405.66045 20900 8e38b804c798913c2019da1b730bfb6c ""
   "./bibliography.bib" 1785598405.66045 37911 c9bf56ca75619450178f9f6a635ce386 ""
   "/usr/share/texmf-dist/bibtex/bst/base/ieeetr.bst" 1775415801 18361 1a00e58565e7f19bf2b3e1bfb82254ae ""
-  "dissertation.aux" 1785751202.33106 10026 1322b526e35fa920975f4cef5a801fb3 "pdflatex"
+  "dissertation.aux" 1785752671.12967 10026 a63446c0580612536e3f259e00b42d06 "pdflatex"
   (generated)
   "dissertation.bbl"
   "dissertation.blg"
   (rewritten before read)
-["pdflatex"] 1785751201.40575 "dissertation.tex" "dissertation.pdf" "dissertation" 1785751202.55862 0
+["pdflatex"] 1785752670.32474 "dissertation.tex" "dissertation.pdf" "dissertation" 1785752671.38714 0
   "/usr/share/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc" 1775415801 2971 def0b6c1f0b107b3b936def894055589 ""
   "/usr/share/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc" 1775415801 2900 1537cc8184ad1792082cd229ecc269f4 ""
   "/usr/share/texmf-dist/fonts/map/fontname/texfonts.map" 1775415801 3524 cb3e574dea2d1052e39280babc910dc8 ""
@@ -235,11 +235,11 @@
   "/usr/share/texmf-dist/web2c/texmf.cnf" 1775415801 43569 fd570f2fa160877d211e859f687312ba ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1783352909 5385779 47c0c393a77fd4a098bacfd57d66b88a ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1783352867 2328181 d40f166ddf9c3c055fcd3ec3c571d628 ""
-  "dissertation.aux" 1785751202.33106 10026 1322b526e35fa920975f4cef5a801fb3 "pdflatex"
-  "dissertation.bbl" 1785751201.40106 5409 eae61c0ba71476b3eca9f9ce5ef798bb "bibtex dissertation"
-  "dissertation.out" 1785751202.33306 4656 a1801161f88d0e34e23f3f6468a1f34d "pdflatex"
-  "dissertation.tex" 1785751199.89005 51465 0749f83bad0b31ae2d8574dbbb0415fc ""
-  "dissertation.toc" 1785751202.33306 2476 52a2552691d2c8f597cfe8a8b9e5eab7 "pdflatex"
+  "dissertation.aux" 1785752671.12967 10026 a63446c0580612536e3f259e00b42d06 "pdflatex"
+  "dissertation.bbl" 1785752665.07568 5409 eae61c0ba71476b3eca9f9ce5ef798bb "bibtex dissertation"
+  "dissertation.out" 1785752671.13167 4656 a1801161f88d0e34e23f3f6468a1f34d "pdflatex"
+  "dissertation.tex" 1785752669.32467 52250 6733b7812616a6d6ad97cd14501710cd ""
+  "dissertation.toc" 1785752671.13167 2476 26d991d2cf41e206f67c8051c3b8f6f7 "pdflatex"
   (generated)
   "dissertation.aux"
   "dissertation.log"

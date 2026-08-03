@@ -50,8 +50,8 @@ All parameters below are unverified placeholders or indicative midpoints. Verify
 |---|---|---|---|---|
 | `fibre_loss_db_per_km` | **0.18 dB/km** ✓ | 0.15–0.25 dB/km | **Yes** | Corning SMF-28 datasheet (max at 1550 nm, confirmed) |
 | `init_loss` | 0.15 (15%) | 0.05–0.30 | Possibly | Fibre-pigtailed QD coupling efficiency; Bozzio 2022 |
-| `detector_efficiency` η_Z | 0.85 | SPAD 0.20–SNSPD 0.85 | **Yes** | ID Quantique datasheets — note: IDQ SNSPDs sold as multi-channel units; cost model overestimates relay SPD cost (1 unit covers 4 channels). Verify unit pricing. |
-| `dark_count_rate` | 100 cps | SNSPD 10–300; SPAD 1,000–50,000 cps | **Yes** | ID Quantique / Single Quantum datasheets |
+| `detector_efficiency` η_Z | **0.90** ✓ | SPAD: 10–25% (IDQ ID230); SNSPD: 80–95% (IDQ ID281) | **Yes** | IDQ ID230 datasheet (SPAD default 20%); IDQ ID281 datasheet (SNSPD default 90%). Multi-channel note: 1 unit covers 4 channels per relay → cost model overestimates MDI relay SPD cost. IDQ quote requested for pricing. |
+| `dark_count_rate` | **50 cps** ✓ | SNSPD: 25–100 cps (ID281); SPAD: 70–90 cps at η=10%, 150–250 cps at η=20% (ID230) | **Yes** | IDQ datasheets. SPAD d_c is COUPLED to η — realistic SPAD point = η=0.20 + d_c=200 together; layer model treats them independently for marginal analysis. |
 | `node_loss_db` (BB84) | 2.0 dB | 1.0–4.0 dB (EOM 0.5–3 dB + PBS 0.3–1.0 dB) | No | EOM datasheet (Thorlabs/iXblue); PBS datasheet |
 | `node_loss_db_mdi` (MDI/arm) | 1.0 dB | 0.5–2.0 dB (BS excess 0.1–0.5 dB + PBS 0.3–1.0 dB) | No | HOM BS datasheet; Lo 2012 |
 | `node_loss_db_tbb84` (TBB84) | 3.0 dB | 2.0–5.5 dB (switch 0.5–2 dB + EOM 0.5–3 dB + PBS 0.3–1.0 dB) | No | Same as BB84 + switch; confirm switch loss |

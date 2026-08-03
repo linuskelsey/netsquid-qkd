@@ -215,11 +215,12 @@ Fibre cost scales as $\mathcal{O}(N^2)$ for BB84 and as $\mathcal{O}(N)$ for MDI
 
 \subsubsection{Single-Photon Detector Cost}
 
-SPD cost depends primarily on detection efficiency and technology class. We model it as a linear function of detection efficiency $\eta$, anchored at two operating points: an InGaAs SPAD with $\eta = 0.20$ at £15,000, and an SNSPD with $\eta = 0.85$ at £100,000:
+SPD cost depends primarily on detection efficiency and technology class. We model it as a linear function of detection efficiency $\eta$, anchored at two IDQ product operating points: the ID230 InGaAs SPAD ($\eta = 0.20$, dark count 200~cps at £15,000 placeholder) and the ID281 SNSPD ($\eta = 0.90$, dark count 50~cps at £100,000 placeholder):
 \begin{equation}
-    C_\text{SPD}(\eta) = \frac{£100{,}000 - £15{,}000}{0.85 - 0.20}\,(\eta - 0.20) + £15{,}000.
+    C_\text{SPD}(\eta) = \frac{£100{,}000 - £15{,}000}{0.90 - 0.20}\,(\eta - 0.20) + £15{,}000.
     \label{eq:spd_cost}
 \end{equation}
+Both anchor prices are placeholder estimates; a quote from ID Quantique has been requested. Note that for the ID230 SPAD, detection efficiency and dark count rate are not independent: operating the detector at higher bias increases both efficiency and dark count simultaneously (e.g., $\eta = 0.10$ yields ${\sim}80$~cps whilst $\eta = 0.20$ yields ${\sim}200$~cps). The simulation treats $\eta$ and $d_c$ as independent parameters to isolate the marginal effect of each, but the physically consistent SPAD operating point pairs $\eta = 0.20$ with $d_c = 200$~cps.
 This linear model is a simplification: SPD cost in practice is not strictly linear in $\eta$, and dark count rate is a second major performance parameter that is not independently captured. The model is adequate for comparative analysis when sweeping between SPAD and SNSPD technology classes.
 
 A further consideration is that commercial SNSPD products are typically sold as multi-channel units integrating several detector channels within a single cryostat (for example, the ID Quantique product range offers 2--8 channels per unit). An MDI relay station requiring four SPDs (two polarising beam splitter outputs per arm) may therefore be equipped with a single multi-channel unit rather than four independent detectors. In this case the cost per relay is one unit price rather than $4 \times C_\text{SPD}(\eta)$; the per-channel model overestimates relay detector cost and will be revised on confirmation of unit pricing.
@@ -233,8 +234,8 @@ Default component costs are listed in Table~\ref{tab:costs}; all values are esti
 Component & Default cost & Note \\
 \midrule
 QD photon source & £150,000 & Pending verification \\
-SPD (SPAD, $\eta=0.20$) & £15,000 & Linear model anchor \\
-SPD (SNSPD, $\eta=0.85$) & £100,000 & Linear model anchor \\
+SPD (IDQ ID230 SPAD, $\eta=0.20$, $d_c\approx200$~cps) & £15,000 & Placeholder; IDQ quote requested \\
+SPD (IDQ ID281 SNSPD, $\eta=0.90$, $d_c\approx50$~cps) & £100,000 & Placeholder; IDQ quote requested \\
 50:50 HOM beam splitter & £1,000 & Pending verification \\
 Polarising beam splitter & £500 & Pending verification \\
 Electro-optic modulator & £2,000 & Pending verification \\
@@ -286,8 +287,8 @@ Layer & Parameter added & Symbol & Default value & Verification source \\
 \midrule
 0 & Ideal baseline & --- & All perfect & --- \\
 1 & Fibre attenuation & $\alpha$ & 0.18~dB/km & Corning SMF-28 datasheet \\
-2 & Detector efficiency (Z basis) & $\eta_Z$ & 0.65 & \\
-3 & Dark count rate & $d_c$ & 100~cps & \\
+2 & Detector efficiency (Z basis) & $\eta_Z$ & 0.90 & IDQ ID281 SNSPD datasheet \\
+3 & Dark count rate & $d_c$ & 50~cps & IDQ ID281 SNSPD datasheet \\
 4 & TX insertion loss & $L_i$ & 0.10 (10\%) & \\
 5 & RX node loss & $\Delta_n$ & BB84: 2.0~dB; MDI: 1.0~dB/arm; TBB84: 3.0~dB & \\
 6 & Source error rate & $\varepsilon_s$ & 0.02 & \cite{Bozzio_2022} \\

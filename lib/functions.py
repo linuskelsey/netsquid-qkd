@@ -10,13 +10,13 @@ from netsquid.components.models import DelayModel, FibreLossModel
 DEFAULTS = {
     "fibre_loss_db_per_km": 0.18,  # Corning SMF-28 max at 1550 nm; pass --config configs/layer0_ideal.json for idealised baseline
     "init_loss": 0.15,             # linear fraction [0-1], not dB (e.g. 0.15 = 15% loss)
-    "detector_efficiency": 0.85,
-    "dark_count_rate": 100,
+    "detector_efficiency": 0.90,   # IDQ ID281 SNSPD default at telecom (range 0.80-0.95)
+    "dark_count_rate": 50,         # IDQ ID281 SNSPD at telecom (range 25-100 cps)
     "node_loss_db": 2.0,           # BB84 RX: EOM (~1.5 dB) + PBS (~0.5 dB)
     "node_loss_db_mdi": 1.0,       # MDI RX per arm: BS excess (~0.2 dB) + PBS (~0.5 dB); applied independently to each arm
     "node_loss_db_tbb84": 3.0,     # TBB84 RX: switch (~1.5 dB) + EOM (~1.5 dB) + PBS (~0.5 dB)
     "source_error_rate": 0.02,     # 2% QD single-photon error rate (Bozzio et al. 2022)
-    "det_eff_x": 0.85,
+    "det_eff_x": 0.85,             # layer-8 X-basis bias: 5% differential vs η_Z=0.90
     "dephasing_rate": 0.0001,
     "bs_eff": 0.97,
     "tortuosity_mean": 1.0,     # 1.0 = Euclidean (off); set >1.0 to enable per-link stochastic routing factor
