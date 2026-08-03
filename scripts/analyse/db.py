@@ -98,16 +98,12 @@ ERROR_MODES = ["bars", "shade", "sigma", "iqr", "sem"]
 NET_X_COLS   = ["n_users", "k_relays"]
 NET_Y_COLS   = [
     "avg_key_rate", "success_rate", "min_key_rate", "max_key_rate",
-    "total_cost_gbp", "hardware_cost_gbp", "fibre_cost_gbp",
 ]
 NET_Y_LABELS = {
-    "avg_key_rate":      "Avg key rate (kbps)",
-    "success_rate":      "Network success rate",
-    "min_key_rate":      "Min key rate (kbps)",
-    "max_key_rate":      "Max key rate (kbps)",
-    "total_cost_gbp":    "Total deployment cost (M£)",
-    "hardware_cost_gbp": "Hardware cost (M£)",
-    "fibre_cost_gbp":    "Fibre cost (M£)",
+    "avg_key_rate": "Avg key rate (kbps)",
+    "success_rate": "Network success rate",
+    "min_key_rate": "Min key rate (kbps)",
+    "max_key_rate": "Max key rate (kbps)",
 }
 # Maps the x-axis column to the experiment tag stored in network_results.
 NET_EXPERIMENT = {"n_users": "user_sweep", "k_relays": "relay_sweep"}

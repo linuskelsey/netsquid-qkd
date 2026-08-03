@@ -37,12 +37,10 @@ _BB84_COL  = "#377eb8"
 _MDI_COL   = "#e41a1c"
 
 _RATE_COLS = {"avg_key_rate", "min_key_rate", "max_key_rate"}
-_COST_COLS = {"total_cost_gbp", "hardware_cost_gbp", "fibre_cost_gbp"}
 
 def _y_scale(y_col):
-    if y_col in _RATE_COLS:   return "rate"     # log scale, bps → kbps (÷1000)
-    if y_col in _COST_COLS:   return "cost"     # linear, £ → M£ (÷1e6)
-    return "fraction"                            # linear, no conversion
+    if y_col in _RATE_COLS: return "rate"      # log scale, bps → kbps (÷1000)
+    return "fraction"                           # linear, no conversion
 _TOPO_COLOURS = [
     "#e41a1c", "#377eb8", "#4daf4a", "#984ea3",
     "#ff7f00", "#a65628", "#f781bf", "#999999",
@@ -151,7 +149,7 @@ def _topology_fig(x_col: str, data: dict, fixed_dict: dict, seed: int,
 # ── plotting ──────────────────────────────────────────────────────────────────
 
 def _sc(scale: str) -> float:
-    return 1000 if scale == "rate" else (1e6 if scale == "cost" else 1)
+    return 1000 if scale == "rate" else 1
 
 
 def _plot_bb84(ax, d: dict, scale: str) -> None:

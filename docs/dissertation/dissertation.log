@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026/Arch Linux) (preloaded format=pdflatex 2026.7.6)  3 AUG 2026 14:47
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026/Arch Linux) (preloaded format=pdflatex 2026.7.6)  3 AUG 2026 18:56
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -784,18 +784,6 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 
 ]
 
-LaTeX Warning: Command \textsterling invalid in math mode on input line 218.
-
-
-LaTeX Warning: Command \textsterling invalid in math mode on input line 218.
-
-
-LaTeX Warning: Command \textsterling invalid in math mode on input line 218.
-
-Missing character: There is no ¿ in font cmr12!
-Missing character: There is no ¿ in font cmr12!
-Missing character: There is no ¿ in font cmr12!
-
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 13.59999pt, for example:
 (fancyhdr)                \setlength{\headheight}{13.59999pt}.
@@ -803,15 +791,6 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [10]
-Overfull \hbox (0.41145pt too wide) in paragraph at lines 226--227
-[]\T1/cmr/m/n/12 Default com-po-nent costs are listed in Ta-ble []3[]; all val-ues are es-ti-mates pend-ing datasheet
- []
-
-
-Overfull \hbox (93.24619pt too wide) in paragraph at lines 230--244
- [][] 
- []
-
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 13.59999pt, for example:
@@ -820,10 +799,50 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [11]
+Underfull \hbox (badness 10000) in paragraph at lines 251--251
+[]\T1/cmr/m/n/10.95 Parameter
+ []
 
-LaTeX Warning: Command \textsterling invalid in math mode on input line 258.
 
-Missing character: There is no ¿ in font cmr12!
+Underfull \hbox (badness 10000) in paragraph at lines 254--254
+[]\T1/cmr/m/n/10.95 Fibre at-ten-u-a-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 254--255
+[]\T1/cmr/m/n/10.95 Corning SMF-28
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 255--255
+[]\T1/cmr/m/n/10.95 Detector ef-fi-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 259--260
+[]\T1/cmr/m/n/10.95 Quandela
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 259--260
+\T1/cmr/m/n/10.95 Prometheus
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 259--260
+\T1/cmr/m/n/10.95 datasheet
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 262--262
+[]\T1/cmr/m/n/10.95 BSM beam-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 262--262
+\T1/cmr/m/n/10.95 splitter ef-fi-
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 13.59999pt, for example:
@@ -832,50 +851,6 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [12]
-Underfull \hbox (badness 10000) in paragraph at lines 284--284
-[]\T1/cmr/m/n/10.95 Parameter
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 287--287
-[]\T1/cmr/m/n/10.95 Fibre at-ten-u-a-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 287--288
-[]\T1/cmr/m/n/10.95 Corning SMF-28
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 288--288
-[]\T1/cmr/m/n/10.95 Detector ef-fi-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 292--293
-[]\T1/cmr/m/n/10.95 Quandela
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 292--293
-\T1/cmr/m/n/10.95 Prometheus
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 292--293
-\T1/cmr/m/n/10.95 datasheet
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 295--295
-[]\T1/cmr/m/n/10.95 BSM beam-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 295--295
-\T1/cmr/m/n/10.95 splitter ef-fi-
- []
-
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 13.59999pt, for example:
@@ -915,7 +890,9 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[17]
+[17
+
+]
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 13.59999pt, for example:
@@ -933,9 +910,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[19
-
-]
+[19]
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 13.59999pt, for example:
@@ -952,6 +927,10 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [21]
+Overfull \hbox (10.73753pt too wide) in paragraph at lines 377--378
+[]\T1/cmr/m/n/12 The sym-bolic cost model pre-dicts that MDI be-comes cost-competitive above a crossover
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 13.59999pt, for example:
@@ -959,15 +938,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[22]
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 13.59999pt, for example:
-(fancyhdr)                \setlength{\headheight}{13.59999pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
-
-[23
+[22
 
 {/usr/share/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc}] (./dissertation.bbl
 
@@ -977,7 +948,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[24]
+[23]
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 13.59999pt, for example:
@@ -985,7 +956,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[25
+[24
 
 ]
 
@@ -995,7 +966,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[26])
+[25])
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 13.59999pt, for example:
@@ -1003,27 +974,27 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[27] (./dissertation.aux)
+[26] (./dissertation.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
 Package rerunfilecheck Info: File `dissertation.out' has not changed.
-(rerunfilecheck)             Checksum: A1801161F88D0E34E23F3F6468A1F34D;4656.
+(rerunfilecheck)             Checksum: 595B102A1F9DA839F2047B12F180436E;4101.
  ) 
 Here is how much of TeX's memory you used:
- 28527 strings out of 469515
- 552169 string characters out of 5470808
- 989424 words of memory out of 5000000
- 56583 multiletter control sequences out of 15000+600000
+ 28520 strings out of 469515
+ 552060 string characters out of 5470808
+ 989344 words of memory out of 5000000
+ 56581 multiletter control sequences out of 15000+600000
  647781 words of font info for 91 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  84i,18n,131p,1959b,1445s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfbx1095.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfbx1200.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfbx1440.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfbx1728.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfrm0800.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfrm1095.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfrm1200.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfrm1440.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfrm2074.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfti1095.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfti1200.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sftt1200.pfb>
-Output written on dissertation.pdf (27 pages, 458365 bytes).
+Output written on dissertation.pdf (26 pages, 454847 bytes).
 PDF statistics:
- 516 PDF objects out of 1000 (max. 8388607)
- 434 compressed objects within 5 object streams
- 96 named destinations out of 1000 (max. 500000)
- 237 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 504 PDF objects out of 1000 (max. 8388607)
+ 423 compressed objects within 5 object streams
+ 91 named destinations out of 1000 (max. 500000)
+ 221 words of extra memory for PDF output out of 10000 (max. 10000000)
 

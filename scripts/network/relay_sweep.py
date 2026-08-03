@@ -41,13 +41,12 @@ sys.path.insert(0, _network)
 
 import time
 from lib.functions import load_config
-from lib.db import DEFAULT_DB_PATH, update_network_cost
+from lib.db import DEFAULT_DB_PATH
 from lib.progress import Progress
 from topology import place_users, optimise_relays, Topology
 from bb84_network import run_bb84_network
 from mdi_network import run_mdi_network
 from visualise_network import draw_mdi, draw_bb84
-from cost import component_counts, total_cost
 
 
 def _pair_avgs(pair_rates):
@@ -123,12 +122,6 @@ def main():
         bb84_per_seed.append(_s_bb84)
         bb84_ok_per_seed.append(_s_bb84_ok)
         bb84_fibre_per_seed.append(bb84_res["total_fibre_km"])
-        _det_eff = cfg["detector_efficiency"]
-        _bb84_cost = total_cost(component_counts(args.n, 0, "BB84"),
-                                bb84_res["total_fibre_km"], _det_eff)
-        update_network_cost(None if args.no_net_db else DEFAULT_DB_PATH,
-                            bb84_res.get("net_run_id"), _det_eff,
-                            _bb84_cost["hardware_gbp"], _bb84_cost["fibre_gbp"], _bb84_cost["total_gbp"])
         step += 1
         prog.update(step, f"BB84 {_s_bb84/1000:.2f} kbps  ({_s_bb84_ok:.0f}% ok)")
 
@@ -147,12 +140,6 @@ def main():
             mdi_per_seed[K].append(_s_mdi)
             mdi_ok_per_seed[K].append(_s_mdi_ok)
             mdi_fibre_per_seed[K].append(mdi_res["total_fibre_km"])
-            _mdi_cost = total_cost(component_counts(args.n, K, "MDI"),
-                                   mdi_res["total_fibre_km"], _det_eff)
-            update_network_cost(None if args.no_net_db else DEFAULT_DB_PATH,
-                                mdi_res.get("net_run_id"), _det_eff,
-                                _mdi_cost["hardware_gbp"], _mdi_cost["fibre_gbp"], _mdi_cost["total_gbp"])
-
             step += 1
             prog.update(step, f"Relay count: {K}/{K_values[-1]}  BB84 {_s_bb84/1000:.2f} | MDI {_s_mdi/1000:.2f} kbps")
 

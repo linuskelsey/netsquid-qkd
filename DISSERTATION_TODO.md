@@ -1,14 +1,15 @@
 # Dissertation TODO
 > Generated 2026-08-03 from audit of `dissertation.tex`, `ROADMAP.md`, `TODO.md`, and `cost rethink/cost_analysis.tex`.
+> Updated 2026-08-03: cost model stripped from simulation code entirely. Cost analysis is now purely analytical in the dissertation (component count formulae with free parameters α, β). No cost sweep scripts; no £ columns in DB. Simulation code outputs (N, K, avg_key_rate, total_fibre_km) only.
 > Organised by category. Items marked **[BLOCKING]** must be done before submission.
 
 ---
 
 ## 1. Code Bugs (fix before final data runs)
 
-- [x] **`mdi_network.py`**: return dict has `"n_spd": 2 * topo.K` — stale, cost model uses 4K. Update to `4 * topo.K`. (cost_analysis.tex Inconsistency IV)
-- [x] **`cost_sweep.py`**: when `--detector-tech SPAD`, `dark_count_rate` stays at 100 cps (SNSPD-tier). Couple dark count to detector class: SPAD → ~10,000 cps, SNSPD → ~100 cps. (cost_analysis.tex Inconsistency II)
-- [x] **`lib/functions.py` / JSON configs**: node loss unified to single `node_loss_db = 2.0 dB` for both BB84 and MDI. Protocol-specific split reverted (too complex to verify; noted as limitation in §5). `node_loss_db_mdi` removed. `SWITCH_LOSS_DB = 0.0` (switch abstracted). (cost_analysis.tex Inconsistency I — partially addressed)
+- [x] **`mdi_network.py`**: return dict `"n_spd"` corrected to `4 * topo.K`. *(moot post cost-strip but fixed for completeness)*
+- [x] **`lib/functions.py` / JSON configs**: node loss unified to single `node_loss_db = 2.0 dB` for both BB84 and MDI. `node_loss_db_mdi` removed. `SWITCH_LOSS_DB = 0.0`. Noted as limitation in §5.
+- [x] **Strip all cost code** — removed `cost_sweep.py`, `network/cost.py`, `update_network_cost` calls from all sweep scripts, cost columns from DB schema and `lib/db.py`, cost imports from `user_sweep.py` / `relay_sweep.py`. DB consolidated: old cost-schema results.db (30k rows) deleted; results_to_Aug.db (11M rows, no cost cols) renamed to results.db.
 
 ---
 
@@ -16,18 +17,17 @@
 
 - [x] **Real-topology input tool**: `network/real_topology.py` — equirectangular lat/lon → km projection; JSON format with `"nodes"` (type: user/relay) and `"protocols"` fields; `load_real_topology()` returns `(Topology, meta)`. `--real NAME` flag on `user_sweep.py` and `cost_sweep.py` loads `data/real_topologies/NAME.json`, fixes relay positions, enforces 30 km catchment radius for clustered placement, skips k-means. Users generated incrementally (pool of n_max sliced per data point). TBB84 gated by `"protocols"` in JSON — only available in `--real` path. BT topology at `data/real_topologies/bt.json` (Slough, West End, City of London; 3 relays; BB84+MDI+TBB84). `relay_sweep.py` excluded (K sweep meaningless with fixed real topology).
 
-- [x] **Cost columns in DB**: 4 cost columns added to `network_results` schema (`detector_efficiency`, `hardware_cost_gbp`, `fibre_cost_gbp`, `total_cost_gbp`). Written via `update_network_cost()` from all three sweep scripts after each run.
-- [x] **DB cost reconstruction**: `scripts/analyse/network.py` now supports `--y total_cost_gbp / hardware_cost_gbp / fibre_cost_gbp` (M£, linear scale) and `--protocols trusted_BB84`. Cost columns written to DB by all sweep scripts.
-- [ ] **Cost–rate optimisation sweep**: sweep relay count K at fixed N and area; extract (total_cost_gbp, avg_key_rate) per configuration per protocol; identify cost-optimal and rate-optimal configurations; plot cost vs rate for each protocol. Needed for the Deployment Recommendations section in the dissertation. (ROADMAP Planned, dissertation §4)
-- [x] **`--tortuosity FLOAT` flag** on all network sweep scripts (default 1.0 = off). When enabled, each physical cable gets an independent factor drawn from truncated normal(mean, σ=0.1), min 1.0. Per-cable (not per-pair): user i's cable reused across N-1 pairs; backbone (j,k) reused across all cross-cluster pairs through it. Affects both simulated key rate (longer fibre → more loss) and cost (total_fibre_km). Cost-only path in cost_sweep.py uses a deterministic mean multiplier.
+- [x] **`--tortuosity FLOAT` flag** on all network sweep scripts (default 1.0 = off). Per-cable factor drawn from truncated normal(mean, σ=0.1), min 1.0. Affects simulated key rate via longer fibre distances; `total_fibre_km` in DB reflects tortuous lengths.
+- ~~**Cost columns in DB**~~ — stripped; cost is analytical in dissertation, not stored in DB.
+- ~~**Cost–rate optimisation sweep**~~ — replaced by analytical model in dissertation §4 (component count formulae with free parameters; crossover N discussed qualitatively).
 
 ---
 
 ## 3. Simulations to Run (data collection)
 
 - [ ] **[HIGH PRIORITY] Regenerate all figures** — hardware defaults updated (fibre_loss 0.2→0.18, detector_efficiency 0.65→0.90, dark_count_rate 100→50, source_error_rate 0.005→0.015) and node_loss_db unified across protocols. All existing P2P and network figures are stale and must be rerun before thesis submission.
-- [ ] **Cost sweep — SPAD and SNSPD** at representative N range (e.g. N=2..16, K=2): cost vs N and cost-efficiency vs N for BB84 and MDI → figure for thesis §4.
-- [ ] **Cost–rate optimisation sweep** (K grid at fixed N, multi-seed): (cost, avg_key_rate) pairs for BB84/MDI → cost vs rate figures per protocol.
+- ~~**Cost sweep**~~ — removed; cost treated analytically in dissertation.
+- ~~**Cost–rate optimisation sweep**~~ — removed; crossover point derived analytically from component count formulae.
 - [ ] **Realistic hardware region shading**: finalise hardware parameter values from Lo 2012 (`\cite{Lo_2012}`), Tang 2016 (`\cite{Tang_2016}`), Berrevoets 2022 (`\cite{Berrevoets_2022}`); add to all P2P compare figures as shaded region. (TODO.md §1)
 - [ ] **Literature validation on `layers.py`**: identify 2–3 published key rate vs distance curves per protocol; overlay as scatter markers on layers figure. (TODO.md §2)
 - [ ] **MC run count audit**: for rates of order 10⁻ˣ target 10^(x+1) samples per point; audit all scripts and increase where under-sampled. (ROADMAP Analysis)
@@ -56,33 +56,31 @@ All parameters below are unverified placeholders or indicative midpoints. Verify
 - [ ] **Confirm sweep ranges** used in compare figures match the realistic ranges above. Where they differ, update the compare script x-ranges and re-shade.
 - [ ] **`node_loss_db`** (2.0 dB unified): noted as unverified limitation in §5; datasheet verification deferred to future work.
 
-### 4b. Cost Model Parameters (`network/cost.py` DEFAULT_COSTS and DETECTOR_TECH)
+### 4b. Cost Model (analytical — no code)
 
-| Parameter | Current value | Notes | Verify against |
-|---|---|---|---|
-| QD photon source | £150,000 | Includes cryostat amortisation; placeholder | Quandela SPS `\cite{QuandelaSPS}`; confirm cryostat share |
-| InGaAs SPAD efficiency | η = 0.20 | Lower anchor of SPD cost model | ID Quantique ID230; Excelitas SPCM datasheet |
-| InGaAs SPAD cost | £15,000 | Placeholder | ID Quantique / Excelitas list price |
-| InGaAs SPAD dark count | 10,000 cps | Now coupled to detector class (bug fixed) | Datasheet; expected 1,000–50,000 cps |
-| SNSPD efficiency | η = 0.85 | Upper anchor of SPD cost model | Single Quantum / Photon Spot; NIST publications |
-| SNSPD cost | £100,000 | Placeholder | Single Quantum list price |
-| SNSPD dark count | 100 cps | Now coupled to detector class (bug fixed) | Datasheet; expected 1–300 cps |
-| HOM 50:50 BS (MDI relay) | £1,000 | — | Thorlabs / OFR fibre coupler price |
-| PBS | £500 | — | Thorlabs / OFR price |
-| EOM (BB84 RX) | £2,000 | Insertion loss abstracted into lumped node_loss_db | iXblue / Thorlabs EOM datasheet |
-| Optical switch (MDI relay) | £5,000 | Insertion loss abstracted (SWITCH_LOSS_DB=0); cost entry retained | DiCon / Agiltron datasheet |
-| Dark fibre installed | £10,000/km | Highly region-dependent; UK duct availability varies | Ofcom / BT Openreach infrastructure reports |
+Cost is expressed in the dissertation as component count formulae with free parameters $c_s$ (source), $c_d$ (detector), $c_f$ (fibre/km). No absolute £ values required in code. For the dissertation discuss qualitatively using literature ranges:
 
-- [ ] Once all values verified: update `DEFAULT_COSTS` / `DETECTOR_TECH` in `network/cost.py`, update `PARAMS.md`, and cite all sources in dissertation cost methodology section.
+| Component | Indicative range | Notes |
+|---|---|---|
+| QD source | very high (£100k–£300k) | Cryogenic; unverified; discuss as barrier |
+| SNSPD | high (£50k–£150k) | Cryogenic; drives MDI relay cost |
+| SPAD | moderate (£5k–£30k) | Room-temp; lower η |
+| Fibre (dark, installed) | £5k–£15k/km | Region-dependent |
+| Passive optics (BS, PBS, EOM) | low (£0.5k–£5k each) | Negligible vs sources/detectors |
+
+- [ ] In dissertation §3 cost methodology: state component count formulae for BB84, MDI, TBB84 (already in `cost_analysis.tex`); express costs symbolically; discuss qualitative scaling (O(N²) fibre for BB84 vs O(N) for MDI/TBB84).
+- [ ] In dissertation §4: derive crossover N analytically (where MDI total cost < BB84); show it depends on ratio $c_s / c_f$ and discuss which regime (source-dominated vs fibre-dominated) favours each protocol.
 
 ---
 
 ## 5. Dissertation Writing
 
-### §3 Methodology — Cost Analysis (currently: two-line stub)
-- [ ] Write full algebraic cost model section: component counts per protocol, SPD linear model (η → cost), total cost formula, cost-rate optimisation framing (fixed budget / fixed rate dual problems). Reference `network/cost.py` and `cost rethink/cost_analysis.tex`.
-- [ ] State all cost model assumptions explicitly: Euclidean topology (no tortuosity), CapEx only (no OpEx), classical comms free, QD source fixed, node loss not individually costed per component.
-- [ ] Mention and cite the ONDM 2025 paper (`\cite{DBLP:conf/ondm/KaraviasHBLP25}`) as the most directly related prior cost work; note it covers PM and entanglement-based QKD but not MDI.
+### §3 Methodology — Cost Analysis
+- [x] Write component count formulae for BB84, MDI. Expressed symbolically with free parameters $c_s, c_d, c_f$ (Eqs cost\_bb84 / cost\_mdi in dissertation.tex). TBB84 cost formulae deferred — TBB84 is only in --real path, out of scope for main methodology.
+- [x] State assumptions: CapEx only, classical comms free (sunk cost of existing infra), absolute prices unverified — results are scaling analysis only.
+- [x] Mention and cite ONDM 2025 (`\cite{DBLP:conf/ondm/KaraviasHBLP25}`) as prior cost work; noted it uses ILP optimisation for PM-QKD with concrete prices; this work extends to MDI symbolically.
+- [x] Tortuosity model written (truncated normal, μ=1.2, σ=0.1); noted as affecting simulated key rate via longer fibre loss only (not cost directly since cost is symbolic).
+- [ ] §4 Results: write cost analysis prose — present component count scaling table (already Tab:components); derive or cite the crossover N* argument; discuss which c_d/c_f regime favours each protocol.
 
 ### §3 Methodology — NetSquid / Simulation Architecture (currently: stub)
 - [ ] Describe NetSquid DES engine and why it was chosen; cite `\cite{Coopmans_2021}`.
@@ -107,22 +105,21 @@ All parameters below are unverified placeholders or indicative midpoints. Verify
 - [ ] **P2P performance**: present layers figure + selected parameter sweeps; refer to parameter impact table.
 - [ ] **Network key rate vs relay count** and **vs user count**: present relay_sweep and user_sweep figures.
 - [ ] **Network key rate gap**: explain MDI ~10× vs BB84 (supported by experiment or cited causes).
-- [ ] **Cost results**: cost vs N, cost-efficiency vs N for SPAD and SNSPD configurations.
-- [ ] **Cost vs rate optimisation plot**: for each protocol; read off deployment recommendations at given budget or rate requirement.
+- [ ] **Cost analysis**: present component count scaling argument (Tab:components already in tex); narrate $\mathcal{O}(N^2)$ vs $\mathcal{O}(N)$ fibre result; discuss crossover N* dependence on $c_d/c_f$ ratio; note SNSPD multi-channel packaging caveat and OpEx omission.
 - [ ] **Parameter impact summary table**: one row per physical parameter (fibre loss, detector efficiency, dark count rate, node loss, init loss, source error, dephasing, basis bias, BS efficiency, Charlie position); columns = BB84 and MDI key rate reduction (% or ×) across the realistic operating range. Replaces or supplements 10 individual compare figures. (ROADMAP Project Report)
-- [ ] **Deployment Recommendations subsection** (§4 already has a skeleton): populate with actual cost-rate optimisation results; frame using security level argument (when MDI is worth the rate penalty).
+- [ ] **Deployment Recommendations subsection** (§4 already has a skeleton): populate with key rate sweep results; frame as: given $R_\min$, what $K^*$ is needed, and what symbolic cost does that imply for each protocol? Security argument (when MDI is worth the rate penalty).
 
 ### §5 Discussion (currently: "Discuss results?")
 - [ ] Critical analysis: MDI rate penalty vs security gain — where is the cross-over point?
-- [ ] Cost model limitations: CapEx only, Euclidean distances, QD cost unverified, no OpEx for cryo systems.
-- [ ] Note simulation–cost decoupling (cost_analysis.tex Inconsistency I): adding components raises cost but doesn't degrade simulated rate; discuss implications for interpretation.
+- [x] Cost model limitations: written in dissertation.tex (§Cost Model Limitations) — component price data unavailable → symbolic model; OpEx not modelled; BB84 O(N²) fibre is upper bound.
+- [x] Note that cost and simulation are decoupled by design: simulation gives key rate, cost model is analytical; explicitly stated as design choice not a limitation.
 - [ ] Note TBB84 trust assumption vs MDI: relay node compromise vs detector side-channel attacks.
 - [ ] Energetic footprint: cite `\cite{Yehia_2025}`; note cryogenic OpEx for SNSPD and QD is unmodelled.
 
 ### §6 Conclusion (currently: skeleton notes)
-- [ ] Past work summary: what simulation infrastructure was built (10-layer model, network simulators, cost model, DB).
-- [ ] Present findings: key rate gap quantified; cost model shows MDI has lower component cost but higher per-bit cost; cost-rate optimisation reveals deployment-optimal configurations.
-- [ ] Future work: finite-key corrections, WCP/decoy-state source model, ILP relay placement, WDM multi-user MDI, traffic-aware relay count optimisation (queueing model), TF-QKD extension.
+- [x] Summary of Contributions: written in dissertation.tex (§Summary of Contributions) — 10-layer model, network simulators, symbolic cost model, DB persistence.
+- [ ] Present findings: key rate gap quantified (placeholder bullets in tex — need actual numbers); cost crossover N* depends on $c_d/c_f$ (written).
+- [ ] Future work: finite-key corrections, WCP/decoy-state source model, ILP relay placement, WDM multi-user MDI, traffic-aware relay count optimisation (queueing model), TF-QKD extension. *(already drafted in dissertation.tex §Future Work)*
 
 ### §2 Background — minor fixes
 - [ ] Line 104 comment `% make a brief appendix entry showing this? incorp hong-ou-mandel?` — decide: add brief HOM explanation in background or appendix; cite `\cite{Hong_1987}` (already in bib).
@@ -134,11 +131,11 @@ All parameters below are unverified placeholders or indicative midpoints. Verify
 ## 6. Referencing
 
 ### Missing citations needed in dissertation
-- [ ] Citation for QD photon source cost (£150k): `\cite{QuandelaSPS}` already in bib — use it or find alternative with price data.
-- [ ] Citation for InGaAs SPAD specs (η, dark count rate, cost per unit): likely ID Quantique or Excelitas datasheets; add to bib.
-- [ ] Citation for SNSPD specs (η, dark count rate, cost per unit): likely Single Quantum, Photon Spot, or NIST publications; add to bib.
-- [ ] Citation for dark fibre installation cost per km (UK context): Ofcom or BT Openreach infrastructure reports.
-- [ ] Citation for EOM insertion loss range (0.5–3 dB): standard photonics reference.
+- ~~Citation for QD photon source cost (£150k)~~ — moot; absolute costs removed from dissertation.
+- [ ] Citation for SPAD η / dark count specs: IDQ ID230 datasheet — needed for §4b indicative range table.
+- [ ] Citation for SNSPD η / dark count specs: IDQ ID281 datasheet — needed for §4b indicative range table.
+- ~~Citation for dark fibre installation cost per km~~ — moot; $c_f$ is a free symbolic parameter.
+- [ ] Citation for EOM insertion loss range (0.5–3 dB): standard photonics reference — needed for §7 node\_loss justification.
 - [ ] Citation for 11% QBER threshold: already `\cite{Shor_2000}` — ensure it is cited in the methodology where the cutoff is stated.
 
 ### Citations to verify compile correctly
@@ -187,14 +184,14 @@ Every item below is an assumption baked into the simulation or cost model that m
 
 ### Cost Model Assumptions
 
-- [ ] **CapEx only, no OpEx**: cryogenic systems (SNSPD at ~2 K, QD at ~4 K) have cooling costs that can rival hardware CapEx over a 10-year lifetime. State this is not modelled; cite `\cite{Yehia_2025}` as the only energetic analysis in the QKD context.
-- [ ] **Classical communications free**: synchronisation, basis reconciliation, error correction, privacy amplification, and key forwarding are not costed. Standard assumption in early-stage techno-economic QKD analysis; state explicitly. (cost_analysis.tex §9.1)
-- [ ] **BB84 mesh: one dark fibre per user pair**: N(N−1)/2 individual dark fibre runs. Correct for passive dark-fibre mesh; unrealistic at large N where WDM or switched architecture would be used. State this makes BB84 costs appear very large at high N, which is physically meaningful (mesh BB84 doesn't scale) but should not be interpreted as a realistic deployment estimate at N>8. (cost_analysis.tex §9.3)
-- [ ] **SPD cost linear in η**: two-point linear model anchored at SPAD (η=0.20, £15k) and SNSPD (η=0.85, £100k). State that this is a modelling simplification; in reality cost is not strictly linear and dark count rate (a second major parameter) is not captured. Justify as sufficient for comparative analysis given the technology class is swept in discrete steps. (cost_analysis.tex §3)
-- [ ] **QD source at £150,000**: reflects QD SPS + cryostat cost amortised per channel. State this is an estimate requiring verification; use `--source-cost` to override when revised figures are available.
-- [ ] **TX coupling loss (`init_loss = 0.15`) has no cost entry**: coupling hardware (collimator, circulator) is ~£100–500, negligible vs £150k source. State explicitly that it is omitted as negligible. (cost_analysis.tex Inconsistency VI)
-- [ ] **Optical switch at MDI relay: cost charged per relay, loss only for cross-cluster pairs**: the switch must be installed at every relay unconditionally; its insertion loss only applies when routing cross-cluster photons. State this asymmetry; note that networks with high K have a larger switch cost fraction relative to switch-induced rate penalty. (cost_analysis.tex Inconsistency V)
-- [ ] **Cost and simulation models are not tightly coupled**: adding components to the cost model raises cost but does not change simulated key rate (node_loss_db is fixed). State this explicitly in the cost methodology section; note that the correct approach is to update both cost model and `node_loss_db` when refining component budgets. (cost_analysis.tex §9.4)
+- [x] **CapEx only, no OpEx**: stated in dissertation.tex §Cost Model and §Cost Model Limitations; cites `\cite{Yehia_2025}`.
+- [x] **Classical communications free**: stated as sunk cost of existing infrastructure in §Cost Model intro.
+- [x] **BB84 mesh: one dark fibre per user pair**: stated as upper bound applicable to passive dark-fibre mesh deployments; WDM/switched caveat noted in §Cost Model Limitations.
+- ~~**SPD cost linear in η**~~ — moot; linear cost model removed. Cost is now symbolic ($c_d$ per detector, no η dependence).
+- ~~**QD source at £150,000**~~ — moot; absolute prices removed. Cost is $c_s$ (free parameter).
+- ~~**TX coupling loss has no cost entry**~~ — moot; cost model is symbolic, no component-level price entries.
+- ~~**Optical switch: cost vs insertion loss asymmetry**~~ — moot; switch cost absorbed into symbolic relay hardware term (omitted for clarity in Eqs).
+- [x] **Cost and simulation models are not tightly coupled**: stated explicitly as design choice (simulation gives key rate; cost model is analytical). Mentioned in §Simulation Model Limitations (receiver node loss discussion).
 
 ---
 

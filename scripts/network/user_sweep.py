@@ -47,7 +47,7 @@ sys.path.insert(0, _network)
 
 import time
 from lib.functions import load_config
-from lib.db import DEFAULT_DB_PATH, update_network_cost
+from lib.db import DEFAULT_DB_PATH
 from lib.progress import Progress
 from topology import place_users, place_users_clustered, optimise_relays, Topology
 from bb84_network import run_bb84_network
@@ -55,7 +55,6 @@ from mdi_network import run_mdi_network
 from trusted_bb84_network import run_trusted_bb84_network
 from real_topology import load_real_topology
 from visualise_network import draw_mdi, draw_bb84
-from cost import component_counts, total_cost
 
 
 def _pair_avgs(pair_rates):
@@ -188,13 +187,6 @@ def main():
             bb84_fibre_per_seed[N].append(bb84_res["total_fibre_km"])
             mdi_fibre_per_seed[N].append(mdi_res["total_fibre_km"])
 
-            _det_eff  = cfg["detector_efficiency"]
-            _db_path  = None if args.no_net_db else DEFAULT_DB_PATH
-            _bc = total_cost(component_counts(N, 0,  "BB84"), bb84_res["total_fibre_km"], _det_eff)
-            _mc = total_cost(component_counts(N, _K, "MDI"),  mdi_res["total_fibre_km"],  _det_eff)
-            update_network_cost(_db_path, bb84_res.get("net_run_id"), _det_eff, _bc["hardware_gbp"], _bc["fibre_gbp"], _bc["total_gbp"])
-            update_network_cost(_db_path, mdi_res.get("net_run_id"),  _det_eff, _mc["hardware_gbp"], _mc["fibre_gbp"], _mc["total_gbp"])
-
             if "TBB84" in _protocols:
                 tbb84_res = run_trusted_bb84_network(
                     topo_mdi, cfg, runtimes=args.runtimes, workers=args.workers,
@@ -206,8 +198,6 @@ def main():
                 tbb84_per_seed[N].append(np.mean(tp) if tp else 0.0)
                 tbb84_ok_per_seed[N].append(tbb84_res["success_rate"] * 100)
                 tbb84_fibre_per_seed[N].append(tbb84_res["total_fibre_km"])
-                _tc = total_cost(component_counts(N, _K, "trusted_BB84"), tbb84_res["total_fibre_km"], _det_eff)
-                update_network_cost(_db_path, tbb84_res.get("net_run_id"), _det_eff, _tc["hardware_gbp"], _tc["fibre_gbp"], _tc["total_gbp"])
 
             step += 1
             prog.update(step, f"User count: {N}/{N_values[-1]}  BB84 {bb84_per_seed[N][-1]/1000:.2f} | MDI {mdi_per_seed[N][-1]/1000:.2f} kbps")
