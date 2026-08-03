@@ -1,12 +1,12 @@
 {
     "layer": 9,
     "description": "Layer 8 + beam splitter efficiency. \u03b7_bs = 0.97 (commercial 50:50 BS at MDI relay). MDI-only; ignored by BB84.",
-    "fibre_loss_db_per_km": 0.2,
+    "fibre_loss_db_per_km": 0.18,
     "init_loss": 0.1,
     "detector_efficiency": 0.65,
     "dark_count_rate": 100,
     "node_loss_db": 2.0,
-    "source_error_rate": 0.005,
+    "source_error_rate": 0.02,
     "dephasing_rate": 0.0001,
     "det_eff_x": 0.85,
     "bs_eff": 0.97

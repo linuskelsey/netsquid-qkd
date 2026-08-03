@@ -1,7 +1,7 @@
 {
     "layer": 5,
     "description": "Layer 4 + RX-side node/connector loss. Protocol-specific: BB84=2.0 dB (EOM+PBS), MDI=1.0 dB per arm (BS excess+PBS), TBB84=3.0 dB (switch+EOM+PBS). Values indicative; pending literature verification.",
-    "fibre_loss_db_per_km": 0.2,
+    "fibre_loss_db_per_km": 0.18,
     "init_loss": 0.1,
     "detector_efficiency": 0.65,
     "dark_count_rate": 100,

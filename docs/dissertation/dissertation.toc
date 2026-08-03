@@ -2,15 +2,27 @@
 \contentsline {section}{\numberline {2}Shared Quantum Secrecy}{5}{section.2}%
 \contentsline {subsection}{\numberline {2.1}BB84}{5}{subsection.2.1}%
 \contentsline {subsection}{\numberline {2.2}Measurement-Device-Independent QKD}{6}{subsection.2.2}%
-\contentsline {subsection}{\numberline {2.3}Theoretical Performance Bounds}{7}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.3}Theoretical Performance Bounds}{8}{subsection.2.3}%
 \contentsline {section}{\numberline {3}Methodology}{9}{section.3}%
-\contentsline {subsection}{\numberline {3.1}Cost Analysis}{9}{subsection.3.1}%
-\contentsline {subsection}{\numberline {3.2}Performance Analysis}{9}{subsection.3.2}%
-\contentsline {subsubsection}{\numberline {3.2.1}NetSquid}{10}{subsubsection.3.2.1}%
-\contentsline {subsubsection}{\numberline {3.2.2}Bipartite Single-Link Analysis}{10}{subsubsection.3.2.2}%
-\contentsline {subsubsection}{\numberline {3.2.3}Multi-User Network Analysis}{10}{subsubsection.3.2.3}%
-\contentsline {subsection}{\numberline {3.3}Scalability Analysis}{10}{subsection.3.3}%
-\contentsline {section}{\numberline {4}Results}{11}{section.4}%
-\contentsline {subsection}{\numberline {4.1}Deployment Recommendations}{11}{subsection.4.1}%
-\contentsline {section}{\numberline {5}Discussion}{12}{section.5}%
-\contentsline {section}{\numberline {6}Conclusion}{13}{section.6}%
+\contentsline {subsection}{\numberline {3.1}Cost Model}{9}{subsection.3.1}%
+\contentsline {subsubsection}{\numberline {3.1.1}Component Counts}{10}{subsubsection.3.1.1}%
+\contentsline {subsubsection}{\numberline {3.1.2}Single-Photon Detector Cost}{11}{subsubsection.3.1.2}%
+\contentsline {subsubsection}{\numberline {3.1.3}Total Deployment Cost and Fibre Tortuosity}{12}{subsubsection.3.1.3}%
+\contentsline {subsubsection}{\numberline {3.1.4}Cost--Rate Optimisation Framework}{12}{subsubsection.3.1.4}%
+\contentsline {subsection}{\numberline {3.2}Performance Analysis}{12}{subsection.3.2}%
+\contentsline {subsubsection}{\numberline {3.2.1}Hardware Model}{13}{subsubsection.3.2.1}%
+\contentsline {subsubsection}{\numberline {3.2.2}NetSquid Simulation Engine}{15}{subsubsection.3.2.2}%
+\contentsline {subsubsection}{\numberline {3.2.3}Bipartite Single-Link Analysis}{15}{subsubsection.3.2.3}%
+\contentsline {subsubsection}{\numberline {3.2.4}Multi-User Network Analysis}{16}{subsubsection.3.2.4}%
+\contentsline {subsection}{\numberline {3.3}Scalability Analysis}{17}{subsection.3.3}%
+\contentsline {section}{\numberline {4}Results}{18}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Deployment Recommendations}{18}{subsection.4.1}%
+\contentsline {section}{\numberline {5}Discussion}{19}{section.5}%
+\contentsline {subsection}{\numberline {5.1}The Security--Rate Trade-off}{19}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Cost Model Limitations}{19}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Simulation Model Limitations}{20}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Implications for Protocol Selection}{21}{subsection.5.4}%
+\contentsline {section}{\numberline {6}Conclusion}{22}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Summary of Contributions}{22}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Findings}{22}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Future Work}{23}{subsection.6.3}%

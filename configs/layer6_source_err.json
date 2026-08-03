@@ -1,12 +1,12 @@
 {
     "layer": 6,
     "description": "Layer 5 + source bit error rate. \u03b5_s = 0.005 (0.5% \u2014 well-calibrated polarisation source).",
-    "fibre_loss_db_per_km": 0.2,
+    "fibre_loss_db_per_km": 0.18,
     "init_loss": 0.1,
     "detector_efficiency": 0.65,
     "dark_count_rate": 100,
     "node_loss_db": 2.0,
-    "source_error_rate": 0.005,
+    "source_error_rate": 0.02,
     "dephasing_rate": 0.0,
     "det_eff_x": 1.0,
     "bs_eff": 1.0

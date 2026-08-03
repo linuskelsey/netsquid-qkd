@@ -48,14 +48,14 @@ All parameters below are unverified placeholders or indicative midpoints. Verify
 
 | Parameter | Current default | Realistic range | Graph-swept? | Verify against |
 |---|---|---|---|---|
-| `fibre_loss_db_per_km` | 0.20 dB/km | 0.17–0.35 dB/km (SMF-28 fresh; ageing/splices push higher) | **Yes** | Corning SMF-28 datasheet; Dynes 2019 |
+| `fibre_loss_db_per_km` | **0.18 dB/km** ✓ | 0.15–0.25 dB/km | **Yes** | Corning SMF-28 datasheet (max at 1550 nm, confirmed) |
 | `init_loss` | 0.15 (15%) | 0.05–0.30 | Possibly | Fibre-pigtailed QD coupling efficiency; Bozzio 2022 |
-| `detector_efficiency` η_Z | 0.85 | SPAD 0.20–SNSPD 0.85 | **Yes** | ID Quantique / Single Quantum datasheets |
+| `detector_efficiency` η_Z | 0.85 | SPAD 0.20–SNSPD 0.85 | **Yes** | ID Quantique datasheets — note: IDQ SNSPDs sold as multi-channel units; cost model overestimates relay SPD cost (1 unit covers 4 channels). Verify unit pricing. |
 | `dark_count_rate` | 100 cps | SNSPD 10–300; SPAD 1,000–50,000 cps | **Yes** | ID Quantique / Single Quantum datasheets |
 | `node_loss_db` (BB84) | 2.0 dB | 1.0–4.0 dB (EOM 0.5–3 dB + PBS 0.3–1.0 dB) | No | EOM datasheet (Thorlabs/iXblue); PBS datasheet |
 | `node_loss_db_mdi` (MDI/arm) | 1.0 dB | 0.5–2.0 dB (BS excess 0.1–0.5 dB + PBS 0.3–1.0 dB) | No | HOM BS datasheet; Lo 2012 |
 | `node_loss_db_tbb84` (TBB84) | 3.0 dB | 2.0–5.5 dB (switch 0.5–2 dB + EOM 0.5–3 dB + PBS 0.3–1.0 dB) | No | Same as BB84 + switch; confirm switch loss |
-| `source_error_rate` | 0.005 (0.5%) | 0.001–0.05 | **Yes** | Bozzio 2022; Yang 2024 (QD g² measurements) |
+| `source_error_rate` | **0.02 (2%)** ✓ | 0.001–0.05 | **Yes** | Bozzio 2022 (confirmed); Yang 2024 (QD g² measurements) |
 | `det_eff_x` η_X | 0.85 | same as η_Z (shared device) | Partially (basis_bias sweep) | Same as η_Z |
 | `dephasing_rate` | 0.0001 /ns | 0.00001–0.001 (PMD-dominated) | Possibly | PMD spec of SMF-28; Dynes 2019 |
 | `bs_eff` | 0.97 (3% excess loss) | 0.90–0.99 | **Yes** (MDI compare) | Fibre coupler datasheet; Tang 2016 |

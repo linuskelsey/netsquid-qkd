@@ -1,7 +1,7 @@
 {
     "layer": 1,
     "description": "Layer 0 + fibre attenuation. \u03b1 = 0.20 dB/km (SMF-28 telecom fibre at 1550 nm).",
-    "fibre_loss_db_per_km": 0.2,
+    "fibre_loss_db_per_km": 0.18,
     "init_loss": 0.0,
     "detector_efficiency": 1.0,
     "dark_count_rate": 0,

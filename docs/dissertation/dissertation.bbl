@@ -69,10 +69,19 @@ E.~I. T.~C. Institute, ``What is the {P}hoton {N}umber {S}plitting ({PNS}) attac
 \bibitem{Lo_decoys}
 H.-K. Lo, X.~Ma, and K.~Chen, ``Decoy {S}tate {Q}uantum {K}ey {D}istribution,'' {\em Phys. Rev. Lett.}, vol.~94, p.~230504, Jun 2005.
 
+\bibitem{Hong_1987}
+C.~K. Hong, Z.~Y. Ou, and L.~Mandel, ``{Measurement of subpicosecond time intervals between two photons by interference},'' {\em Phys. Rev. Lett.}, vol.~59, pp.~2044--2046, Nov. 1987.
+
 \bibitem{Pirandola_2017}
 S.~Pirandola, R.~Laurenza, C.~Ottaviani, and L.~Banchi, ``Fundamental limits of repeaterless quantum communications,'' {\em Nature Communications}, vol.~8, Apr. 2017.
 
 \bibitem{Lucamarini_2018}
 M.~Lucamarini, Z.~L. Yuan, J.~F. Dynes, and A.~J. Shields, ``Overcoming the rate–distance limit of quantum key distribution without quantum repeaters,'' {\em Nature}, vol.~557, p.~400–403, May 2018.
+
+\bibitem{Bozzio_2022}
+M.~Bozzio {\em et~al.}, ``Enhancing quantum cryptography with quantum dot single-photon sources,'' {\em npj Quantum Information}, vol.~8, Sept. 2022.
+
+\bibitem{Song-2012}
+T.-T. Song, Q.-Y. Wen, F.-Z. Guo, and X.-Q. Tan, ``Finite-key analysis for measurement-device-independent quantum key distribution,'' {\em Phys. Rev. A}, vol.~86, p.~022332, Aug 2012.
 
 \end{thebibliography}

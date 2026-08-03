@@ -30,36 +30,78 @@
 \@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Communication diagram for point-to-point BB84. Alice sends quantum states to Bob; basis reconciliation and post-processing occur over authenticated classical channels.}}{5}{figure.caption.2}\protected@file@percent }
 \providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
 \newlabel{fig:bb84_comm}{{1}{5}{Communication diagram for point-to-point BB84. Alice sends quantum states to Bob; basis reconciliation and post-processing occur over authenticated classical channels}{figure.caption.2}{}}
-\citation{Lo_2012}
+\citation{Hong_1987}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Measurement-Device-Independent QKD}{6}{subsection.2.2}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Communication diagram for point-to-point MDI-QKD. Both Alice and Bob transmit quantum states to Charlie; Charlie performs a BSM and announces the result classically to both parties.}}{6}{figure.caption.3}\protected@file@percent }
-\newlabel{fig:mdi_comm}{{2}{6}{Communication diagram for point-to-point MDI-QKD. Both Alice and Bob transmit quantum states to Charlie; Charlie performs a BSM and announces the result classically to both parties}{figure.caption.3}{}}
 \citation{Lo_2012}
-\citation{Pirandola_2017}
-\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Bit-flip rules upon receipt of BSM outcome. Alice and Bob agree in advance which party applies the flip; if both flip, there is no net change.}}{7}{table.caption.4}\protected@file@percent }
-\newlabel{tab:mdi_flips}{{1}{7}{Bit-flip rules upon receipt of BSM outcome. Alice and Bob agree in advance which party applies the flip; if both flip, there is no net change}{table.caption.4}{}}
+\citation{Lo_2012}
+\citation{Lo_2012}
+\citation{Lo_2012}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Communication diagram for point-to-point MDI-QKD. Both Alice and Bob transmit quantum states to Charlie; Charlie performs a BSM and announces the result classically to both parties.}}{7}{figure.caption.3}\protected@file@percent }
+\newlabel{fig:mdi_comm}{{2}{7}{Communication diagram for point-to-point MDI-QKD. Both Alice and Bob transmit quantum states to Charlie; Charlie performs a BSM and announces the result classically to both parties}{figure.caption.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Bit-flip rules upon receipt of BSM outcome~\cite  {Lo_2012}. Alice and Bob agree in advance which party applies the flip; if both flip, there is no net change.}}{7}{table.caption.4}\protected@file@percent }
+\newlabel{tab:mdi_flips}{{1}{7}{Bit-flip rules upon receipt of BSM outcome~\cite {Lo_2012}. Alice and Bob agree in advance which party applies the flip; if both flip, there is no net change}{table.caption.4}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Bell State Measurement circuit: CNOT gate followed by Hadamard, then measurement in the computational basis.}}{7}{figure.caption.5}\protected@file@percent }
 \newlabel{fig:bsm_circ}{{3}{7}{Bell State Measurement circuit: CNOT gate followed by Hadamard, then measurement in the computational basis}{figure.caption.5}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Theoretical Performance Bounds}{7}{subsection.2.3}\protected@file@percent }
+\citation{Pirandola_2017}
 \citation{Lucamarini_2018}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Theoretical Performance Bounds}{8}{subsection.2.3}\protected@file@percent }
 \citation{Coopmans_2021}
+\citation{DBLP:conf/ondm/KaraviasHBLP25}
 \@writefile{toc}{\contentsline {section}{\numberline {3}Methodology}{9}{section.3}\protected@file@percent }
 \newlabel{sec:methodology}{{3}{9}{Methodology}{section.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Cost Analysis}{9}{subsection.3.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Performance Analysis}{9}{subsection.3.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.1}NetSquid}{10}{subsubsection.3.2.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.2}Bipartite Single-Link Analysis}{10}{subsubsection.3.2.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.3}Multi-User Network Analysis}{10}{subsubsection.3.2.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Scalability Analysis}{10}{subsection.3.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4}Results}{11}{section.4}\protected@file@percent }
-\newlabel{sec:results}{{4}{11}{Results}{section.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Deployment Recommendations}{11}{subsection.4.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {5}Discussion}{12}{section.5}\protected@file@percent }
-\newlabel{sec:discussion}{{5}{12}{Discussion}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Cost Model}{9}{subsection.3.1}\protected@file@percent }
+\newlabel{sec:cost_model}{{3.1}{9}{Cost Model}{subsection.3.1}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.1.1}Component Counts}{10}{subsubsection.3.1.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Hardware component counts for a network of $N$ users and $K$ relay nodes. MDI relay nodes are passive BSM stations; TBB84 relay nodes are active. BB84 forms a direct mesh with no relay infrastructure.}}{10}{table.caption.6}\protected@file@percent }
+\newlabel{tab:components}{{2}{10}{Hardware component counts for a network of $N$ users and $K$ relay nodes. MDI relay nodes are passive BSM stations; TBB84 relay nodes are active. BB84 forms a direct mesh with no relay infrastructure}{table.caption.6}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.1.2}Single-Photon Detector Cost}{11}{subsubsection.3.1.2}\protected@file@percent }
+\newlabel{eq:spd_cost}{{1}{11}{Single-Photon Detector Cost}{equation.1}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Default hardware component costs used in the cost model. All values are unverified estimates.}}{11}{table.caption.7}\protected@file@percent }
+\newlabel{tab:costs}{{3}{11}{Default hardware component costs used in the cost model. All values are unverified estimates}{table.caption.7}{}}
+\citation{Shor_2000}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.1.3}Total Deployment Cost and Fibre Tortuosity}{12}{subsubsection.3.1.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.1.4}Cost--Rate Optimisation Framework}{12}{subsubsection.3.1.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Performance Analysis}{12}{subsection.3.2}\protected@file@percent }
+\newlabel{sec:performance}{{3.2}{12}{Performance Analysis}{subsection.3.2}{}}
+\citation{Bozzio_2022}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.1}Hardware Model}{13}{subsubsection.3.2.1}\protected@file@percent }
+\citation{Lo_decoys}
+\citation{Coopmans_2021}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Ten-layer hardware model. Layer $k$ includes all impairments of layer $k-1$ plus the new parameter listed. Layer~9 is the realistic operating point used for network simulations. Empty cells in the verification column indicate parameters pending datasheet confirmation.}}{14}{table.caption.8}\protected@file@percent }
+\newlabel{tab:layers}{{4}{14}{Ten-layer hardware model. Layer $k$ includes all impairments of layer $k-1$ plus the new parameter listed. Layer~9 is the realistic operating point used for network simulations. Empty cells in the verification column indicate parameters pending datasheet confirmation}{table.caption.8}{}}
+\citation{Lo_2012}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.2}NetSquid Simulation Engine}{15}{subsubsection.3.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.3}Bipartite Single-Link Analysis}{15}{subsubsection.3.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.4}Multi-User Network Analysis}{16}{subsubsection.3.2.4}\protected@file@percent }
+\newlabel{sec:network_analysis}{{3.2.4}{16}{Multi-User Network Analysis}{subsubsection.3.2.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Scalability Analysis}{17}{subsection.3.3}\protected@file@percent }
+\newlabel{sec:scalability}{{3.3}{17}{Scalability Analysis}{subsection.3.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Results}{18}{section.4}\protected@file@percent }
+\newlabel{sec:results}{{4}{18}{Results}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Deployment Recommendations}{18}{subsection.4.1}\protected@file@percent }
+\citation{Yehia_2025}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Discussion}{19}{section.5}\protected@file@percent }
+\newlabel{sec:discussion}{{5}{19}{Discussion}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}The Security--Rate Trade-off}{19}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Cost Model Limitations}{19}{subsection.5.2}\protected@file@percent }
+\citation{Lo_decoys}
+\citation{DBLP:conf/ondm/KaraviasHBLP25}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Simulation Model Limitations}{20}{subsection.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Implications for Protocol Selection}{21}{subsection.5.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Conclusion}{22}{section.6}\protected@file@percent }
+\newlabel{sec:conclusion}{{6}{22}{Conclusion}{section.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Summary of Contributions}{22}{subsection.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Findings}{22}{subsection.6.2}\protected@file@percent }
+\citation{Song-2012}
+\citation{Lo_decoys}
+\citation{Tang_2016,Berrevoets_2022,Dynes_2019}
+\citation{DBLP:conf/ondm/KaraviasHBLP25}
+\citation{Dynes_2019,Berrevoets_2022,Tang_2016}
+\citation{Lucamarini_2018}
+\citation{Yehia_2025}
 \bibstyle{ieeetr}
 \bibdata{IEEEabrv,bibliography}
-\@writefile{toc}{\contentsline {section}{\numberline {6}Conclusion}{13}{section.6}\protected@file@percent }
-\newlabel{sec:conclusion}{{6}{13}{Conclusion}{section.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Future Work}{23}{subsection.6.3}\protected@file@percent }
 \bibcite{RSA_1978}{1}
 \bibcite{Koblitz_ECC}{2}
 \bibcite{Miller_ECC}{3}
@@ -83,6 +125,9 @@
 \bibcite{Shor_2000}{21}
 \bibcite{PNS_desc}{22}
 \bibcite{Lo_decoys}{23}
-\bibcite{Pirandola_2017}{24}
-\bibcite{Lucamarini_2018}{25}
-\gdef \@abspage@last{15}
+\bibcite{Hong_1987}{24}
+\bibcite{Pirandola_2017}{25}
+\bibcite{Lucamarini_2018}{26}
+\bibcite{Bozzio_2022}{27}
+\bibcite{Song-2012}{28}
+\gdef \@abspage@last{26}

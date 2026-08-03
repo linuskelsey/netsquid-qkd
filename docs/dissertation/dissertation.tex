@@ -101,8 +101,7 @@ In MDI-QKD, both Alice and Bob independently prepare photon strings in the manne
 \[
     \ket{\phi^\pm} = \frac{\ket{00} \pm \ket{11}}{\sqrt{2}}, \qquad \ket{\psi^\pm} = \frac{\ket{01} \pm \ket{10}}{\sqrt{2}}.
 \]
-Charlie announces the measurement outcome over a classical channel to both Alice and Bob. Since the BSM measures only the \emph{correlation} % make a brief appendix entry showing this? incorp hong-ou-mandel?
-between the two incoming photons rather than their individual polarisations, an eavesdropper with full control of Charlie's apparatus can learn nothing about Alice's or Bob's individual bit values, only the joint interaction. The bipartite logical layer for MDI-QKD is shown in Figure~\ref{fig:mdi_comm}.
+Charlie announces the measurement outcome over a classical channel to both Alice and Bob. Since the BSM measures only the \emph{joint correlation} between the two incoming photons rather than their individual polarisations, an eavesdropper with full control of Charlie's apparatus can learn nothing about Alice's or Bob's individual bit values. The physical mechanism underlying the BSM is Hong-Ou-Mandel (HOM) interference~\cite{Hong_1987}: two indistinguishable photons arriving simultaneously at a 50:50 beam splitter always exit the same output port due to bosonic quantum interference. Coincident clicks at the downstream polarising beam splitters then identify the projected Bell state. Photon indistinguishability is therefore a prerequisite for MDI-QKD: timing jitter, spectral mismatch, and polarisation misalignment all reduce HOM visibility and degrade BSM success probability. The bipartite logical layer for MDI-QKD is shown in Figure~\ref{fig:mdi_comm}.
 
 \begin{figure}[H]
     \centering
@@ -140,7 +139,7 @@ Alice and Bob sift by matching bases as in BB84. Upon receiving the BSM outcome,
         Rectilinear basis & Bit flip    & Bit flip \\
         \bottomrule
     \end{tabular}
-    \caption{Bit-flip rules upon receipt of BSM outcome. Alice and Bob agree in advance which party applies the flip; if both flip, there is no net change.}
+    \caption{Bit-flip rules upon receipt of BSM outcome~\cite{Lo_2012}. Alice and Bob agree in advance which party applies the flip; if both flip, there is no net change.}
     \label{tab:mdi_flips}
 \end{table}
 
@@ -178,18 +177,175 @@ We compare BB84 and MDI-QKD across three dimensions: performance, deployment cos
 
 \textit{Scalability.} We define scalability as the marginal key rate and cost incurred when adding a user to an existing network. Since BB84 requires a direct link between every user pair whilst MDI routes traffic through relay nodes, the two protocols exhibit fundamentally different scaling behaviour. We quantify this by sweeping user count at fixed topology parameters and extracting per-user marginal rates and costs for both protocols.
 
-\subsection{Cost Analysis}
-Algebraic cost model — component counts per protocol topology, cost curves vs user count.
+\subsection{Cost Model}
+\label{sec:cost_model}
+
+We model the total deployment cost of a QKD network algebraically from per-component hardware costs. All costs are capital expenditure (CapEx) only; operational expenditure --- in particular the cryogenic cooling required by superconducting nanowire single-photon detectors (SNSPDs) and quantum dot (QD) sources --- is not modelled. Classical communication infrastructure (basis reconciliation, error correction, and key forwarding) is assumed to be a sunk cost of existing network infrastructure. The most directly related prior cost analysis is that of Karavias \textit{et al.}~\cite{DBLP:conf/ondm/KaraviasHBLP25}, which applies integer linear programming to PM-QKD and entanglement-based infrastructure planning; MDI-QKD is not considered there, and cost--rate trade-offs are not explored. We extend this cost-modelling perspective to MDI-QKD and a third protocol, trusted-node BB84 (TBB84), described below.
+
+\subsubsection{Component Counts}
+
+The three network topologies impose fundamentally different hardware structures. In BB84, every user pair requires a dedicated direct dark-fibre link: the network is a complete mesh of $N(N-1)/2$ quantum channels. At each receiver, a polarising beam splitter (PBS) separates Z and X basis outputs to two single-photon detectors (SPDs), and an electro-optic modulator (EOM) performs active basis selection. No relay infrastructure is required.
+
+In MDI-QKD, users transmit photons to BSM relay stations rather than to each other. Each relay is a passive station comprising a 50:50 HOM beam splitter, two PBS (one per arm), four SPDs, and one optical switch for routing photons from cross-cluster pairs. The network requires $N$ user-to-relay fibre links and $K(K-1)/2$ relay-to-relay backbone links.
+
+Trusted-node BB84 (TBB84) uses the same relay topology as MDI but with active relay nodes. Each relay runs a BB84 session with every assigned user (receiving photons from user sources), and a further backbone BB84 session with every other relay (using its own source). Keys are forwarded via XOR: $K_{A R_1} \oplus K_{R_1 R_2}$ is transmitted classically as a one-time-pad encryption of Alice's key contribution, providing end-to-end security conditional on the physical integrity of the relay node. The TBB84 source count is simplified: one QD source is assigned per relay (for backbone sessions), noting that a fully bidirectional implementation would require $K-1$ sources per relay.
+
+Table~\ref{tab:components} summarises the component counts for all three protocols.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lccc}
+\toprule
+Component & BB84 & MDI & Trusted BB84 \\
+\midrule
+Single-photon sources   & $N$                   & $N$                       & $N + K$ \\
+Single-photon detectors & $2N$                  & $4K$                      & $2K$ \\
+50:50 beam splitter (HOM) & 0                   & $K$                       & 0 \\
+Polarising beam splitter  & $N$                 & $2K$                      & $K$ \\
+Electro-optic modulator   & $N$                 & 0                         & $K$ \\
+Optical switch            & 0                   & $K$                       & $K$ \\
+Fibre links & $\dfrac{N(N-1)}{2}$ & $N + \dfrac{K(K-1)}{2}$ & $N + \dfrac{K(K-1)}{2}$ \\
+\bottomrule
+\end{tabular}
+\caption{Hardware component counts for a network of $N$ users and $K$ relay nodes. MDI relay nodes are passive BSM stations; TBB84 relay nodes are active. BB84 forms a direct mesh with no relay infrastructure.}
+\label{tab:components}
+\end{table}
+
+Fibre cost scales as $\mathcal{O}(N^2)$ for BB84 and as $\mathcal{O}(N)$ for MDI and TBB84 at fixed $K$, providing the structural cost incentive for relay-based architectures as user counts grow.
+
+\subsubsection{Single-Photon Detector Cost}
+
+SPD cost depends primarily on detection efficiency and technology class. We model it as a linear function of detection efficiency $\eta$, anchored at two operating points: an InGaAs SPAD with $\eta = 0.20$ at £15,000, and an SNSPD with $\eta = 0.85$ at £100,000:
+\begin{equation}
+    C_\text{SPD}(\eta) = \frac{£100{,}000 - £15{,}000}{0.85 - 0.20}\,(\eta - 0.20) + £15{,}000.
+    \label{eq:spd_cost}
+\end{equation}
+This linear model is a simplification: SPD cost in practice is not strictly linear in $\eta$, and dark count rate is a second major performance parameter that is not independently captured. The model is adequate for comparative analysis when sweeping between SPAD and SNSPD technology classes.
+
+A further consideration is that commercial SNSPD products are typically sold as multi-channel units integrating several detector channels within a single cryostat (for example, the ID Quantique product range offers 2--8 channels per unit). An MDI relay station requiring four SPDs (two polarising beam splitter outputs per arm) may therefore be equipped with a single multi-channel unit rather than four independent detectors. In this case the cost per relay is one unit price rather than $4 \times C_\text{SPD}(\eta)$; the per-channel model overestimates relay detector cost and will be revised on confirmation of unit pricing.
+
+Default component costs are listed in Table~\ref{tab:costs}; all values are estimates pending datasheet verification.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lrl}
+\toprule
+Component & Default cost & Note \\
+\midrule
+QD photon source & £150,000 & Pending verification \\
+SPD (SPAD, $\eta=0.20$) & £15,000 & Linear model anchor \\
+SPD (SNSPD, $\eta=0.85$) & £100,000 & Linear model anchor \\
+50:50 HOM beam splitter & £1,000 & Pending verification \\
+Polarising beam splitter & £500 & Pending verification \\
+Electro-optic modulator & £2,000 & Pending verification \\
+Optical switch & £5,000 & Pending verification \\
+Dark fibre (installed) & £10,000/km & Region-dependent; pending verification \\
+\bottomrule
+\end{tabular}
+\caption{Default hardware component costs used in the cost model. All values are unverified estimates.}
+\label{tab:costs}
+\end{table}
+
+\subsubsection{Total Deployment Cost and Fibre Tortuosity}
+
+The total deployment cost is:
+\begin{equation}
+    C_\text{total} = C_\text{hardware} + C_\text{fibre},
+\end{equation}
+where
+\begin{equation}
+    C_\text{hardware} = N_s C_s + N_d\,C_\text{SPD}(\eta) + N_\text{BS} C_\text{BS} + N_\text{PBS} C_\text{PBS} + N_\text{EOM} C_\text{EOM} + N_\text{sw} C_\text{sw},
+\end{equation}
+and $C_\text{fibre} = L_\text{total} \cdot C_f$, with $L_\text{total}$ the total fibre deployed in km and $C_f = £10{,}000$/km.
+
+In practice, installed cable follows duct routes longer than the straight-line distance between nodes. We model this through per-link tortuosity: each physical cable $(i,j)$ is assigned an independent factor $\tau_{ij}$ drawn from a truncated normal distribution:
+\begin{equation}
+    \tau_{ij} \sim \max\!\left(1,\;\mathcal{N}(\mu_\tau,\,\sigma_\tau^2)\right), \qquad \mu_\tau = 1.2,\quad \sigma_\tau = 0.1.
+\end{equation}
+The mean $\mu_\tau = 1.2$ is representative of urban cable routing, where installed fibre is typically 15--25\% longer than the Euclidean distance. Each physical cable draws one factor, held constant across all simulation runs. Tortuosity affects both the simulated key rate (via increased fibre loss on longer cables) and the cost model (via increased fibre deployed). For MDI and TBB84, user-to-relay and relay-to-relay cables each draw a single factor, shared across all user pairs that traverse that cable; this ensures physical consistency when the same cable appears in multiple end-to-end paths.
+
+\subsubsection{Cost--Rate Optimisation Framework}
+
+Beyond simple cost curves, we frame deployment decisions as a cost--rate optimisation. For a provider with capital budget $C_\text{max}$, the optimal configuration maximises average key rate $\bar{R}$ subject to $C_\text{total} \leq C_\text{max}$. For a provider with minimum rate requirement $R_\text{min}$, the optimal configuration minimises $C_\text{total}$ subject to $\bar{R} \geq R_\text{min}$. By sweeping relay count $K$ at fixed $N$ and area under each protocol, we obtain a (cost, key rate) frontier per protocol. Both optimisation problems can be read directly from this frontier, enabling protocol-agnostic deployment recommendations.
+
 \subsection{Performance Analysis}
-Key rate, QBER cutoffs, success rate?
-\subsubsection{NetSquid}
-Discuss in brief, how is it integrated into a usable tool to achieve my goals?
+\label{sec:performance}
+
+The primary performance metric is the secure key rate $R$, measured in bits per second: the key length extracted by a simulation run divided by the simulation duration. Since all QKD-generated keys are information-theoretically equivalent in security regardless of protocol, key rate is the sole performance discriminant between BB84 and MDI-QKD for a given network. A symmetric QBER threshold of 11\% is applied: simulation runs with QBER above this value are discarded as failures~\cite{Shor_2000}. All key rates are computed in the asymptotic regime, without finite-key corrections; this overestimates extractable key at low photon count rates but is standard in comparative simulation studies at metropolitan scale.
+
+\subsubsection{Hardware Model}
+
+Physical impairments are introduced via a ten-layer parametric model. Each layer adds one impairment cumulatively to the previous, from a fully ideal baseline (layer~0) to a system incorporating all realistic imperfections (layer~9). This structure allows the marginal impact of each physical parameter on key rate to be isolated, forming the basis of the parameter sweep analysis in Section~\ref{sec:results}. Table~\ref{tab:layers} lists the ten layers.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{cp{2.8cm}lp{4.3cm}p{3.5cm}}
+\toprule
+Layer & Parameter added & Symbol & Default value & Verification source \\
+\midrule
+0 & Ideal baseline & --- & All perfect & --- \\
+1 & Fibre attenuation & $\alpha$ & 0.18~dB/km & Corning SMF-28 datasheet \\
+2 & Detector efficiency (Z basis) & $\eta_Z$ & 0.65 & \\
+3 & Dark count rate & $d_c$ & 100~cps & \\
+4 & TX insertion loss & $L_i$ & 0.10 (10\%) & \\
+5 & RX node loss & $\Delta_n$ & BB84: 2.0~dB; MDI: 1.0~dB/arm; TBB84: 3.0~dB & \\
+6 & Source error rate & $\varepsilon_s$ & 0.02 & \cite{Bozzio_2022} \\
+7 & Fibre dephasing & $\beta$ & $10^{-4}$~ns$^{-1}$ & \\
+8 & X-basis detector bias & $\eta_X$ & 0.85 & \\
+9 & BSM beam-splitter efficiency & $\eta_\text{BS}$ & 0.97 (MDI only) & \\
+\bottomrule
+\end{tabular}
+\caption{Ten-layer hardware model. Layer $k$ includes all impairments of layer $k-1$ plus the new parameter listed. Layer~9 is the realistic operating point used for network simulations. Empty cells in the verification column indicate parameters pending datasheet confirmation.}
+\label{tab:layers}
+\end{table}
+
+Layer~5 introduces protocol-specific receiver node loss. For BB84, the RX path passes through an EOM ($\approx$1.5~dB) and a PBS ($\approx$0.5~dB), giving $\Delta_n^\text{BB84} = 2.0$~dB. For MDI, each arm encounters only a PBS and HOM coupler excess loss without an EOM, giving $\Delta_n^\text{MDI} = 1.0$~dB per arm; the two arms contribute independently to photon loss. For TBB84, an additional optical switch at the relay ($\approx$1.5~dB) gives $\Delta_n^\text{TBB84} = 3.0$~dB. These are indicative midpoints pending literature verification. Layer~9 (beam-splitter efficiency) applies to MDI only, where a non-ideal HOM split ratio ($\eta_\text{BS} = 0.97$) reduces coincidence rate. Ideal single-photon sources are used throughout; source imperfection is captured solely by $\varepsilon_s$ at layer~6. Weak coherent pulse (WCP) sources and decoy-state techniques~\cite{Lo_decoys} are not modelled, so reported rates represent an upper bound relative to practical WCP deployments.
+
+\subsubsection{NetSquid Simulation Engine}
+
+NetSquid~\cite{Coopmans_2021} is a discrete-event simulation (DES) engine for quantum networks developed at QuTech. In a DES framework, system state changes only at discrete event times; between events no computation is performed. This suits photon-by-photon QKD simulation, where the relevant events are emission, propagation delay, detection, and classical post-processing. NetSquid represents quantum states as density matrices acted on by quantum channels, enabling physically accurate treatment of loss, noise, and measurement.
+
+We drive NetSquid through a multiprocessing pool. Each worker runs one independent QKD simulation trial, returning key length, QBER, and wall-clock time. The main process distributes trials across worker processes using Python's \texttt{multiprocessing} module with spawn semantics, avoiding shared-state contamination from NetSquid's process-level global state. The pool is sized to 80\% of available CPU cores by default. Results are collected in the main process and aggregated over trials. All results are persisted to an SQLite database (\texttt{results.db}) via a dedicated library (\texttt{lib/db.py}). Two tables are used: \texttt{p2p\_results} stores one row per simulation trial (key rate, QBER, all physical parameters); \texttt{network\_results} stores one aggregated row per network configuration (mean key rate, success rate, deployment cost, topology parameters). This separation enables post-hoc analysis without re-simulation.
+
 \subsubsection{Bipartite Single-Link Analysis}
-Protocol implementation Architecture, how have i extracted statistics from that?
+
+The bipartite simulation sweeps one hardware parameter at a time, holding all others at their layer-5 defaults. For each parameter value, $r = 20$ independent Monte Carlo trials are run; each trial constitutes one complete QKD exchange from photon emission to key extraction. The mean key rate and success rate (fraction of trials with QBER $< 11\%$) are reported as a function of the swept parameter.
+
+In the BB84 simulation, Alice prepares $n = 1024$ photons per trial at $f = 10^7$~Hz. Each photon is assigned an independent random basis and bit value; Bob measures each received photon in a randomly selected basis. Channel loss, dark counts, and measurement noise are modelled as stochastic events within the DES engine. After each trial the key length (matching-basis, post-error-corrected bits) and simulation time are recorded; key rate is their ratio.
+
+In the MDI simulation, Alice and Bob independently prepare photon strings and transmit to Charlie's relay. The simulation models the additional loss on both arms, the HOM visibility (governed by $\eta_\text{BS}$), and the BSM success probability. The linear-optical BSM discriminates $|\psi^+\rangle$ and $|\psi^-\rangle$ but cannot distinguish $|\phi^\pm\rangle$~\cite{Lo_2012}; approximately half of all photon pair arrivals yield inconclusive results and are discarded. The Charlie position along the link is a free parameter; in the network setting it is fixed by the relay's geometric position relative to the pair's users.
+
 \subsubsection{Multi-User Network Analysis}
-same as above. justify modelling decisions inc k-means + centroid, multi-seeding etc
+\label{sec:network_analysis}
+
+The multi-user simulation models a metropolitan network of $N$ users within an $A \times A$~km grid. Users are placed uniformly at random. Relay positions are determined by $k$-means clustering of user positions, placing each relay at the centroid of its cluster. The centroid minimises the sum of squared user-to-relay distances within each cluster, directly reducing the mean user-to-relay path loss. For $K = 1$ the centroid equals the single-relay optimum; $k$-means generalises this to $K > 1$.
+
+To decouple topology variability from Monte Carlo noise, all network experiments are repeated across multiple independently drawn user placements (seeds). Relay positions are re-optimised per seed. Aggregate statistics across seeds produce error bars that characterise topology uncertainty rather than sampling noise.
+
+Three network protocols are simulated:
+
+\textbf{BB84 mesh.}
+Every user pair $(i,j)$ communicates over a dedicated direct link of tortuous length $d_{ij}\,\tau_{ij}$. All $N(N-1)/2$ pairs are simulated in parallel; $r$ Monte Carlo trials are run per pair. Network key rate is the mean over all valid (pair, trial) combinations.
+
+\textbf{MDI network.}
+Each user connects to their nearest relay. A pair $(i,j)$ where both users share the same relay station runs an MDI simulation with Alice-to-relay distance $d_{iR}\,\tau_{iR}$ and Bob-to-relay distance $d_{jR}\,\tau_{jR}$. A cross-cluster pair additionally routes through the relay-to-relay backbone: Bob's effective path is $d_{jR}\,\tau_{jR}$ (user to serving relay $R_j$) plus $d_{R_j R_i}\,\tau_{R_j R_i}$ (backbone leg to Alice's relay $R_i$), and the serving relay applies an optical switch (insertion loss $\Delta_\text{sw} = 1.0$~dB). The Charlie position is set to $d_{iR}/(d_{iR} + \text{total Bob path})$.
+
+\textbf{Trusted-node BB84 (TBB84).}
+The relay topology is shared with MDI. Each user runs a BB84 session to their assigned relay; cross-cluster pairs additionally use a backbone BB84 session between the two relays. The end-to-end key rate for pair $(i,j)$ is bounded by the minimum of the constituent link rates, with the backbone rate divided by the number of cross-cluster pairs sharing that backbone link (key dilution):
+\begin{equation}
+    R_{ij} = \min\!\left(R_{iR_i},\;\frac{R_{R_i R_j}}{M_{R_i R_j}},\; R_{jR_j}\right),
+\end{equation}
+where $M_{R_i R_j}$ is the number of user pairs traversing backbone link $(R_i, R_j)$. Keys are forwarded via XOR at the relay: $K_{A R_1} \oplus K_{R_1 R_2}$ is transmitted classically, constituting a one-time-pad encryption of Alice's key contribution and providing end-to-end secrecy conditional on the physical trustworthiness of the relay node.
+
 \subsection{Scalability Analysis}
-network marginals for key rate and cost wrt relay user count?
+\label{sec:scalability}
+
+Scalability is characterised through two orthogonal sweeps.
+
+\textbf{User count sweep.} Relay positions are optimised for the maximum $N$ in the sweep and held fixed as $N$ varies from 2 to $N_\text{max}$. For each $N$, all three protocols are simulated and their mean key rate and total deployment cost are recorded. The marginal rate $\Delta\bar{R}/\Delta N$ and marginal cost $\Delta C / \Delta N$ are computed numerically from adjacent sweep points. MDI and TBB84 amortise relay infrastructure cost as $N$ grows, since relay hardware is fixed whilst user count increases; BB84 incurs one new fibre link per user added, giving $\mathcal{O}(N)$ marginal fibre cost growth.
+
+\textbf{Relay count sweep.} User count $N$ is fixed and $K$ is varied from 1 to $K_\text{max}$. BB84 is relay-independent and appears as a constant baseline. MDI and TBB84 key rates improve as $K$ increases (shorter mean user-to-relay distances) until the relay-to-relay backbone becomes the dominant bottleneck; cost increases monotonically with $K$ due to relay hardware. This sweep surfaces the deployment-optimal relay count for a given $N$ and area, and provides the (cost, key rate) frontier used for cost--rate optimisation.
 
 \section{Results}
 \label{sec:results}
@@ -202,11 +358,80 @@ Two deployment questions are answered from this sweep. Given a capital budget $C
 
 \section{Discussion}
 \label{sec:discussion}
-Discuss results? and their implications? critical analysis i think...
+
+The results presented in Section~\ref{sec:results} support a consistent picture of the trade-off space between BB84, MDI-QKD, and TBB84. We discuss the key findings, their physical interpretation, the limitations of the methodology, and their implications for protocol selection.
+
+\subsection{The Security--Rate Trade-off}
+
+MDI-QKD's elimination of detector side-channel attacks comes at a key rate penalty rooted in its physical architecture. Whereas BB84 requires one photon to traverse the full link and be detected, MDI requires two photons --- one from each party --- to arrive at Charlie's relay simultaneously and produce a coincidence event. Loss on each arm compounds multiplicatively: if the single-arm transmittance is $\eta_\text{arm}$, the BSM detection probability scales as $\eta_\text{arm}^2\,\eta_\text{BS}\,\eta_d^2$, compared to $\eta_\text{link}\,\eta_d$ for BB84. At metropolitan distances and typical detector efficiencies, this effectively squares the channel transmittance, consistent with the order-of-magnitude rate gap between the two protocols in the bipartite setting.
+
+At the network level, the rate gap between MDI and BB84 widens relative to the bipartite case. MDI users route photons to a relay rather than directly to their communication partner, incurring a geometric detour for cross-cluster pairs. This routing overhead is absent in BB84's direct mesh. The relay distance advantage is a function of relay count $K$ and user distribution; the relay sweep quantifies the extent to which increasing $K$ can recover the MDI rate penalty.
+
+TBB84 sits between the two protocols on both the security and performance axes. Per-link rates follow BB84's single-arm loss model, but key dilution on the shared backbone link reduces the effective cross-cluster rate. The security guarantee is conditional on the physical integrity of relay nodes: if a relay is compromised, an adversary gains the full key material forwarded through it. For deployments in which relay nodes can be physically secured --- for example, within a carrier's own infrastructure --- TBB84 offers a favourable rate-to-cost ratio. Where relay nodes may be operated by untrusted third parties, MDI-QKD's trustless detector model is the appropriate choice.
+
+\subsection{Cost Model Limitations}
+
+The cost model is a first-order CapEx-only estimate. Several factors are not captured.
+
+\textit{Operational expenditure.} Cryogenic systems --- both SNSPD detectors and QD sources --- require continuous cooling to temperatures of order 2--4~K, incurring energy costs that can rival hardware CapEx over a ten-year deployment lifetime~\cite{Yehia_2025}. For SNSPD-equipped MDI networks with $K$ relay stations, the cryogenic OpEx may substantially alter the economic comparison with TBB84, which can in principle operate with room-temperature SPADs.
+
+\textit{Cost--simulation decoupling.} The cost model and the simulation model are not tightly coupled. Adding components to the cost model raises cost, but the simulated key rate responds only through changes in topology geometry. The insertion loss of individual components (EOM, PBS, optical switch) is captured in the protocol-specific node loss $\Delta_n$, but this is a fixed per-protocol constant rather than a value derived from the component cost model at runtime. A cheaper optical switch with higher insertion loss would reduce key rate without reducing cost, a trade-off invisible to the cost model as presented.
+
+\textit{BB84 fibre scaling at large $N$.} The BB84 direct mesh assumes one independent dark-fibre run per user pair. In practice, WDM or switched architectures would serve many pairs over shared fibre infrastructure at high $N$, substantially reducing BB84 fibre cost. The $\mathcal{O}(N^2)$ fibre scaling should therefore be interpreted as an upper bound applicable to passive, unmanaged dark-fibre mesh deployments; it is physically exact for that specific case.
+
+\textit{TBB84 source count.} The model assigns one QD source per relay for backbone sessions. A fully bidirectional implementation with $K-1$ backbone partners per relay would require $K-1$ sources per relay, increasing backbone source cost by up to a factor of $K-1$ relative to the simplified model. For $K \leq 4$ (the range explored in this work) the correction factor is bounded by 3.
+
+\subsection{Simulation Model Limitations}
+
+\textit{Ideal single-photon sources.} All simulations assume one photon per pulse with no multi-photon component. WCP laser sources are overwhelmingly more practical and affordable than QD sources, and their multi-photon components require decoy-state analysis~\cite{Lo_decoys} to extract secure key rate. The ideal source assumption gives an upper bound on key rate and a lower bound on source cost; both should be re-evaluated for WCP deployments.
+
+\textit{Asymptotic key rates.} Finite-key corrections become significant at low photon count rates and short block lengths, reducing the extractable key compared to the asymptotic rate reported here. At long distances where photon detection events are sparse, the finite-key penalty is expected to be most severe for MDI-QKD, potentially widening the gap with BB84 beyond what the asymptotic analysis suggests.
+
+\textit{Relay placement.} $k$-means relay placement minimises mean user-to-relay distance but is not provably optimal for network key rate or cost. ILP-based placement~\cite{DBLP:conf/ondm/KaraviasHBLP25} could provide tighter lower bounds on minimum MDI deployment cost, and would be a valuable extension of this work.
+
+\subsection{Implications for Protocol Selection}
+
+The results support a protocol-selection framework based on two axes: security requirement and scale. At small $N$ (fewer than approximately [X] users), BB84's direct mesh is both cheaper and faster than MDI, and TBB84 offers no advantage over BB84. As $N$ grows, BB84 fibre cost grows as $\mathcal{O}(N^2)$ whilst MDI and TBB84 grow as $\mathcal{O}(N)$; the relay-based protocols become cost-competitive at [N$^*$] users, depending on area, relay count, and component costs. Security requirements then determine the final selection: MDI is preferred where detector side-channels are a threat and relay nodes cannot be trusted; TBB84 is preferred where relay nodes are trusted and rate-to-cost ratio is the primary objective.
 
 \section{Conclusion}
 \label{sec:conclusion}
-Past work (summary of what has been done + achievements) -> Present work (my results) -> Future work (what I would do given more time)
+
+\subsection{Summary of Contributions}
+
+This work has built a complete simulation and cost modelling infrastructure for the comparative analysis of BB84, MDI-QKD, and trusted-node BB84 at metropolitan scale. On the simulation side, both BB84 and MDI-QKD are implemented within the NetSquid discrete-event simulation engine under a ten-layer hardware model that progressively introduces physical imperfections from an idealised baseline to a fully realistic system. Point-to-point key rates are obtained via Monte Carlo simulation across a parameter space covering fibre loss, detector efficiency, dark count rate, TX insertion loss, receiver node loss, source error rate, fibre dephasing, detector basis bias, and BSM beam-splitter efficiency. The simulation infrastructure parallelises across CPU cores using a spawn-context pool and persists all results to a structured SQLite database for post-hoc analysis without re-simulation.
+
+At the network level, three multi-user protocols are implemented: a direct BB84 mesh, an MDI-QKD network with BSM relay stations, and a trusted-node BB84 network sharing the same relay topology as MDI. Relay positions are determined by $k$-means clustering of random user placements, and all network experiments are repeated across multiple independent seeds to characterise topology variability. A cost model computes total CapEx algebraically from per-component hardware costs and topology-determined component counts, incorporating a stochastic fibre tortuosity model that accounts for cable routing overhead in both the cost and the simulated key rate.
+
+\subsection{Findings}
+
+\textit{[This section will be completed once simulation results are generated. The following bullet points identify the expected finding structure.]}
+
+\begin{itemize}
+    \item The MDI-QKD key rate is approximately [X]$\times$ lower than BB84 in the bipartite setting at metropolitan distances under layer-9 hardware, consistent with the squaring of channel transmittance imposed by the BSM coincidence requirement.
+    \item The rate gap increases in the network setting due to cross-cluster relay routing detours; the magnitude of the increase depends on relay count and user distribution.
+    \item TBB84 achieves key rates intermediate between BB84 and MDI, with the gap from BB84 governed by backbone key dilution under load.
+    \item MDI total deployment cost is lower than BB84 for $N > N^*$ users due to the $\mathcal{O}(N)$ vs $\mathcal{O}(N^2)$ fibre scaling; the crossover $N^*$ depends on relay hardware cost, area, and fibre cost per km.
+    \item Cost--rate optimisation reveals a protocol-specific deployment-optimal relay count for MDI and TBB84; the optimal $K$ increases with $N$ and area.
+    \item Detector efficiency is the dominant hardware parameter limiting key rate in the bipartite setting at short and medium distances; fibre attenuation dominates at long distances.
+\end{itemize}
+
+\subsection{Future Work}
+
+Several extensions are of immediate interest.
+
+\textit{Finite-key corrections.} All key rates are asymptotic; finite-key bounds~\cite{Song-2012} would reduce reported rates and alter the comparison, particularly at long distances where detection events are sparse and block lengths are short.
+
+\textit{Weak coherent pulse sources.} Replacing ideal QD sources with WCP laser sources modelled via the decoy-state technique~\cite{Lo_decoys} would give rates more directly comparable to published experimental deployments~\cite{Tang_2016, Berrevoets_2022, Dynes_2019} and would substantially reduce assumed source cost.
+
+\textit{Optimal relay placement.} $k$-means relay placement is heuristic. ILP-based placement~\cite{DBLP:conf/ondm/KaraviasHBLP25} solves the joint relay placement and routing problem to global optimality, providing tighter lower bounds on minimum MDI deployment cost.
+
+\textit{Real network topologies.} Extending the simulator to accept fixed network graphs from real city infrastructure would enable direct comparison with published deployed networks~\cite{Dynes_2019, Berrevoets_2022, Tang_2016} and provide a practical planning tool for network operators.
+
+\textit{Twin-Field QKD.} TF-QKD and its variants~\cite{Lucamarini_2018} achieve key rates scaling as $\mathcal{O}(\sqrt{\eta})$, surpassing the PLOB bound and extending the distance at which MDI-level security is achievable without quantum repeaters. Extending this framework to TF-QKD would complete the repeater-less QKD comparison.
+
+\textit{Operational expenditure.} Incorporating cryogenic OpEx for SNSPD-equipped deployments, using the energetic analysis methodology of~\cite{Yehia_2025}, would enable full lifetime cost comparisons and is likely to substantially shift the MDI vs TBB84 economic comparison at high relay counts.
+
+\textit{Traffic modelling.} A model of key request rates, buffer occupancy, and WDM channel sharing would give a more realistic picture of BB84 and MDI at large $N$, where the direct-mesh assumption becomes economically unphysical.
 
 \bibliographystyle{ieeetr}
 \bibliography{IEEEabrv,bibliography}

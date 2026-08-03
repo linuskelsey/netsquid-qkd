@@ -1,7 +1,7 @@
 {
     "layer": 2,
     "description": "Layer 1 + detector efficiency. \u03b7_d = 0.65 (typical SNSPD in metropolitan deployment).",
-    "fibre_loss_db_per_km": 0.2,
+    "fibre_loss_db_per_km": 0.18,
     "init_loss": 0.0,
     "detector_efficiency": 0.65,
     "dark_count_rate": 0,
