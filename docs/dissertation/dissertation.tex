@@ -15,10 +15,14 @@
 \usepackage{subcaption}
 \usepackage[hidelinks]{hyperref}
 \usepackage{fancyhdr}
+\usepackage{titlesec}
+\titleformat{\section}{\LARGE\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries}{\thesubsubsection}{1em}{}
 
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\small\itshape Beyond BB84}
+\fancyhead[L]{\small\itshape Beyond Prepare-and-Measure}
 \fancyhead[R]{\small\itshape Linus Kelsey}
 \fancyfoot[C]{\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
@@ -27,7 +31,7 @@
 \let\oldsection\section
 \renewcommand{\section}{\clearpage\oldsection}
 
-\title{Beyond BB84: The Cost of Trustless Detectors in Quantum Key Distribution}
+\title{Beyond Prepare-and-Measure: The Cost of Trustless Detectors in Quantum Key Distribution}
 \author{Linus Kelsey}
 \date{Aug 2026}
 
@@ -53,7 +57,7 @@ QKD was first conceived by Wiesner \cite{Wiesner_1983} in the 1970s and given it
 
 MDI-QKD improves upon BB84's security model by removing the need to trust photon detectors, an assumption that is difficult to verify in practice and has been exploited in hardware-level attacks. This advantage, however, comes at a real cost in key rate: at metropolitan distances, BB84 consistently delivers rates an order of magnitude higher than MDI under comparable hardware conditions \cite{Dynes_2019,Yan2025}. For network providers selecting between the two protocols, this trade-off must be mapped carefully across distance, topology, and network scale. The question is not simply which protocol is more secure, but under what deployment conditions MDI's security advantage justifies its rate penalty, and at what economic and energetic cost.
 
-Despite the commercial momentum behind both protocols — evidenced by field deployments \cite{Tang_2016,Berrevoets_2022}, heterogeneous network testbeds \cite{Martins2024}, and European infrastructure programmes \cite{eu_open_qkd} — the quantitative basis for choosing between BB84 and MDI-QKD for a given application remains poorly characterised. Simulation of MDI-QKD at metropolitan scale has not systematically explored the interplay between topology, relay placement, and hardware parameters across a sufficiently wide parameter space to support confident protocol selection \cite{Yehia_2022}. Cost models for MDI networks are largely absent from the literature: whilst integer linear programming approaches have been developed for PM and entanglement-based QKD infrastructure \cite{DBLP:conf/ondm/KaraviasHBLP25}, their extension to MDI has not been carried out. Energetic footprint, an increasingly central criterion in telecommunications infrastructure procurement, has only recently begun to receive attention in the QKD context \cite{Yehia_2025}. A rigorous parametric comparison across key rate, cost, and scalability is absent.
+Despite the commercial momentum behind both protocols — evidenced by a progression of field deployments from early national testbeds \cite{Elliott_2002,Peev_2009,Sasaki_2011,chen2021,Qin_NQSN_2024} through metropolitan and long-haul fibre networks \cite{Dynes_2019,pittaluga_2024} to dedicated MDI-QKD systems \cite{Tang_2016,Berrevoets_2022,qbird_belQCI}, heterogeneous multi-vendor network trials \cite{Martins2024}, and European infrastructure programmes \cite{eu_open_qkd} — the quantitative basis for choosing between BB84 and MDI-QKD for a given application remains poorly characterised. Simulation of MDI-QKD at metropolitan scale has not systematically explored the interplay between topology, relay placement, and hardware parameters across a sufficiently wide parameter space to support confident protocol selection \cite{Yehia_2022}. Cost models for MDI networks are largely absent from the literature: whilst integer linear programming approaches have been developed for PM and entanglement-based QKD infrastructure \cite{DBLP:conf/ondm/KaraviasHBLP25}, their extension to MDI has not been carried out. Energetic footprint, an increasingly central criterion in telecommunications infrastructure procurement, has only recently begun to receive attention in the QKD context \cite{Yehia_2025}. A rigorous parametric comparison across key rate, cost, and scalability is absent.
 
 This work addresses these gaps through a two-part methodology. First, we implement and simulate both protocols within NetSquid \cite{Coopmans_2021}, a discrete-event quantum network simulation engine, across a ten-layer hardware model spanning ideal to physically realistic conditions. Second, we derive deployment cost formulae algebraically using symbolic per-component parameters---cost per photon source $c_s$, per single-photon detector $c_d$, and per km of installed dark fibre $c_f$---expressing each protocol's total infrastructure cost as a closed-form function of user count and topology. Since manufacturer prices for quantum dot sources and single-photon detectors are not publicly available, absolute CapEx comparison is deferred to the parameter space; the structural scaling difference between protocols is the primary analytical result. We compare BB84 and MDI-QKD across three dimensions: key rate as a function of distance and hardware parameters; relative deployment cost as a function of network size; and scalability, defined as the marginal key rate when adding users to a fixed metropolitan topology. The remainder of this report is structured as follows. Section~\ref{sec:background} introduces the protocols, their hardware underpinnings, and the theoretical performance bounds that govern them. Section~\ref{sec:methodology} describes the simulation architecture and cost model. Section~\ref{sec:results} presents results across all three comparison axes, and Section~\ref{sec:conclusion} concludes with deployment recommendations and directions for future work.
 
@@ -167,6 +171,11 @@ Since transmittance decays exponentially with fibre length $L$ as $\eta = 10^{-\
 
 Twin-Field QKD (TF-QKD), proposed in 2018 by Lucamarini et al.\ \cite{Lucamarini_2018}, exploits the same untrusted-relay tenet as MDI but replaces the two-photon BSM with single-photon interference. The result is that key rates scale as $\mathcal{O}(\sqrt{\eta})$ rather than $\mathcal{O}(\eta)$, exceeding the PLOB bound and extending the distance at which secure communication is achievable. TF-QKD thus represents the most practically significant near-term stepping stone beyond the repeater-less limit, and motivates the question central to this work, of precisely where and under what conditions MDI-QKD's security advantage over BB84 justifies its rate penalty, before that regime is superseded by TF-QKD or, eventually, quantum repeaters.
 
+\subsection{Network Topologies}
+\label{sec:network_topologies}
+
+When QKD is deployed beyond a single point-to-point link, network topology becomes a primary driver of cost and scalability. BB84 requires a dedicated quantum channel between every pair of users: for $N$ users, a full mesh demands $\binom{N}{2} = \mathcal{O}(N^2)$ fibre spans, each carrying an independent quantum signal. MDI-QKD's architecture naturally admits a star topology instead: all users direct their pulses to a shared measurement node (Charlie), which performs the Bell-state measurement without accessing the key material. Crucially, Charlie need not be trusted---the measurement-device-independence property is preserved at network scale, so the relay introduces no new security assumption. For $K$ relay nodes each serving a cluster of users, the MDI network requires $\mathcal{O}(N)$ user--relay fibre spans and $\mathcal{O}(K^2)$ inter-relay backbone links, both substantially below the $\mathcal{O}(N^2)$ full mesh for $K\ll N$. This structural asymmetry---summarised in the component-count model of Section~\ref{sec:cost_model}---is the central economic and scalability argument evaluated in this work.
+
 \section{Methodology}
 \label{sec:methodology}
 We compare BB84 and MDI-QKD across three dimensions: performance, deployment cost, and scalability. Together these axes capture the trade-off a network provider faces when selecting between the two protocols for a given metropolitan deployment.
@@ -176,6 +185,131 @@ We compare BB84 and MDI-QKD across three dimensions: performance, deployment cos
 \textit{Cost.} Deployment cost is modelled algebraically using symbolic per-component parameters: $c_s$ (photon source), $c_d$ (single-photon detector), and $c_f$ (fibre per km). The number of each component is determined by the network topology under each protocol. Since manufacturer prices for quantum dot sources and single-photon detectors are not publicly available at the precision required for quantitative comparison, we express total cost symbolically and focus on the \textit{relative} cost structure between protocols. This reveals a structural crossover: BB84 fibre cost scales as $\mathcal{O}(N^2)$ whilst MDI scales as $\mathcal{O}(N)$ at fixed relay count $K$, so MDI becomes cost-competitive above a threshold user count $N^*$ whose value depends on the ratio $c_d/c_f$ and network geometry.
 
 \textit{Scalability.} We define scalability as the marginal key rate incurred when adding a user to an existing network. Since BB84 requires a direct link between every user pair whilst MDI routes traffic through relay nodes, the two protocols exhibit fundamentally different scaling behaviour. We quantify this by sweeping user count at fixed topology parameters and extracting per-user marginal key rates.
+
+\subsection{Performance Analysis}
+\label{sec:performance}
+
+The primary performance metric is the secure key rate $R$, measured in bits per second: the key length extracted by a simulation run divided by the simulation duration. Since all QKD-generated keys are information-theoretically equivalent in security regardless of protocol, key rate is the sole performance discriminant between BB84 and MDI-QKD for a given network. A symmetric QBER threshold of 11\% is applied: simulation runs with QBER above this value are discarded as failures~\cite{Shor_2000}. All key rates are computed in the asymptotic regime, without finite-key corrections; this overestimates extractable key at low photon count rates but is standard in comparative simulation studies at metropolitan scale.
+
+\subsubsection{NetSquid Simulation Engine}
+
+NetSquid~\cite{Coopmans_2021} is a discrete-event simulation (DES) engine for quantum networks developed at QuTech, chosen for this work over analytical probability models and general-purpose DES tools for three reasons. First, NetSquid is purpose-built for quantum networks: it natively represents quantum states as density matrices evolved by quantum channels modelled as Kraus operator maps, providing physically accurate treatment of loss, decoherence, and measurement without hand-coding quantum mechanics. Second, the DES framework handles temporally correlated dynamics --- detector dead time, photon timing jitter, coincidence windows, entanglement distillation timeouts --- that a static i.i.d. probability model cannot accommodate; these effects become significant when extending to quantum repeater chains or adaptive protocols, and the DES infrastructure supports that extension without architectural changes. Third, NetSquid's \texttt{Protocol} abstraction allows each party's logic (photon preparation, transmission, basis announcement, sifting) to be written as an event-driven coroutine that yields at each physical event, making the simulation structure directly parallel to the protocol description in Section~\ref{sec:background} and reducing the gap between specification and implementation. As discussed in Section~\ref{sec:discussion}, the i.i.d. trial structure adopted here could in principle be reproduced analytically, but the DES overhead is justified by the extensibility it provides.
+
+NetSquid organises a simulation into three layers of abstraction. \textit{Components} represent physical hardware: \texttt{QuantumChannel} objects carry photons between nodes, applying noise models (loss, dephasing, delay) as Kraus operators; \texttt{ClassicalChannel} objects carry classical messages for basis reconciliation and BSM announcements. \textit{Nodes} represent network parties (Alice, Bob, Charlie), each holding named ports through which components connect; nodes own their local quantum processors and memory registers. \textit{Protocols} are event-driven coroutines that run on nodes, yielding control to the DES scheduler at each \texttt{await} expression until a subscribed event fires. This three-layer structure maps directly onto the physical network: changing a component's noise model (e.g.\ swapping a lossless channel for one with $\alpha = 0.18$~dB/km) is localised to a single object and does not require protocol logic to change, supporting the ten-layer hardware sweep described in Section~\ref{sec:hardware_model}.
+
+Each simulation trial instantiates a fresh NetSquid environment via \texttt{ns.sim\_reset()}, preventing cross-trial state contamination. Nodes are connected by \texttt{QuantumChannel} objects carrying a \texttt{DephaseNoiseModel} with per-arm dephasing probability $p_\phi = \min(1, \beta L)$ for arm length $L$~km, and a stochastic \texttt{HybridDelayModel} with mean propagation speed $0.8c$ and 5\% per-km Gaussian jitter. Photon loss is applied stochastically at the source before transmission using the combined Beer-Lambert and insertion loss transmittance $T = 10^{-\alpha L/10}(1 - L_i)$, and additionally at the receiver as a probabilistic discard with probability $1 - 10^{-\Delta_n/10}$. The simulation clock runs until classical post-processing completes or a 100-second simulation timeout is reached.
+
+Trials are executed in parallel using Python's \texttt{multiprocessing} module with a \texttt{spawn} context. The spawn start method is required rather than fork because NetSquid maintains process-level global state that would be silently corrupted by copy-on-write fork sharing. The pool is sized to 80\% of available CPU cores by default. In the point-to-point setting, $r$ trials are batched in blocks of 100 and distributed across workers; in the network setting, one task is issued per user pair and all $N(N-1)/2$ tasks are dispatched in a single \texttt{pool.map} call. Results are aggregated in the main process and persisted to an SQLite database (\texttt{results.db}) via a dedicated library (\texttt{lib/db.py}). Two tables are maintained: \texttt{p2p\_results} stores one row per simulation trial (key rate, QBER, all physical parameters); \texttt{network\_results} stores one aggregated row per network run (mean key rate, success rate, topology parameters). This separation enables figure regeneration and post-hoc filtering without re-running simulations.
+
+\subsubsection{Hardware Model}
+\label{sec:hardware_model}
+
+Physical impairments are introduced via a ten-layer parametric model. Each layer adds one impairment cumulatively to the previous, from a fully ideal baseline (layer~0) to a system incorporating all realistic imperfections (layer~9). This structure allows the marginal impact of each physical parameter on key rate to be isolated, forming the basis of the parameter sweep analysis in Section~\ref{sec:results}. Table~\ref{tab:layers} lists the ten layers.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{cp{4.2cm}lp{2.8cm}p{3.5cm}}
+\toprule
+Layer & Parameter added & Symbol & Default value & Verification source \\
+\midrule
+0 & Ideal baseline & --- & All perfect & --- \\
+1 & Fibre attenuation & $\alpha$ & 0.18~dB/km & Corning \cite{corning_smf28} \\
+2 & Detector efficiency & $\eta_Z$ & 0.90 & ID Quantique \cite{idq_id281} \\
+3 & Dark count rate & $d_c$ & 50~cps & ID Quantique \cite{idq_id281} \\
+4 & TX insertion loss & $L_i$ & 0.10 (10\%) & \\
+5 & RX node loss & $\Delta_n$ & 2.0~dB & \\
+6 & Source error rate & $\varepsilon_s$ & 0.015 & Quandela \cite{QuandelaSPS} \\
+7 & Fibre dephasing & $\beta$ & $10^{-4}$~ns$^{-1}$ & \\
+8 & X-basis detector bias & $\eta_X$ & 0.85 & \\
+9 & Beam-splitter efficiency & $\eta_\text{BS}$ & 0.97 & \\
+\midrule
+--- & Relay position & $\delta$ & 0.5 & User symmetry \\
+\bottomrule
+\end{tabular}
+\caption{Ten-layer hardware model. Layer $k$ includes all impairments of layer $k-1$ plus the new parameter listed. Layer~9 is the realistic operating point used for network simulations. Empty cells in the verification column indicate parameters pending datasheet confirmation.}
+\label{tab:layers}
+\end{table}
+
+\textit{Layer~0} is the ideal baseline: photons propagate without loss or noise, so key rate is limited only by propagation delay. Bipartite sweeps at this layer vary distance across the metropolitan range (0--50~km), establishing an upper bound on achievable key rate and confirming correct simulation timing before physical impairments are introduced.
+
+\textit{Layer~1} adds fibre attenuation: each photon is discarded before transmission with probability $p_\text{loss} = 1 - 10^{-\alpha L/10}$, where $\alpha = 0.18$~dB/km and $L$ is the arm length. For MDI-QKD the two arms attenuate independently, so coincidence probability scales as the product of both arm transmittances.
+
+\textit{Layer~2} introduces Z-basis detector efficiency $\eta_Z = 0.90$: each photon arriving at the receiver is accepted with probability $\eta_Z$. Missed detections reduce key length but do not introduce errors.
+
+\textit{Layer~3} adds dark count rate $d_c = 50$~cps: a spurious click fires per time slot with probability $d_c / (d_c + f)$, where $f$ is the source repetition rate. Dark clicks on empty slots generate false detections; dark clicks on occupied slots override the measurement with a random bit, contributing directly to QBER.
+
+The default detector parameters ($\eta_Z = 0.90$, $d_c = 50$~cps, layers~2--3) correspond to a superconducting nanowire single-photon detector (SNSPD) operating point, verified against the ID Quantique (IDQ) ID281~\cite{idq_id281}. The bipartite parameter sweeps in Section~\ref{sec:results_p2p} additionally span the single-photon avalanche diode (SPAD) regime ($\eta_Z \approx 0.10$--$0.25$, $d_c \approx 100$--$200$~cps), representative of the IDQ ID230~\cite{idq_id230}, covering the full range of detector technologies relevant to near-term metropolitan deployments.
+
+\textit{Layer~4} adds TX insertion loss $L_i = 0.10$: a fixed fraction of photons is lost at the source before entering the fibre, absorbed into the combined transmittance $T = 10^{-\alpha L/10}(1 - L_i)$.
+
+\textit{Layer~5} introduces receiver node loss $\Delta_n = 2.0$~dB as a single lumped parameter applied uniformly to both protocols, capturing the insertion loss of optical receiver components (EOM, PBS, HOM coupler). Each photon surviving fibre transmission is discarded with probability $1 - 10^{-\Delta_n/10}$ before reaching the detector. Individual component losses are not modelled separately and the protocol-specific breakdown is noted as a limitation in Section~\ref{sec:discussion}.
+
+\textit{Layer~6} adds source error rate $\varepsilon_s = 0.015$: each emitted photon receives an unintended $\hat{X}$ flip with probability $\varepsilon_s$, modelling multi-photon emission events characterised by $g^{(2)}(0)/2$ for the reference single-photon source~\cite{QuandelaSPS}. Ideal single-photon sources are assumed throughout; WCP sources and decoy-state techniques~\cite{Lo_decoys} are not modelled, so reported rates represent an upper bound relative to practical laser deployments.
+
+\textit{Layer~7} adds fibre dephasing $\beta = 10^{-4}$~ns$^{-1}$: the \texttt{DephaseNoiseModel} applies a per-photon dephasing error with probability $p_\phi = \min(1, \beta L)$ proportional to arm length, modelling polarisation-mode dispersion in standard single-mode fibre.
+
+\textit{Layer~8} introduces X-basis detector bias $\eta_X = 0.85$: photons measured in the X basis are detected with lower efficiency than those in the Z basis, reflecting inter-channel efficiency variation within the same detector unit.
+
+\textit{Layer~9} (MDI only) adds beam-splitter efficiency $\eta_\text{BS} = 0.97$: the HOM coupler at Charlie's relay has non-unit splitting ratio, reducing coincidence detection probability per arm. The relay position $\delta = 0.5$ (Charlie at the link midpoint) is held fixed for all bipartite sweeps, reflecting user symmetry; it is determined geometrically in the network setting via Equation~\ref{eq:charlie_pos}.
+
+\subsubsection{Bipartite Single-Link Analysis}
+
+The bipartite simulation sweeps one hardware parameter at a time, holding all others at their layer-9 defaults (Table~\ref{tab:layers}). For each parameter value, $r = 20$ independent Monte Carlo trials are run; each trial constitutes one complete QKD exchange from photon emission through key sifting. The mean key rate, mean QBER, and success rate (fraction of trials with QBER $< 11\%$) are reported as a function of the swept parameter.
+
+\textbf{BB84 simulation.} Alice and Bob are represented as \texttt{Node} objects connected by one quantum channel (Alice $\to$ Bob) and two classical channels for basis announcement and sifting. Alice prepares $n = 1{,}024$ photons at $f = 10^7$~Hz. Each photon is assigned an independent random basis ($Z$ or $X$) and bit value. Encoding is applied qubit-by-qubit: a bit-1 value applies $\hat{X}$; an $X$-basis choice applies a Hadamard gate. Source imperfection ($\varepsilon_s$) is modelled by an additional $\hat{X}$ flip applied with probability $\varepsilon_s$, consistent with the multi-photon emission rate $g^{(2)}(0)/2$ of the reference single-photon source. Photons are discarded before transmission with probability
+\begin{equation}
+    p_\text{loss} = 1 - 10^{-\alpha L/10}\,(1 - L_i),
+\end{equation}
+modelling both fibre attenuation and TX coupling loss. The quantum channel applies an additional per-photon dephasing error of probability $\beta L$. At Bob, each arriving photon is further subject to receiver node loss (probability $1 - 10^{-\Delta_n/10}$), then detected with probability $\eta_Z$ (Z~basis) or $\eta_X$ (X~basis). Dark counts fire with per-slot probability $d_c / (d_c + f)$; a dark click on a slot where a real detection also occurs overrides with a random outcome. Dark clicks also fire on slots where the photon was lost.
+
+After transmission, Bob announces his measurement bases and the indices of his detected slots; Alice returns her basis list. Bob retains only detections where both parties chose the same basis. The sifted key is the list of Bob's raw measurement outcomes at matching-basis slots. QBER is the fraction of bit disagreements between Alice's and Bob's sifted keys:
+\begin{equation}
+    \text{QBER} = \frac{1}{\ell}\sum_{k=1}^{\ell}\mathbf{1}[a_k \neq b_k],
+    \label{eq:qber}
+\end{equation}
+where $\ell$ is the sifted key length. The QBER is measured over the full sifted key, not a sacrificed subset, since no eavesdropper is modelled. Key rate is then:
+\begin{equation}
+    R = \frac{\ell}{T_\text{end} - T_\text{start}} \quad \text{(bps)},
+    \label{eq:key_rate}
+\end{equation}
+where $T_\text{end}$ is the simulation time at which Bob completes basis reconciliation and $T_\text{start}$ is the photon emission start, both in nanoseconds. Trials with QBER~$> 11\%$ are excluded and counted as failures. No error correction or privacy amplification is applied; $R$ therefore overestimates the secure key rate (see Section~\ref{sec:discussion}).
+
+\textbf{MDI simulation.} Three nodes are instantiated: Alice, Bob, and Charlie. Two quantum channels (Alice $\to$ Charlie, Bob $\to$ Charlie) and six classical channels (BSM announcement and basis disclosure) are constructed. Each end node prepares $n = 512$ photons --- half the BB84 count --- normalising comparison to a single-source rate scale, since MDI involves two independent emitters per trial. Encoding, source error, and per-photon transmission loss are applied identically to the BB84 case, with arm lengths $L_A = L\,\delta$ and $L_B = L\,(1-\delta)$ where $\delta = \texttt{charlie\_pos}$ locates Charlie on the link; each arm applies an independent dephasing model proportional to its length.
+
+At Charlie, photons arriving from Alice and Bob on the same pulse index are paired. Both photons undergo node coupling loss ($\Delta_n$) and are detected with probability $\eta_\text{BS}\,\eta_d$ (HOM beam-splitter efficiency × detector efficiency). A CNOT gate followed by a Hadamard on the control qubit and measurement of both qubits implements the Bell state measurement. The four computational outcomes correspond to the four Bell states:
+\begin{equation}
+    (a,b) \;\longmapsto\;
+    \begin{cases}
+        |\Phi^+\rangle & a=0,\,b=0 \\
+        |\Phi^-\rangle & a=1,\,b=0 \\
+        |\Psi^+\rangle & a=0,\,b=1 \\
+        |\Psi^-\rangle & a=1,\,b=1
+    \end{cases}
+\end{equation}
+Consistent with the linear-optical BSM constraint~\cite{Lo_2012}, only $|\Psi^\pm\rangle$ outcomes ($b=1$) are treated as conclusive; $|\Phi^\pm\rangle$ outcomes ($b=0$) are discarded. This yields a maximum BSM success probability of 50\% for coincident pairs. Dark count clicks on unpaired or lost slots generate spurious conclusive outcomes, contributing to QBER. Charlie announces BSM outcomes and basis-mismatch indices to Alice and Bob; end users discard inconclusive and basis-mismatched rounds. Bob applies basis-dependent bit corrections according to the BSM outcome to restore key agreement with Alice. The sifted key, QBER, and key rate are computed as per Equations~\ref{eq:qber}--\ref{eq:key_rate}, with $T_\text{end} = \max(T^\text{A}_\text{end}, T^\text{B}_\text{end})$. In the network setting, the Charlie position is determined geometrically by the relay's location relative to the user pair (Section~\ref{sec:network_analysis}).
+
+\subsubsection{Multi-User Network Analysis}
+\label{sec:network_analysis}
+
+The multi-user simulation models a metropolitan network of $N$ users within an $A \times A$~km service area. Users are placed uniformly at random within the grid. Relay positions are determined by $k$-means clustering of user positions with $n_\text{init} = 10$ random restarts: each relay is placed at the centroid of its assigned user cluster. The centroid minimises the sum of squared Euclidean distances from cluster members to the relay, which directly minimises mean squared user-to-relay path length and hence mean path loss. For $K = 1$ the centroid minimises the sum of squared user-to-relay distances and is the known single-relay optimum; $k$-means generalises this to $K > 1$ heuristically. User-to-relay assignment is by nearest relay: $\texttt{user\_relay}[i] = \arg\min_k \|u_i - r_k\|_2$, computed at topology construction and independent of the catchment used to generate user positions.
+
+To decouple topology variability from Monte Carlo noise, all network experiments are repeated across $S$ independently drawn user placements (seeds), with relay positions re-optimised per seed. Aggregate statistics across seeds produce error bars that characterise topology uncertainty --- the variance arising from user placement --- rather than the sampling noise of a fixed topology. The number of seeds is chosen such that the inter-seed standard deviation of the protocol comparison metric (mean key rate) is small relative to the protocol gap.
+
+This work focuses on metropolitan-scale networks, where inter-node distances are short enough for both BB84 and MDI-QKD to establish keys at viable rates. Two network protocols are simulated:
+
+\textbf{BB84 mesh.} Every user pair $(i,j)$ communicates over a dedicated direct dark-fibre link. Per-link tortuosity is sampled independently for each of the $N(N-1)/2$ links: $\tau_{ij} \sim \max(1, \mathcal{N}(\mu_\tau, \sigma_\tau^2))$. The physical cable length is $d_{ij}\,\tau_{ij}$~km. All pairs are dispatched to the multiprocessing pool simultaneously; $r$ Monte Carlo trials are run per pair. Network key rate is the mean over all valid (pair, trial) combinations.
+
+\textbf{MDI network.} Tortuosity is sampled once per physical cable rather than per pair, ensuring that all simulation pairs sharing a cable see the same physical routing factor. Specifically, $N$ user-to-relay cables and $K(K-1)/2$ relay-to-relay backbone cables each draw one independent tortuosity factor at the start of each seed.
+
+For a same-cluster pair $(i,j)$ assigned to relay $R_i = R_j = R$, Alice's arm length is $d_{iR}\,\tau_{iR}$ and Bob's arm length is $d_{jR}\,\tau_{jR}$; the BSM takes place at relay $R$. For a cross-cluster pair $(i,j)$ with $R_i \neq R_j$, Bob's photon travels from user $j$ to relay $R_j$, then along the backbone to relay $R_i$ where Alice's BSM station is located. Bob's effective arm length is $d_{jR_j}\,\tau_{jR_j} + d_{R_j R_i}\,\tau_{R_j R_i}$. The Charlie position parameter is set geometrically:
+\begin{equation}
+    \delta = \frac{d_{iR_i}\,\tau_{iR_i}}{d_{iR_i}\,\tau_{iR_i} + d_{jR_j}\,\tau_{jR_j} + d_{R_j R_i}\,\tau_{R_j R_i}}.
+    \label{eq:charlie_pos}
+\end{equation}
+An optical switch at each relay routes backbone photons to the BSM station for cross-cluster pairs. Its insertion loss is set to 0~dB in the current model; the asymmetry between switch installation cost (per relay) and switch-induced loss (cross-cluster pairs only) is noted as a simulation limitation in Section~\ref{sec:discussion}.
+
+The network key rate reported throughout this work is the mean pairwise point-to-point key rate averaged over all $N(N-1)/2$ user pairs and $S$ topology seeds. This is not a live traffic simulation: no channel contention, scheduling, or multiplexing is modelled. Every user pair is assumed to extract key simultaneously and independently at full channel capacity, with no interference from other pairs sharing physical infrastructure. The reported metric therefore constitutes a semi-probabilistic geometric upper bound on network throughput: \textit{geometric} because the rate for each pair is determined by the physical path geometry (distances, relay placement, tortuosity); \textit{probabilistic} because relay positions and cable tortuosities are drawn stochastically and averaged across seeds; and an \textit{upper bound} because real deployments would see contention for shared fibre, detector dead time across concurrent channels, and scheduling overhead that this model does not capture. The multi-seeding procedure described above quantifies the geometric component of this bound across the distribution of plausible topologies for a given $N$, $K$, and service area.
 
 \subsection{Cost Model}
 \label{sec:cost_model}
@@ -234,69 +368,6 @@ In practice, installed cable follows duct routes longer than the straight-line E
 \end{equation}
 The mean $\mu_\tau = 1.2$ is representative of urban cable routing, where installed fibre is typically 15--25\% longer than the Euclidean distance. Tortuosity affects the simulated key rate through increased fibre loss on longer cables. Each physical cable draws one factor, held constant across all simulation runs; for MDI, user-to-relay and relay-to-relay cables each draw a single factor shared across all user pairs that traverse that cable, ensuring physical consistency when the same cable appears in multiple paths.
 
-\subsection{Performance Analysis}
-\label{sec:performance}
-
-The primary performance metric is the secure key rate $R$, measured in bits per second: the key length extracted by a simulation run divided by the simulation duration. Since all QKD-generated keys are information-theoretically equivalent in security regardless of protocol, key rate is the sole performance discriminant between BB84 and MDI-QKD for a given network. A symmetric QBER threshold of 11\% is applied: simulation runs with QBER above this value are discarded as failures~\cite{Shor_2000}. All key rates are computed in the asymptotic regime, without finite-key corrections; this overestimates extractable key at low photon count rates but is standard in comparative simulation studies at metropolitan scale.
-
-\subsubsection{Hardware Model}
-
-Physical impairments are introduced via a ten-layer parametric model. Each layer adds one impairment cumulatively to the previous, from a fully ideal baseline (layer~0) to a system incorporating all realistic imperfections (layer~9). This structure allows the marginal impact of each physical parameter on key rate to be isolated, forming the basis of the parameter sweep analysis in Section~\ref{sec:results}. Table~\ref{tab:layers} lists the ten layers.
-
-\begin{table}[H]
-\centering
-\small
-\begin{tabular}{cp{2.8cm}lp{4.3cm}p{3.5cm}}
-\toprule
-Layer & Parameter added & Symbol & Default value & Verification source \\
-\midrule
-0 & Ideal baseline & --- & All perfect & --- \\
-1 & Fibre attenuation & $\alpha$ & 0.18~dB/km & Corning SMF-28 datasheet \\
-2 & Detector efficiency (Z basis) & $\eta_Z$ & 0.90 & IDQ ID281 SNSPD datasheet \\
-3 & Dark count rate & $d_c$ & 50~cps & IDQ ID281 SNSPD datasheet \\
-4 & TX insertion loss & $L_i$ & 0.10 (10\%) & \\
-5 & RX node loss & $\Delta_n$ & 2.0~dB (lumped; unverified) & \\
-6 & Source error rate & $\varepsilon_s$ & 0.015 & Quandela Prometheus datasheet ($g^{(2)}(0)<0.03$) \\
-7 & Fibre dephasing & $\beta$ & $10^{-4}$~ns$^{-1}$ & \\
-8 & X-basis detector bias & $\eta_X$ & 0.85 & \\
-9 & BSM beam-splitter efficiency & $\eta_\text{BS}$ & 0.97 (MDI only) & \\
-\bottomrule
-\end{tabular}
-\caption{Ten-layer hardware model. Layer $k$ includes all impairments of layer $k-1$ plus the new parameter listed. Layer~9 is the realistic operating point used for network simulations. Empty cells in the verification column indicate parameters pending datasheet confirmation.}
-\label{tab:layers}
-\end{table}
-
-Layer~5 introduces receiver node loss as a single lumped parameter $\Delta_n = 2.0$~dB, applied uniformly to both BB84 and MDI-QKD. This captures the insertion loss of optical receiver components (EOM, PBS, HOM coupler) as a single approximate value. Individual component losses are not modelled separately, and the protocol-specific breakdown of these components (which differ between BB84 and MDI receivers) is not reflected in the model. The value is an indicative midpoint pending datasheet verification; this simplification is discussed further in Section~\ref{sec:discussion}. Layer~9 (beam-splitter efficiency) applies to MDI only, where a non-ideal HOM split ratio ($\eta_\text{BS} = 0.97$) reduces coincidence rate. Ideal single-photon sources are used throughout; source imperfection is captured solely by $\varepsilon_s$ at layer~6. Weak coherent pulse (WCP) sources and decoy-state techniques~\cite{Lo_decoys} are not modelled, so reported rates represent an upper bound relative to practical WCP deployments.
-
-\subsubsection{NetSquid Simulation Engine}
-
-NetSquid~\cite{Coopmans_2021} is a discrete-event simulation (DES) engine for quantum networks developed at QuTech. In a DES framework, system state changes only at discrete event times; between events no computation is performed. This suits photon-by-photon QKD simulation, where the relevant events are emission, propagation delay, detection, and classical post-processing. NetSquid represents quantum states as density matrices acted on by quantum channels, enabling physically accurate treatment of loss, noise, and measurement.
-
-We drive NetSquid through a multiprocessing pool. Each worker runs one independent QKD simulation trial, returning key length, QBER, and wall-clock time. The main process distributes trials across worker processes using Python's \texttt{multiprocessing} module with spawn semantics, avoiding shared-state contamination from NetSquid's process-level global state. The pool is sized to 80\% of available CPU cores by default. Results are collected in the main process and aggregated over trials. All results are persisted to an SQLite database (\texttt{results.db}) via a dedicated library (\texttt{lib/db.py}). Two tables are used: \texttt{p2p\_results} stores one row per simulation trial (key rate, QBER, all physical parameters); \texttt{network\_results} stores one aggregated row per network configuration (mean key rate, success rate, topology parameters). This separation enables post-hoc analysis without re-simulation.
-
-\subsubsection{Bipartite Single-Link Analysis}
-
-The bipartite simulation sweeps one hardware parameter at a time, holding all others at their layer-5 defaults. For each parameter value, $r = 20$ independent Monte Carlo trials are run; each trial constitutes one complete QKD exchange from photon emission to key extraction. The mean key rate and success rate (fraction of trials with QBER $< 11\%$) are reported as a function of the swept parameter.
-
-In the BB84 simulation, Alice prepares $n = 1024$ photons per trial at $f = 10^7$~Hz. Each photon is assigned an independent random basis and bit value; Bob measures each received photon in a randomly selected basis. Channel loss, dark counts, and measurement noise are modelled as stochastic events within the DES engine. After each trial the key length (matching-basis, post-error-corrected bits) and simulation time are recorded; key rate is their ratio.
-
-In the MDI simulation, Alice and Bob independently prepare photon strings and transmit to Charlie's relay. The simulation models the additional loss on both arms, the HOM visibility (governed by $\eta_\text{BS}$), and the BSM success probability. The linear-optical BSM discriminates $|\psi^+\rangle$ and $|\psi^-\rangle$ but cannot distinguish $|\phi^\pm\rangle$~\cite{Lo_2012}; approximately half of all photon pair arrivals yield inconclusive results and are discarded. The Charlie position along the link is a free parameter; in the network setting it is fixed by the relay's geometric position relative to the pair's users.
-
-\subsubsection{Multi-User Network Analysis}
-\label{sec:network_analysis}
-
-The multi-user simulation models a metropolitan network of $N$ users within an $A \times A$~km grid. Users are placed uniformly at random. Relay positions are determined by $k$-means clustering of user positions, placing each relay at the centroid of its cluster. The centroid minimises the sum of squared user-to-relay distances within each cluster, directly reducing the mean user-to-relay path loss. For $K = 1$ the centroid equals the single-relay optimum; $k$-means generalises this to $K > 1$.
-
-To decouple topology variability from Monte Carlo noise, all network experiments are repeated across multiple independently drawn user placements (seeds). Relay positions are re-optimised per seed. Aggregate statistics across seeds produce error bars that characterise topology uncertainty rather than sampling noise.
-
-This work focuses on metropolitan-scale networks, where inter-node distances are short enough for both BB84 and MDI-QKD to establish keys at viable rates without trusted forwarding. Trusted-node relay architectures (such as trusted-node BB84) are therefore out of scope; their value arises at wide-area scales where direct and MDI links become loss-limited, a regime not addressed here. Two network protocols are simulated:
-
-\textbf{BB84 mesh.}
-Every user pair $(i,j)$ communicates over a dedicated direct link of tortuous length $d_{ij}\,\tau_{ij}$. All $N(N-1)/2$ pairs are simulated in parallel; $r$ Monte Carlo trials are run per pair. Network key rate is the mean over all valid (pair, trial) combinations.
-
-\textbf{MDI network.}
-Each user connects to their nearest relay. A pair $(i,j)$ where both users share the same relay station runs an MDI simulation with Alice-to-relay distance $d_{iR}\,\tau_{iR}$ and Bob-to-relay distance $d_{jR}\,\tau_{jR}$. A cross-cluster pair additionally routes through the relay-to-relay backbone: Bob's effective path is $d_{jR}\,\tau_{jR}$ (user to serving relay $R_j$) plus $d_{R_j R_i}\,\tau_{R_j R_i}$ (backbone leg to Alice's relay $R_i$). The Charlie position is set to $d_{iR}/(d_{iR} + \text{total Bob path})$.
-
 \subsection{Scalability Analysis}
 \label{sec:scalability}
 
@@ -308,7 +379,19 @@ Scalability is characterised through two orthogonal sweeps.
 
 \section{Results}
 \label{sec:results}
-bunch of graphs...
+
+\subsection{Point-to-Point Performance}
+\label{sec:results_p2p}
+
+\subsection{Network Performance}
+\label{sec:results_network}
+
+\subsection{Cost}
+\label{sec:results_cost}
+
+\subsection{Scalability}
+\label{sec:results_scalability}
+
 \subsection{Deployment Recommendations}
 
 Protocol selection recommendations follow from combining the simulation key rate results with the algebraic cost model. The relay sweep provides mean key rate $\bar{R}(K)$ at fixed $N$ and area; Equations~\ref{eq:cost_bb84}--\ref{eq:cost_mdi} express cost as a function of the same variables and the free parameters $c_s$, $c_d$, $c_f$.

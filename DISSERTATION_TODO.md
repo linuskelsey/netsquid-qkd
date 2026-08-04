@@ -82,24 +82,24 @@ Cost is expressed in the dissertation as component count formulae with free para
 - [x] Tortuosity model written (truncated normal, μ=1.2, σ=0.1); noted as affecting simulated key rate via longer fibre loss only (not cost directly since cost is symbolic).
 - [ ] §4 Results: write cost analysis prose — present component count scaling table (already Tab:components); derive or cite the crossover N* argument; discuss which c_d/c_f regime favours each protocol.
 
-### §3 Methodology — NetSquid / Simulation Architecture (currently: stub)
-- [ ] Describe NetSquid DES engine and why it was chosen; cite `\cite{Coopmans_2021}`.
-- [ ] Describe ten-layer hardware model: each layer, what impairment it adds, cite physical motivation.
-- [ ] Describe multiprocessing architecture (pool per protocol, seeds split across cores).
-- [ ] Describe SQLite persistence (`lib/db.py`), how results are stored and queried.
+### §3 Methodology — NetSquid / Simulation Architecture
+- [x] Describe NetSquid DES engine and why it was chosen; cite `\cite{Coopmans_2021}`. *(DES vs analytical justification: extensibility to repeater chains; density matrix / Kraus operator framing.)*
+- [x] Describe ten-layer hardware model: each layer, what impairment it adds, cite physical motivation. *(§Hardware Model subsubsection; layer table + layer-5 node loss caveat written.)*
+- [x] Describe multiprocessing architecture (pool per protocol, seeds split across cores). *(spawn context rationale, 80% pool, batch-100 P2P vs single pool.map network, written.)*
+- [x] Describe SQLite persistence (`lib/db.py`), how results are stored and queried. *(p2p_results + network_results tables described; post-hoc filtering rationale stated.)*
 
-### §3 Methodology — Bipartite Single-Link Analysis (currently: stub)
-- [ ] Describe BB84 and MDI-QKD protocol implementations in NetSquid.
-- [ ] Explain Monte Carlo statistics: runtimes per point, key rate extraction, QBER cutoff application.
-- [ ] **Justify QBER cutoff at 11%**: cite Shor–Preskill proof (already `\cite{Shor_2000}`); state explicitly.
-- [ ] Describe key rate formula: key length / simulation time.
+### §3 Methodology — Bipartite Single-Link Analysis
+- [x] Describe BB84 and MDI-QKD protocol implementations in NetSquid. *(Full BB84 encoding/loss/detection/sifting + MDI 3-node/BSM/basis-corrections written.)*
+- [x] Explain Monte Carlo statistics: runtimes per point, key rate extraction, QBER cutoff application. *(Key rate = ℓ/T equation; QBER formula; 11% cutoff stated.)*
+- [x] **Justify QBER cutoff at 11%**: cite Shor–Preskill proof (already `\cite{Shor_2000}`); state explicitly. *(Written; Shor_2000 cited.)*
+- [x] Describe key rate formula: key length / simulation time. *(eq:key_rate written; nanosecond timestamp arithmetic stated.)*
 
-### §3 Methodology — Network / Multi-User Analysis (currently: stub)
-- [ ] Describe topology generator: random user placement on A×A km grid, k-means relay placement.
-- [ ] **Justify k-means relay placement**: argue from grid-search results already in `relay_placement.py` outputs; centroid ≈ optimal for single relay, k-means generalises this.
-- [ ] **Justify multi-seeding**: state seed count, explain why averaging over random topologies gives more representative results than a single fixed topology.
-- [ ] Describe BB84 mesh and MDI network simulators: what each computes, how pairs are aggregated.
-- [ ] Describe cross-relay routing model for MDI (cross-cluster path via relay backbone).
+### §3 Methodology — Multi-User Network Analysis
+- [x] Describe topology generator: random user placement on A×A km grid, k-means relay placement. *(place_users uniform grid; optimise_relays k-means n_init=10 written.)*
+- [x] **Justify k-means relay placement**: centroid minimises sum squared distances → minimises expected path loss; k-means generalises to K>1. *(Karavias citation removed; mathematical argument written.)*
+- [x] **Justify multi-seeding**: averaging over random topologies removes single-topology bias; inter-seed std small relative to protocol gap justifies seed count. *(Written.)*
+- [x] Describe BB84 mesh and MDI network simulators: what each computes, how pairs are aggregated. *(Per-link tortuosity, N(N-1)/2 pairs for BB84; N + K(K-1)/2 physical cables for MDI written.)*
+- [x] Describe cross-relay routing model for MDI (cross-cluster path via relay backbone). *(Same-cluster vs cross-cluster arm lengths; eq:charlie_pos geometrically derived; SWITCH_LOSS_DB=0 limitation noted.)*
 
 ### §4 Results (currently: "bunch of graphs...")
 - [ ] **P2P performance**: present layers figure + selected parameter sweeps; refer to parameter impact table.
@@ -132,22 +132,22 @@ Cost is expressed in the dissertation as component count formulae with free para
 
 ### Missing citations needed in dissertation
 - ~~Citation for QD photon source cost (£150k)~~ — moot; absolute costs removed from dissertation.
-- [ ] Citation for SPAD η / dark count specs: IDQ ID230 datasheet — needed for §4b indicative range table.
-- [ ] Citation for SNSPD η / dark count specs: IDQ ID281 datasheet — needed for §4b indicative range table.
+- [x] Citation for SPAD η / dark count specs: IDQ ID230 datasheet — `\cite{idq_id230}` added to bib and used in §3.2.1 detector note.
+- [x] Citation for SNSPD η / dark count specs: IDQ ID281 datasheet — `\cite{idq_id281}` added to bib and used in hardware model table + §3.2.1 detector note.
 - ~~Citation for dark fibre installation cost per km~~ — moot; $c_f$ is a free symbolic parameter.
 - [ ] Citation for EOM insertion loss range (0.5–3 dB): standard photonics reference — needed for §7 node\_loss justification.
-- [ ] Citation for 11% QBER threshold: already `\cite{Shor_2000}` — ensure it is cited in the methodology where the cutoff is stated.
+- [x] Citation for 11% QBER threshold: `\cite{Shor_2000}` cited in §Bipartite Single-Link Analysis.
 
 ### Citations to verify compile correctly
 All of the following are in `bibliography.bib` but confirm they appear in the compiled `.bbl` with no warning:
-- [ ] `\cite{Dynes_2019}` — Cambridge quantum network
-- [ ] `\cite{Yan2025}` — MDI-QKD with frequency comb
-- [ ] `\cite{Yehia_2022}` — Quantum City simulation
-- [ ] `\cite{Yehia_2025}` — energetic analysis
-- [ ] `\cite{DBLP:conf/ondm/KaraviasHBLP25}` — comparative cost analysis ONDM 2025
-- [ ] `\cite{Berrevoets_2022}` — deployed MDI-QKD
-- [ ] `\cite{Martins2024}` — MadQCI heterogeneous network
-- [ ] `\cite{eu_open_qkd}` — OpenQKD project
+- [x] `\cite{Dynes_2019}` — Cambridge quantum network
+- [x] `\cite{Yan2025}` — MDI-QKD with frequency comb
+- [x] `\cite{Yehia_2022}` — Quantum City simulation
+- [x] `\cite{Yehia_2025}` — energetic analysis
+- [x] `\cite{DBLP:conf/ondm/KaraviasHBLP25}` — comparative cost analysis ONDM 2025
+- [x] `\cite{Berrevoets_2022}` — deployed MDI-QKD
+- [x] `\cite{Martins2024}` — MadQCI heterogeneous network
+- [x] `\cite{eu_open_qkd}` — OpenQKD project
 
 ### Bibliography hygiene
 - [ ] `\cite{PNS_desc}` currently points to EITCA (non-peer-reviewed); consider replacing with `\cite{Brassard_2000}` or `\cite{Chen2022}` for a more citable source.
@@ -161,7 +161,7 @@ Every item below is an assumption baked into the simulation or cost model that m
 
 ### Simulation / Protocol Assumptions
 
-- [ ] **QBER cutoff at 11%**: state the threshold and cite Shor–Preskill `\cite{Shor_2000}`. Note that 11% is the security proof threshold for the BB84 protocol under individual attacks; the same threshold is applied to MDI as a conservative bound.
+- [x] **QBER cutoff at 11%**: stated in §Bipartite Single-Link Analysis; Shor_2000 cited; MDI application noted as conservative bound.
 - [ ] **Asymptotic key rate (no finite-key corrections)**: justify as standard for comparative simulation at this scale; cite or note that finite-key corrections become significant at short block lengths. State that this overestimates key rate at low photon counts. (ROADMAP lists finite-key as a future extension.)
 - [ ] **Ideal single-photon sources (not WCP/decoy)**: all simulations use ideal SPS. Justify that this gives a clean upper-bound comparison between protocols. Note that WCP sources with decoy states are the practical standard; the decoy-state technique `\cite{Lo_decoys}` tightens the single-photon bound for WCP, but is not modelled here.
 - [ ] **`source_error_rate = 0.005` (0.5% multi-photon / emission error)**: not derived from a specific QD device. State the assumed value and note it is plausible for a high-quality QD (cite `\cite{Bozzio_2022}` or `\cite{Yang_2024}`). Acknowledge it is not propagated from a source-technology model.
@@ -169,14 +169,14 @@ Every item below is an assumption baked into the simulation or cost model that m
 - [ ] **`init_loss = 0.15` (15% TX coupling loss)**: source-to-fibre coupling at Alice. Justify or cite a typical value for fibre-pigtailed QD sources.
 - [ ] **`dephasing_rate = 0.0001`**: per-km fibre dephasing. State this is a conservative value; cite or justify.
 - [ ] **`bs_eff = 0.97` (BSM beam splitter efficiency)**: 3% excess loss at the HOM BS. Plausible for a high-quality fibre coupler; cite or justify.
-- [ ] **Linear-optical BSM discriminates only ψ⁺ and ψ⁻**: inherent to any linear-optical implementation `\cite{Lo_2012}`. State that this halves the effective BSM success rate (50% of valid coincidences are kept). This is already in the background section but should be referenced again in methodology.
+- [x] **Linear-optical BSM discriminates only ψ⁺ and ψ⁻**: stated in §Bipartite Single-Link Analysis with BSM outcome table and 50% constraint; Lo_2012 cited.
 - [ ] **`dark_count_rate = 100 cps` default**: SNSPD-tier; does not match InGaAs SPAD when `--detector-tech SPAD` is used. Note the inconsistency; plan to fix (see §1 Code Bugs). In the dissertation, state that all results use the default 100 cps unless otherwise specified.
 - [ ] **Euclidean (flat-grid) topology**: all node positions on a flat A×A km grid with straight-line distances. Justify as appropriate for a comparative study at metropolitan scale where topology geometry is varied across seeds rather than fixed to a real city. Note no tortuosity factor; real fibre follows duct paths with typical tortuosity 1.2–1.5×.
 
 ### Network Modelling Assumptions
 
-- [ ] **k-means relay placement**: relays placed at k-means centroids of user clusters. Justify: show or cite that centroid placement ≈ optimal for K=1 (from `relay_placement.py` results); argue k-means generalises this to K>1. Note that ILP-optimal placement is not computed (leave as future work).
-- [ ] **Multi-seeding (seed count justification)**: state number of seeds used; justify that averaging over N random user placements gives representative results that are not artefacts of a single topology. Discuss choice of seed count (diminishing returns argument or variance plot).
+- [x] **k-means relay placement**: written in §Multi-User Network Analysis — centroid minimises sum squared distances; k-means generalises to K>1; ILP-optimal deferred to future work.
+- [ ] **Multi-seeding (seed count justification)**: seed count stated in text but diminishing-returns argument or inter-seed variance plot not yet included — add when results figures are available.
 - [ ] **TBB84 backbone: 1 source per relay (not K−1)**: relay backbone uses one QD source per relay node for relay-to-relay BB84. Strict bidirectional full-mesh backbone would require K−1 sources per relay (K(K−1) total). State simplification and bound the error: for K≤8 the undercount is ≤7× on backbone source cost. (cost_analysis.tex §9.6)
 - [ ] **TBB84 backbone: unidirectional links (K(K−1)/2 sessions)**: simulated as half-duplex shared key per relay pair. Full duplex (separate key per direction) would double backbone rate and source count. State and justify or flag as a limitation. (cost_analysis.tex Inconsistency VII)
 - [ ] **TBB84 classical XOR forwarding is secure**: the relayed message K_AR1 ⊕ K_R1R2 is a one-time pad; in-flight interception reveals nothing. State clearly that the trust assumption is on the relay *node* (physical security), not the classical link. (already discussed in cost_analysis.tex §4.3)
