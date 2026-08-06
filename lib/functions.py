@@ -9,13 +9,13 @@ from netsquid.components.models import DelayModel, FibreLossModel
 
 DEFAULTS = {
     "fibre_loss_db_per_km": 0.18,  # Corning SMF-28 max at 1550 nm; pass --config configs/layer0_ideal.json for idealised baseline
-    "init_loss": 0.15,             # linear fraction [0-1], not dB (e.g. 0.15 = 15% loss)
+    "init_loss": 0.10,             # linear fraction [0-1]; OZ Optics PM fused coupler, 0.4dB max excess loss (DTS0092), rounded up
     "detector_efficiency": 0.90,   # IDQ ID281 SNSPD default at telecom (range 0.80-0.95)
     "dark_count_rate": 50,         # IDQ ID281 SNSPD at telecom (range 25-100 cps)
-    "node_loss_db": 2.0,            # lumped RX insertion loss (unverified; single value for both protocols)
+    "node_loss_db": 2.0,            # lumped RX insertion loss; matches Duplinskiy et al. 2017 Bob-side receiver (LiNbO3 phase mod + PBS)
     "source_error_rate": 0.015,    # Quandela Prometheus: g²(0)<0.03 → ε_s=g²(0)/2<0.015
-    "det_eff_x": 0.85,             # layer-8 X-basis bias: 5% differential vs η_Z=0.90
-    "dephasing_rate": 0.0001,
+    "det_eff_x": 0.715,            # layer-8 X-basis bias: η_X=η_Z×10^-1/10 (1dB extra insertion loss, Grasselli et al. 2025)
+    "dephasing_rate": 3.2e-7,       # PMD-derived: β=D²/2T², D=0.04 ps/√km (Corning SMF-28), T=50ps (IDQ ID281 jitter); range 2.6e-7-3.8e-7 /km (±20%)
     "bs_eff": 0.97,
     "tortuosity_mean": 1.0,     # 1.0 = Euclidean (off); set >1.0 to enable per-link stochastic routing factor
 }

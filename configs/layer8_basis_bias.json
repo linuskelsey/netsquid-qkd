@@ -1,13 +1,13 @@
 {
     "layer": 8,
-    "description": "Layer 7 (dephasing) + X-basis detector bias. η_X = 0.85 (slight polarisation misalignment in X basis, both protocols).",
+    "description": "Layer 7 (dephasing) + X-basis detector bias. η_X = 0.715 = η_Z×10^-1/10 (1dB extra insertion loss for X-basis optical stage, Grasselli et al. 2025).",
     "fibre_loss_db_per_km": 0.18,
     "init_loss": 0.1,
     "detector_efficiency": 0.90,
     "dark_count_rate": 50,
     "node_loss_db": 2.0,
     "source_error_rate": 0.015,
-    "dephasing_rate": 0.0001,
-    "det_eff_x": 0.85,
+    "dephasing_rate": 3.2e-7,
+    "det_eff_x": 0.715,
     "bs_eff": 1.0
 }

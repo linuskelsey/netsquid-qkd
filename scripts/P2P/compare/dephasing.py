@@ -1,7 +1,8 @@
 """
 Key Rate vs Fibre Dephasing Rate Comparison
 ============================================
-Sweeps fibre dephasing rate (0-0.01 /km). Fixed fibre length and other parameters.
+Sweeps fibre dephasing rate (3e-8-3e-6 /km, bracketing the PMD-derived realistic
+value 3.2e-7 /km). Fixed fibre length and other parameters.
 Note: dephasing_rate in --config is ignored; β is the sweep axis.
 
 Usage:
@@ -11,7 +12,7 @@ Usage:
                                         [--workers N]
 
 Defaults (no --config):
-    dephasing_rate          swept 0-0.01 /km  (sweep axis — config value ignored)
+    dephasing_rate          swept 3e-8-3e-6 /km  (sweep axis — config value ignored)
     fibre_loss_db_per_km    0.2  dB/km
     detector_efficiency     1.0
     dark_count_rate         0    cps
@@ -133,9 +134,9 @@ if __name__ == "__main__":
     print()
     if args.config is not None:
         print(f"Note: dephasing_rate from config ignored — β is the sweep axis")
-    print(f"Sweep: β [0-0.01 /km]  |  Fixed: L={args.fibre} km  α={cfg['fibre_loss_db_per_km']} dB/km  η_d={cfg['detector_efficiency']}")
+    print(f"Sweep: β [3e-8-3e-6 /km]  |  Fixed: L={args.fibre} km  α={cfg['fibre_loss_db_per_km']} dB/km  η_d={cfg['detector_efficiency']}")
 
-    Dpx = [5e-5, 1e-4, 3e-4, 5e-4, 1e-3, 1.5e-3, 2e-3, 2.5e-3, 3e-3]
+    Dpx = [3e-8, 1e-7, 2e-7, 2.6e-7, 3.2e-7, 3.8e-7, 6e-7, 1e-6, 3e-6]
 
     def _run_sweep(sweep_cfg, label=""):
         prog = Progress(len(Dpx))
@@ -300,7 +301,7 @@ if __name__ == "__main__":
 
     ax1.legend()
 
-    REALISTIC_MIN, REALISTIC_MAX = 1e-4, 1e-3
+    REALISTIC_MIN, REALISTIC_MAX = 2.6e-7, 3.8e-7
     ax1.axvspan(REALISTIC_MIN, REALISTIC_MAX, alpha=0.08, color='red', zorder=0)
     ax1.axvline(REALISTIC_MIN, color='black', linestyle=':', linewidth=1.2)
     ax1.axvline(REALISTIC_MAX, color='black', linestyle=':', linewidth=1.2)
@@ -310,7 +311,7 @@ if __name__ == "__main__":
     _inv    = _xlim[0] > _xlim[1]
     _ha_min = 'left'  if _inv else 'right'
     _ha_max = 'right' if _inv else 'left'
-    for _xv, _lbl, _ha in [(REALISTIC_MIN, "1e-4", _ha_min), (REALISTIC_MAX, "1e-3", _ha_max)]:
+    for _xv, _lbl, _ha in [(REALISTIC_MIN, "2.6e-7", _ha_min), (REALISTIC_MAX, "3.8e-7", _ha_max)]:
         if not any(abs(_xv - _t) < max(abs(_xv), 1e-9) * 1e-3 + 1e-9 for _t in _ticks):
             _xpos = _xv - _dx if _xv < (REALISTIC_MIN + REALISTIC_MAX) / 2 else _xv + _dx
             ax1.text(_xpos, 0.01, _lbl, transform=ax1.get_xaxis_transform(),

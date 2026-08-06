@@ -43,7 +43,7 @@ _DISTANCES = [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 _FIXED = dict(
     qDelay=0, qSpeed=0.8, photonCount=1024, sourceFreq=1e7,
     lenLoss=0.2, initLoss=0.1, detectorEffZ=0.65, detectorEffX=0.85,
-    darkCount=100, nodeLossDb=2.0, sourceErrRate=0.005, dephasingRate=0.0001,
+    darkCount=100, nodeLossDb=2.0, sourceErrRate=0.005, dephasingRate=3.2e-7,
     db_path=None,
 )
 

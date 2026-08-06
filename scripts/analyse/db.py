@@ -71,8 +71,8 @@ _DEFAULTS = {
     "dark_count_rate":      100,
     "node_loss_db":         2.0,
     "source_error_rate":    0.005,
-    "det_eff_x":            0.85,
-    "dephasing_rate":       0.0001,
+    "det_eff_x":            0.715,
+    "dephasing_rate":       3.2e-7,
     "bs_eff":               0.97,
 }
 

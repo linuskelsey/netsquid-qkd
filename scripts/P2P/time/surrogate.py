@@ -52,7 +52,7 @@ _ETA_DENSE = np.linspace(0.10, 1.00, 100)
 _FIXED = dict(
     qDelay=0, qSpeed=0.8, photonCount=1024, sourceFreq=1e7,
     lenLoss=0.2, initLoss=0.1, darkCount=100,
-    nodeLossDb=2.0, sourceErrRate=0.005, dephasingRate=0.0001,
+    nodeLossDb=2.0, sourceErrRate=0.005, dephasingRate=3.2e-7,
     db_path=None,
 )
 

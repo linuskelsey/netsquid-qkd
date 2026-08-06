@@ -27,8 +27,8 @@ Layers:
     Layer 4   + init/coupling loss        L_i = 0.10
     Layer 5   + node/connector loss       2.0 dB
     Layer 6   + source error rate         0.005
-    Layer 7   + fibre dephasing           1e-4 /km
-    Layer 8   + X-basis detector bias     η_X = 0.85
+    Layer 7   + fibre dephasing           3.2e-7 /km
+    Layer 8   + X-basis detector bias     η_X = 0.715
     Layer 9   + beam splitter efficiency  0.97  (MDI only)
 
 Examples:
@@ -60,8 +60,8 @@ LAYERS = [
     ("layer4_init_loss.json",   "Layer 4: + init loss @ 0.10"),
     ("layer5_node_loss.json",   "Layer 5: + node loss @ 2.0 dB"),
     ("layer6_source_err.json",  "Layer 6: + source error @ 0.005"),
-    ("layer7_dephasing.json",   "Layer 7: + dephasing @ 1e-4/km"),
-    ("layer8_basis_bias.json",  "Layer 8: + basis bias @ 0.85"),
+    ("layer7_dephasing.json",   "Layer 7: + dephasing @ 3.2e-7/km"),
+    ("layer8_basis_bias.json",  "Layer 8: + basis bias @ 0.715"),
     ("layer9_bs_eff.json",      "Layer 9: + BS efficiency @ 0.97"),
 ]
 

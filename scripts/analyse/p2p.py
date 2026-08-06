@@ -163,7 +163,7 @@ def _add_regime_shading(ax1, sweep_col: str, x_data: list) -> None:
             "node_loss_db":   (0.5,   4.0,   "0.5",   "4.0"),
             "source_err_rate":(0.001, 0.02,  "0.001", "0.02"),
             "detector_eff_x": (0.65,  0.90,  "0.65",  "0.90"),
-            "dephasing_rate": (1e-4,  1e-3,  "1e-4",  "1e-3"),
+            "dephasing_rate": (2.6e-7,  3.8e-7,  "2.6e-7",  "3.8e-7"),
             "bs_eff":         (0.90,  0.99,  "0.90",  "0.99"),
         }
         if sweep_col not in _SINGLE:

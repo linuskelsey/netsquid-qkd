@@ -1,13 +1,13 @@
 {
     "layer": 7,
-    "description": "Layer 6 + fibre dephasing. β = 1e-4 /km (SMF polarisation stability, uncompensated).",
+    "description": "Layer 6 + fibre dephasing. β = 3.2e-7 /km (Corning SMF-28 PMD-derived, D=0.04 ps/√km, T=50ps).",
     "fibre_loss_db_per_km": 0.18,
     "init_loss": 0.1,
     "detector_efficiency": 0.90,
     "dark_count_rate": 50,
     "node_loss_db": 2.0,
     "source_error_rate": 0.015,
-    "dephasing_rate": 0.0001,
+    "dephasing_rate": 3.2e-7,
     "det_eff_x": 1.0,
     "bs_eff": 1.0
 }
