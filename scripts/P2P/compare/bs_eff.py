@@ -6,21 +6,17 @@ BB84 is unaffected by bs_eff and appears as a flat reference line.
 Note: bs_eff in --config is ignored; η_bs is the sweep axis.
 
 Usage:
-    python scripts/compare/bs_eff.py [--config PATH] [--runtimes N] [--fibre F]
-                                     [--loss F] [--det-eff F] [--dark-count N]
-                                     [--init-loss F] [--node-loss F] [--source-err F]
-                                     [--workers N]
+    python scripts/P2P/compare/bs_eff.py [--config PATH] [--runtimes N] [--fibre F]
+                                         [--loss F] [--det-eff F] [--dark-count N]
+                                         [--init-loss F] [--node-loss F] [--source-err F]
+                                         [--workers N] [--error MODE] [--output-dir DIR]
+                                         [--compare-configs PATH [PATH ...]] [--no-db]
 
-Defaults (no --config):
-    bs_eff                  swept 1.0->0.5  (sweep axis — config value ignored)
-    fibre_loss_db_per_km    0.2  dB/km
-    detector_efficiency     1.0
-    dark_count_rate         0    cps
-    init_loss               0.0
-    node_loss_db            0.0  dB
-    source_error_rate       0.0
-    fibre                   20   km
-    runtimes                100
+Fixed params default to lib/functions.py DEFAULTS (the layer-9 realistic operating
+point: fibre_loss=0.18 dB/km, detector_efficiency=0.90, dark_count_rate=50 cps,
+init_loss=0.10, node_loss_db=2.0 dB, source_error_rate=0.015, dephasing_rate=3.2e-7/km).
+Pass --config configs/layer0_ideal.json (or any layerN.json) to override all of them
+at once. bs_eff is always the sweep axis, 1.0->0.5 — the config value for it is ignored.
 """
 
 import sys

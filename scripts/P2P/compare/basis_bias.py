@@ -5,21 +5,18 @@ Sweeps X-basis detector efficiency η_X (1.0->0.5) with η_Z fixed at detector_e
 Note: detector_efficiency in --config sets η_Z (fixed axis); η_X is the sweep axis.
 
 Usage:
-    python scripts/compare/basis_bias.py [--config PATH] [--runtimes N] [--fibre F]
-                                         [--loss F] [--det-eff-z F] [--dark-count N]
-                                         [--init-loss F] [--node-loss F] [--source-err F]
-                                         [--workers N]
+    python scripts/P2P/compare/basis_bias.py [--config PATH] [--runtimes N] [--fibre F]
+                                              [--loss F] [--det-eff-z F] [--dark-count N]
+                                              [--init-loss F] [--node-loss F] [--source-err F]
+                                              [--workers N] [--error MODE] [--output-dir DIR]
+                                              [--compare-configs PATH [PATH ...]] [--no-db]
 
-Defaults (no --config):
-    detector_eff_x          swept 1.0->0.5  (sweep axis)
-    detector_eff_z          1.0             (fixed; set via --det-eff-z or config detector_efficiency)
-    fibre_loss_db_per_km    0.2  dB/km
-    dark_count_rate         0    cps
-    init_loss               0.0
-    node_loss_db            0.0  dB
-    source_error_rate       0.0
-    fibre                   20   km
-    runtimes                100
+Fixed params default to lib/functions.py DEFAULTS (the layer-9 realistic operating
+point: fibre_loss=0.18 dB/km, detector_efficiency=0.90 [used as fixed η_Z], dark_count_rate=50 cps,
+init_loss=0.10, node_loss_db=2.0 dB, source_error_rate=0.015, dephasing_rate=3.2e-7/km,
+bs_eff=0.97). Pass --config configs/layer0_ideal.json (or any layerN.json) to override
+all of them at once. detector_eff_x (η_X) is always the sweep axis, 1.0->0.5, regardless
+of config.
 """
 
 import sys

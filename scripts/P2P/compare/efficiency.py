@@ -5,17 +5,16 @@ Sweeps detector efficiency (1.0 -> 0.5). Fixed fibre length and loss parameters.
 Note: detector_efficiency in --config is ignored; η_d is the sweep axis.
 
 Usage:
-    python scripts/compare/efficiency.py [--config PATH] [--runtimes N] [--fibre F]
-                                         [--loss F] [--dark-count N] [--init-loss F]
-                                         [--workers N]
+    python scripts/P2P/compare/efficiency.py [--config PATH] [--runtimes N] [--fibre F]
+                                              [--loss F] [--dark-count N] [--init-loss F]
+                                              [--workers N] [--error MODE] [--output-dir DIR]
+                                              [--compare-configs PATH [PATH ...]] [--no-db]
 
-Defaults (no --config):
-    detector_efficiency     swept 1.0->0.5  (sweep axis — config value ignored)
-    fibre_loss_db_per_km    0.2  dB/km  — pass --config configs/layer0_ideal.json for idealised run
-    dark_count_rate         0    cps
-    init_loss               0.0  dB
-    fibre                   20   km
-    runtimes                100
+Fixed params default to lib/functions.py DEFAULTS (the layer-9 realistic operating
+point: fibre_loss=0.18 dB/km, dark_count_rate=50 cps, init_loss=0.10, node_loss_db=2.0 dB,
+source_error_rate=0.015, dephasing_rate=3.2e-7/km, bs_eff=0.97). Pass --config
+configs/layer0_ideal.json (or any layerN.json) to override all of them at once.
+detector_efficiency is always the sweep axis, 1.0->0.15 — the config value for it is ignored.
 """
 
 import argparse

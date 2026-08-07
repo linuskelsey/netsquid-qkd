@@ -51,12 +51,12 @@ _IDEAL = {
 }
 
 _PARAMS = [
-    ("fibre_loss_db_per_km", 0.2,    r"Fibre loss ($\alpha$=0.20 dB/km)"),
-    ("detector_efficiency",  0.65,   r"Detector eff ($\eta_d$=0.65)"),
-    ("dark_count_rate",      100,    r"Dark count ($d_c$=100 cps)"),
+    ("fibre_loss_db_per_km", 0.18,   r"Fibre loss ($\alpha$=0.18 dB/km)"),
+    ("detector_efficiency",  0.90,   r"Detector eff ($\eta_d$=0.90)"),
+    ("dark_count_rate",      50,     r"Dark count ($d_c$=50 cps)"),
     ("init_loss",            0.1,    r"Init loss ($L_i$=0.10)"),
     ("node_loss_db",         2.0,    r"Node loss ($L_n$=2.0 dB)"),
-    ("source_error_rate",    0.005,  r"Source error ($\varepsilon_s$=0.005)"),
+    ("source_error_rate",    0.015,  r"Source error ($\varepsilon_s$=0.015)"),
     ("dephasing_rate",       3.2e-7, r"Dephasing ($\beta$=3.2$\times10^{-7}$/km)"),
     ("det_eff_x",            0.715,  r"Basis bias ($\eta_X$=0.715)"),
     ("bs_eff",               0.97,   r"BS eff ($\eta_{bs}$=0.97, MDI only)"),

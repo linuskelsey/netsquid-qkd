@@ -8,6 +8,13 @@ Total Alice-Bob distance is fixed; only the relay split changes.
 Usage:
     python scripts/P2P/compare/charlie_pos.py [--config PATH] [--runtimes N] [--fibre F]
                                                [--error {bars,shade,sigma,iqr,sem}] [--workers N]
+                                               [--output-dir DIR] [--compare-configs PATH [PATH ...]]
+                                               [--no-db]
+
+Fixed params (fibre loss, detector efficiency, dark count, init/node loss, source error,
+dephasing, bs_eff) default to lib/functions.py DEFAULTS (the layer-9 realistic operating
+point). Pass --config to override all of them at once. Charlie position (0.1-0.9 fraction
+from Alice) is always the sweep axis.
 """
 
 import math

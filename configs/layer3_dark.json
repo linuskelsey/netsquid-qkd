@@ -1,6 +1,6 @@
 {
     "layer": 3,
-    "description": "Layer 2 + dark count rate. d_c = 100 cps (typical SNSPD dark count rate).",
+    "description": "Layer 2 + dark count rate. d_c = 50 cps (IDQ ID281 SNSPD at telecom).",
     "fibre_loss_db_per_km": 0.18,
     "init_loss": 0.0,
     "detector_efficiency": 0.90,

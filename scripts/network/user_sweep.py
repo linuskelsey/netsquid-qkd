@@ -22,12 +22,15 @@ Options:
     --seeds INT      Random topologies to average over (default: 1)
     --runtimes INT   Monte Carlo runs per pair (default: 20)
     --config PATH    JSON config preset
+    --tortuosity FLOAT  Mean fibre tortuosity, cable/Euclidean ratio (default: 1.2; 1.0 = off)
     --error          Error style: bars (default), shade (±1σ fill), or iqr (Q1/Q3 fill)
     --workers INT    Worker processes (default: 80% of CPU cores; use nproc in command line to see maximum)
-    --output-dir DIR Save figures to directory instead of displaying
+    --output-dir DIR Save figure bundle {plot.png, plot.tex, assumptions.md} to directory instead of displaying
     --placement STR  User placement mode: random (default) or clustered
                      (clustered: each user drawn uniformly within the
                       Voronoi-aware catchment circle of a randomly chosen relay)
+    --real NAME      Load fixed relay positions from data/real_topologies/NAME.json;
+                     K is determined by the file, not --k (no files currently checked in)
 
 Examples:
     python scripts/network/user_sweep.py --k 3 --n-max 20 --runtimes 20

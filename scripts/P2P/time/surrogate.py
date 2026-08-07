@@ -9,11 +9,18 @@ parameter pair: distance drives exponential loss; detector_eff enters linearly
 for BB84 and quadratically for MDI.
 
 Usage:
-    python scripts/P2P/surrogate.py [--runtimes INT] [--workers INT] [--protocol STR] [--output-dir DIR]
+    python scripts/P2P/time/surrogate.py [--runtimes INT] [--workers INT] [--protocol STR]
+                                          [--output-dir DIR] [--grid-size N]
+                                          [--save-grid DIR] [--load-grid DIR]
+
+--grid-size N replaces the default 6x6 training grid with an NxN uniform grid.
+--save-grid DIR saves the (X, y) training data after simulating (feeds trend_analysis.py).
+--load-grid DIR loads previously-saved (X, y) data and skips simulation entirely.
 
 Examples:
-    python scripts/P2P/surrogate.py --runtimes 20 --output-dir docs/figures
-    python scripts/P2P/surrogate.py --protocol bb84 --runtimes 30
+    python scripts/P2P/time/surrogate.py --runtimes 20 --output-dir docs/figures
+    python scripts/P2P/time/surrogate.py --protocol bb84 --runtimes 30
+    python scripts/P2P/time/surrogate.py --grid-size 10 --save-grid data/surrogate_grids
 """
 
 import os
@@ -51,11 +58,11 @@ def _make_grid(n):
 _D_DENSE   = np.linspace(1, 100, 100)
 _ETA_DENSE = np.linspace(0.10, 1.00, 100)
 
-# Fixed realistic defaults (all parameters except the two swept ones)
+# Fixed realistic defaults (all parameters except the two swept ones; matches lib/functions.py DEFAULTS)
 _FIXED = dict(
     qDelay=0, qSpeed=0.8, photonCount=1024, sourceFreq=1e7,
-    lenLoss=0.2, initLoss=0.1, darkCount=100,
-    nodeLossDb=2.0, sourceErrRate=0.005, dephasingRate=3.2e-7,
+    lenLoss=0.18, initLoss=0.1, darkCount=50,
+    nodeLossDb=2.0, sourceErrRate=0.015, dephasingRate=3.2e-7,
     db_path=None,
 )
 
@@ -124,10 +131,10 @@ def measure_speedup(protocol, runtimes, workers, gp):
     # Sim: one grid point at typical metropolitan params
     t0 = time.perf_counter()
     if protocol == "BB84":
-        run_BB84_sims(runtimes=runtimes, fibreLen=40.0, detectorEffZ=0.65,
+        run_BB84_sims(runtimes=runtimes, fibreLen=40.0, detectorEffZ=0.90,
                       workers=workers, **_FIXED)
     else:
-        run_mdi_sims(runtimes=runtimes, fibreLen=40.0, detectorEffZ=0.65,
+        run_mdi_sims(runtimes=runtimes, fibreLen=40.0, detectorEffZ=0.90,
                      bsEff=0.97, charliePos=0.5, workers=workers, **_FIXED)
     sim_s = time.perf_counter() - t0
 

@@ -16,6 +16,10 @@ Usage:
 
 Omit --seed to aggregate across all seeds. Pass --seed to pin a specific
 random placement; this also produces a second MDI topology figure.
+
+Pass --output-dir DIR to save a figure bundle {plot.png, plot.tex, assumptions.md}
+(named network_<x>_<y>) instead of displaying; the topology figure, if produced,
+is saved alongside as network_topology.png (not part of the 3-file bundle).
 """
 import argparse
 import math

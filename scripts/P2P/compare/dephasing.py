@@ -6,21 +6,17 @@ value 3.2e-7 /km). Fixed fibre length and other parameters.
 Note: dephasing_rate in --config is ignored; β is the sweep axis.
 
 Usage:
-    python scripts/compare/dephasing.py [--config PATH] [--runtimes N] [--fibre F]
-                                        [--loss F] [--det-eff F] [--dark-count N]
-                                        [--init-loss F] [--node-loss F] [--source-err F]
-                                        [--workers N]
+    python scripts/P2P/compare/dephasing.py [--config PATH] [--runtimes N] [--fibre F]
+                                             [--loss F] [--det-eff F] [--dark-count N]
+                                             [--init-loss F] [--node-loss F] [--source-err F]
+                                             [--workers N] [--error MODE] [--output-dir DIR]
+                                             [--compare-configs PATH [PATH ...]] [--no-db]
 
-Defaults (no --config):
-    dephasing_rate          swept 3e-8-3e-6 /km  (sweep axis — config value ignored)
-    fibre_loss_db_per_km    0.2  dB/km
-    detector_efficiency     1.0
-    dark_count_rate         0    cps
-    init_loss               0.0
-    node_loss_db            0.0  dB
-    source_error_rate       0.0
-    fibre                   20   km
-    runtimes                100
+Fixed params default to lib/functions.py DEFAULTS (the layer-9 realistic operating
+point: fibre_loss=0.18 dB/km, detector_efficiency=0.90, dark_count_rate=50 cps,
+init_loss=0.10, node_loss_db=2.0 dB, source_error_rate=0.015). Pass --config
+configs/layer0_ideal.json (or any layerN.json) to override all of them at once.
+dephasing_rate is always the sweep axis, 3e-8-3e-6 /km — the config value for it is ignored.
 """
 
 import sys
@@ -204,6 +200,7 @@ if __name__ == "__main__":
             ax1.plot(Dpx, [r/1000 for r in res["rates_bb84"]], '--', color=c, lw=1.5, label=f"BB84 - {name}")
             ax1.plot(Dpx, [r/1000 for r in res["rates_mdi"]],  '-',  color=c, lw=1.5, label=f"MDI - {name}")
         ax1.set_yscale("log")
+        ax1.set_xscale("log")
         ax1.set_xlabel(r"Fibre dephasing rate $\beta$ (per km)")
         ax1.set_ylabel("Secure key rate (kbps)")
         ax1.legend(fontsize=8)
@@ -304,6 +301,7 @@ if __name__ == "__main__":
     ax1.set_xlabel(r"Fibre dephasing rate $\beta$ (per km)")
     ax1.set_ylabel("Absolute secure key rate (kbps)")
     ax1.set_yscale("log")
+    ax1.set_xscale("log")
     ax1.grid(True, alpha=0.3)
 
     ax2 = ax1.twinx()
@@ -315,21 +313,22 @@ if __name__ == "__main__":
     ax1.legend()
 
     REALISTIC_MIN, REALISTIC_MAX = 2.6e-7, 3.8e-7
+    REALISTIC_MID = (REALISTIC_MIN * REALISTIC_MAX) ** 0.5  # geometric mean — correct midpoint on a log axis
     ax1.axvspan(REALISTIC_MIN, REALISTIC_MAX, alpha=0.08, color='red', zorder=0)
     ax1.axvline(REALISTIC_MIN, color='black', linestyle=':', linewidth=1.2)
     ax1.axvline(REALISTIC_MAX, color='black', linestyle=':', linewidth=1.2)
-    _ticks  = ax1.get_xticks()
-    _xlim   = ax1.get_xlim()
-    _dx     = 0.012 * abs(_xlim[1] - _xlim[0])
-    _inv    = _xlim[0] > _xlim[1]
-    _ha_min = 'left'  if _inv else 'right'
-    _ha_max = 'right' if _inv else 'left'
+    _ticks    = ax1.get_xticks()
+    _xlim     = ax1.get_xlim()
+    _dx_ratio = (_xlim[1] / _xlim[0]) ** 0.012  # multiplicative offset — equivalent of _dx for a log axis
+    _inv      = _xlim[0] > _xlim[1]
+    _ha_min   = 'left'  if _inv else 'right'
+    _ha_max   = 'right' if _inv else 'left'
     for _xv, _lbl, _ha in [(REALISTIC_MIN, "2.6e-7", _ha_min), (REALISTIC_MAX, "3.8e-7", _ha_max)]:
         if not any(abs(_xv - _t) < max(abs(_xv), 1e-9) * 1e-3 + 1e-9 for _t in _ticks):
-            _xpos = _xv - _dx if _xv < (REALISTIC_MIN + REALISTIC_MAX) / 2 else _xv + _dx
+            _xpos = _xv / _dx_ratio if _xv < REALISTIC_MID else _xv * _dx_ratio
             ax1.text(_xpos, 0.01, _lbl, transform=ax1.get_xaxis_transform(),
                      ha=_ha, va='bottom', fontsize=7, color='dimgray')
-    ax1.text((REALISTIC_MIN + REALISTIC_MAX) / 2, 0.97, "Realistic hardware regime",
+    ax1.text(REALISTIC_MID, 0.97, "Realistic hardware regime",
              transform=ax1.get_xaxis_transform(),
              ha='center', va='top', fontsize=7, color='darkred', alpha=0.7, style='italic')
 

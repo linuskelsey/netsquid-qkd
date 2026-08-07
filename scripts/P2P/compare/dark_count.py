@@ -5,17 +5,16 @@ Sweeps dark count rate (0-10000 cps). Fixed fibre length, loss, and detector eff
 Note: dark_count_rate in --config is ignored; d_c is the sweep axis.
 
 Usage:
-    python scripts/compare/dark_count.py [--config PATH] [--runtimes N] [--fibre F]
-                                         [--loss F] [--det-eff F] [--init-loss F]
-                                         [--workers N]
+    python scripts/P2P/compare/dark_count.py [--config PATH] [--runtimes N] [--fibre F]
+                                              [--loss F] [--det-eff F] [--init-loss F]
+                                              [--workers N] [--error MODE] [--output-dir DIR]
+                                              [--compare-configs PATH [PATH ...]] [--no-db]
 
-Defaults (no --config):
-    dark_count_rate         swept 0-250 cps  (sweep axis — config value ignored)
-    fibre_loss_db_per_km    0.2  dB/km  — pass --config configs/layer0_ideal.json for idealised run
-    detector_efficiency     1.0
-    init_loss               0.0  dB
-    fibre                   20   km
-    runtimes                100
+Fixed params default to lib/functions.py DEFAULTS (the layer-9 realistic operating
+point: fibre_loss=0.18 dB/km, detector_efficiency=0.90, init_loss=0.10, node_loss_db=2.0 dB,
+source_error_rate=0.015, dephasing_rate=3.2e-7/km, bs_eff=0.97). Pass --config
+configs/layer0_ideal.json (or any layerN.json) to override all of them at once.
+dark_count_rate is always the sweep axis, 0-250 cps — the config value for it is ignored.
 """
 
 import argparse

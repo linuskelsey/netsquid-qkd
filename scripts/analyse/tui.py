@@ -2,7 +2,13 @@
 Interactive TUI for reconstructing QKD simulation figures from results.db.
 
 Usage:
-    python scripts/analyse/tui.py
+    python scripts/analyse/tui.py [--output-dir DIR]
+
+--output-dir DIR: when set, every Plot click saves a figure bundle
+{plot.png, plot.tex, assumptions.md} into DIR instead of opening a window
+(named p2p_<sweep> or network_<x>_<y>; topology figures save alongside as
+network_topology.png, not part of the 3-file bundle). Omit to keep the
+default interactive-window behaviour described below.
 
 P2P tab
     Select a sweep axis (x-axis), adjust the 9 fixed parameter values, pick

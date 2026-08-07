@@ -5,7 +5,7 @@ Sweeps Alice-Bob distance (1–100 km) for each config layer, building up from t
 case to a fully realistic physical model. Each layer adds one parameter at its
 industry-typical value on top of all previous layers.
 
-BB84 runs layers 0–7 (no beam splitter); MDI runs layers 0–8.
+BB84 runs layers 0–8 (no beam splitter); MDI runs layers 0–9.
 Error bars show min/max across Monte Carlo runs at each distance point.
 Both protocols produce separate figures.
 
@@ -17,16 +17,16 @@ Options:
     --protocol STR      Protocol(s) to run: bb84, mdi, or both (default: both)
     --workers INT       Worker processes per distance point (default: 80% of CPU cores)
     --no-db             Disable DB writing
-    --output-dir PATH   Save figures to directory instead of displaying
+    --output-dir PATH   Save figure bundle {plot.png, plot.tex, assumptions.md} to directory instead of displaying
 
 Layers:
     Layer 0   Ideal (no physical noise)
-    Layer 1   + fibre attenuation         0.20 dB/km
-    Layer 2   + detector efficiency       0.65
-    Layer 3   + dark count rate           100 cps
+    Layer 1   + fibre attenuation         0.18 dB/km
+    Layer 2   + detector efficiency       0.90
+    Layer 3   + dark count rate           50 cps
     Layer 4   + init/coupling loss        L_i = 0.10
     Layer 5   + node/connector loss       2.0 dB
-    Layer 6   + source error rate         0.005
+    Layer 6   + source error rate         0.015
     Layer 7   + fibre dephasing           3.2e-7 /km
     Layer 8   + X-basis detector bias     η_X = 0.715
     Layer 9   + beam splitter efficiency  0.97  (MDI only)
@@ -57,12 +57,12 @@ apply_thesis_style()
 
 LAYERS = [
     ("layer0_ideal.json",       "Layer 0: Ideal"),
-    ("layer1_loss.json",        "Layer 1: + fibre loss @ 0.20 dB/km"),
-    ("layer2_eff.json",         "Layer 2: + detector efficiency @ 0.65"),
-    ("layer3_dark.json",        "Layer 3: + dark count rate @ 100 cps"),
+    ("layer1_loss.json",        "Layer 1: + fibre loss @ 0.18 dB/km"),
+    ("layer2_eff.json",         "Layer 2: + detector efficiency @ 0.90"),
+    ("layer3_dark.json",        "Layer 3: + dark count rate @ 50 cps"),
     ("layer4_init_loss.json",   "Layer 4: + init loss @ 0.10"),
     ("layer5_node_loss.json",   "Layer 5: + node loss @ 2.0 dB"),
-    ("layer6_source_err.json",  "Layer 6: + source error @ 0.005"),
+    ("layer6_source_err.json",  "Layer 6: + source error @ 0.015"),
     ("layer7_dephasing.json",   "Layer 7: + dephasing @ 3.2e-7/km"),
     ("layer8_basis_bias.json",  "Layer 8: + basis bias @ 0.715"),
     ("layer9_bs_eff.json",      "Layer 9: + BS efficiency @ 0.97"),

@@ -21,7 +21,7 @@ Options (shared):
     --runtimes INT     Monte Carlo runs per pair (default: 10)
     --config PATH      JSON config preset
     --workers INT      Worker processes (default: 80% of CPU cores)
-    --save PATH        Save figure to file instead of displaying
+    --output-dir DIR   Save figure bundle {plot.png, plot.tex, assumptions.md} to directory instead of displaying
 
 Experiment 1 options:
     --n-values INTS    Comma-separated user counts to sweep (default: 5,10,15,20)
@@ -36,7 +36,7 @@ Experiment 2 options:
 
 Examples:
     python scripts/network/relay_placement.py --exp 1 --n-values 5,10,20 --grid 10
-    python scripts/network/relay_placement.py --exp 2 --n-max 40 --seeds 10 --save results/placement.png
+    python scripts/network/relay_placement.py --exp 2 --n-max 40 --seeds 10 --output-dir results/placement
 """
 import argparse
 import os

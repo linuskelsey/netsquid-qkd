@@ -21,11 +21,11 @@ Options:
     --seed INT       Base random seed (random if omitted)
     --config PATH    JSON config preset
     --workers INT    Worker processes (default: 80% of CPU cores)
-    --save PATH      Save figure to file instead of displaying
+    --output-dir DIR Save figure bundle {plot.png, plot.tex, assumptions.md} to directory instead of displaying
 
 Examples:
     python scripts/network/time/time_vs_area.py --n 8 --area-max 50
-    python scripts/network/time/time_vs_area.py --seeds 5 --save results/time_area.png
+    python scripts/network/time/time_vs_area.py --seeds 5 --output-dir results/time_area
 """
 import argparse
 import os

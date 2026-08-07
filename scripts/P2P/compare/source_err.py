@@ -5,19 +5,17 @@ Sweeps source bit error rate (0-10%). Fixed fibre length, loss, and detector par
 Note: source_error_rate in --config is ignored; ε_s is the sweep axis.
 
 Usage:
-    python scripts/compare/source_err.py [--config PATH] [--runtimes N] [--fibre F]
-                                         [--loss F] [--det-eff F] [--dark-count N]
-                                         [--init-loss F] [--node-loss F] [--workers N]
+    python scripts/P2P/compare/source_err.py [--config PATH] [--runtimes N] [--fibre F]
+                                              [--loss F] [--det-eff F] [--dark-count N]
+                                              [--init-loss F] [--node-loss F] [--workers N]
+                                              [--error MODE] [--output-dir DIR]
+                                              [--compare-configs PATH [PATH ...]] [--no-db]
 
-Defaults (no --config):
-    source_error_rate       swept 0-10%  (sweep axis — config value ignored)
-    fibre_loss_db_per_km    0.2  dB/km
-    detector_efficiency     1.0
-    dark_count_rate         0    cps
-    init_loss               0.0
-    node_loss_db            0.0  dB
-    fibre                   20   km
-    runtimes                100
+Fixed params default to lib/functions.py DEFAULTS (the layer-9 realistic operating
+point: fibre_loss=0.18 dB/km, detector_efficiency=0.90, dark_count_rate=50 cps,
+init_loss=0.10, node_loss_db=2.0 dB, dephasing_rate=3.2e-7/km, bs_eff=0.97). Pass
+--config configs/layer0_ideal.json (or any layerN.json) to override all of them at once.
+source_error_rate is always the sweep axis, 0.05%-4% — the config value for it is ignored.
 """
 
 import sys

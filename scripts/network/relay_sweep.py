@@ -20,9 +20,10 @@ Options:
     --seeds INT      Random topologies to average over (default: 1)
     --runtimes INT   Monte Carlo runs per pair (default: 20)
     --config PATH    JSON config preset
+    --tortuosity FLOAT  Mean fibre tortuosity, cable/Euclidean ratio (default: 1.2; 1.0 = off)
     --error          Error style: bars (default), shade (±1σ fill), or iqr (Q1/Q3 fill)
     --workers INT    Worker processes (default: 80% of CPU cores)
-    --output-dir DIR Save figures to directory instead of displaying
+    --output-dir DIR Save figure bundle {plot.png, plot.tex, assumptions.md} to directory instead of displaying
 
 Examples:
     python scripts/network/relay_sweep.py --n 20 --k-max 6 --runtimes 20

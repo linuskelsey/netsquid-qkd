@@ -4,8 +4,9 @@ Trend Analysis: Speedup vs Scale
 Two analyses:
 
 1. GP Surrogate — speedup vs evaluation grid size
-   Load saved training grid, fit GP once, time inference at increasing grid
-   sizes. Shows speedup scales linearly with evaluation density.
+   Load a training grid saved by `surrogate.py --save-grid DIR` (run that first),
+   fit GP once, time inference at increasing grid sizes. Shows speedup scales
+   linearly with evaluation density.
 
 2. Adaptive MC — wall-clock saving vs simulation budget (BB84 only)
    Run fixed vs adaptive at one stable-regime distance across increasing
@@ -13,9 +14,14 @@ Two analyses:
    spawns to amortise).
 
 Usage:
-    python scripts/P2P/time/trend_analysis.py [--load-grid DIR] [--workers INT]
-                                              [--output-dir DIR]
+    python scripts/P2P/time/trend_analysis.py [--load-grid DIR] [--sim-runtimes INT]
+                                              [--workers INT] [--output-dir DIR]
                                               [--skip-surrogate] [--skip-adaptive]
+
+--load-grid DIR is required unless --skip-surrogate is passed (analysis 1 needs a
+grid produced beforehand by `surrogate.py --save-grid DIR`).
+--sim-runtimes INT sets the runtimes for the single timing call in analysis 1 —
+match it to the runtimes used when the training grid was generated.
 
 Examples:
     python scripts/P2P/time/trend_analysis.py --load-grid data/surrogate_grids --output-dir docs/figures/July
@@ -52,8 +58,8 @@ _MIN_RUNS     = 100
 
 _FIXED_KWARGS = dict(
     qDelay=0, qSpeed=0.8, photonCount=1024, sourceFreq=1e7,
-    lenLoss=0.2, initLoss=0.1, detectorEffZ=0.65, detectorEffX=0.85,
-    darkCount=100, nodeLossDb=2.0, sourceErrRate=0.005, dephasingRate=3.2e-7,
+    lenLoss=0.18, initLoss=0.1, detectorEffZ=0.90, detectorEffX=0.715,
+    darkCount=50, nodeLossDb=2.0, sourceErrRate=0.015, dephasingRate=3.2e-7,
     db_path=None,
 )
 

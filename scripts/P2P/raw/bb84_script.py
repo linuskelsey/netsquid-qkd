@@ -4,17 +4,14 @@ BB84 QKD Simulation Runner
 Executes the BB84 NetSquid simulation and prints per-run and aggregate metrics.
 
 Usage:
-    python scripts/raw/bb84_script.py [--config PATH] [--runtimes N] [--fibre F]
-                                      [--loss F] [--det-eff F] [--dark-count N] [--init-loss F]
-                                      [--workers N]
+    python scripts/P2P/raw/bb84_script.py [--config PATH] [--runtimes N] [--fibre F]
+                                           [--loss F] [--det-eff F] [--dark-count N] [--init-loss F]
+                                           [--workers N]
 
-Defaults (no --config):
-    fibre_loss_db_per_km    0.2  dB/km
-    detector_efficiency     1.0
-    dark_count_rate         0    cps
-    init_loss               0.0  (linear fraction)
-    fibre                   20   km
-    runtimes                10
+Fixed params default to lib/functions.py DEFAULTS (the layer-9 realistic operating
+point: fibre_loss=0.18 dB/km, detector_efficiency=0.90, dark_count_rate=50 cps,
+init_loss=0.10, node_loss_db=2.0 dB, source_error_rate=0.015, dephasing_rate=3.2e-7/km).
+Pass --config configs/layer0_ideal.json for the idealised baseline. fibre=20 km, runtimes=10.
 """
 
 import sys

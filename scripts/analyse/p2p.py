@@ -13,6 +13,9 @@ Usage:
     python scripts/analyse/p2p.py --sweep dark_count --protocols MDI --error iqr
 
 Fixed params default to the same values as lib/functions.py DEFAULTS.
+
+Pass --output-dir DIR to save a figure bundle {plot.png, plot.tex, assumptions.md}
+(named p2p_<sweep>) instead of displaying.
 """
 import argparse
 import math

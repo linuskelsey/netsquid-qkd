@@ -5,19 +5,18 @@ Sweeps receiver-side node loss (0-6 dB). Fixed fibre length, loss, and detector 
 Note: node_loss_db in --config is ignored; L_node is the sweep axis.
 
 Usage:
-    python scripts/compare/node_loss.py [--config PATH] [--runtimes N] [--fibre F]
-                                        [--loss F] [--det-eff F] [--dark-count N] [--init-loss F]
-                                        [--source-err F] [--workers N]
+    python scripts/P2P/compare/node_loss.py [--config PATH] [--runtimes N] [--fibre F]
+                                             [--loss F] [--det-eff F] [--dark-count N] [--init-loss F]
+                                             [--source-err F] [--workers N] [--error MODE]
+                                             [--output-dir DIR] [--compare-configs PATH [PATH ...]]
+                                             [--no-plob] [--no-db]
 
-Defaults (no --config):
-    node_loss_db            swept 0-6 dB  (sweep axis — config value ignored)
-    fibre_loss_db_per_km    0.2  dB/km
-    detector_efficiency     1.0
-    dark_count_rate         0    cps
-    init_loss               0.0
-    source_error_rate       0.0
-    fibre                   20   km
-    runtimes                100
+Fixed params default to lib/functions.py DEFAULTS (the layer-9 realistic operating
+point: fibre_loss=0.18 dB/km, detector_efficiency=0.90, dark_count_rate=50 cps,
+init_loss=0.10, source_error_rate=0.015, dephasing_rate=3.2e-7/km, bs_eff=0.97). Pass
+--config configs/layer0_ideal.json (or any layerN.json) to override all of them at once.
+node_loss_db is always the sweep axis, 0-6 dB — the config value for it is ignored.
+PLOB repeaterless bound is overlaid by default; pass --no-plob to suppress it.
 """
 
 import sys

@@ -1,9 +1,10 @@
 """
 Run all P2P parameter comparison scripts in parallel.
 
-Figures are saved to a timestamped directory under docs/figures/ by default:
+Figures are saved to a timestamped directory under docs/figures/ by default. Each
+script writes its own bundle subfolder there — {plot.png, plot.tex, assumptions.md}:
 
-    docs/figures/<Month>/<YYYYMMDD> - P2P parameters/all parameters/<script>.png
+    docs/figures/<Month>/<YYYYMMDD> - P2P parameters/all parameters/<script>/plot.png
 
 The month folder is created if it does not exist. The day folder is created if it
 does not exist. A fresh 'all parameters' subfolder is created inside the day folder.
@@ -31,7 +32,7 @@ Sweeps run:
     node_loss.py    Key rate vs node/connector loss (0-6 dB)
     init_loss.py    Key rate vs TX insertion loss (0-0.5)
     source_err.py   Key rate vs source error rate (0-4%)
-    dephasing.py    Key rate vs fibre dephasing rate (0-0.003 /km)
+    dephasing.py    Key rate vs fibre dephasing rate (3e-8-3e-6 /km)
     basis_bias.py   Key rate vs X-basis detector bias (1.0->0.5)
     bs_eff.py       Key rate vs beam splitter efficiency (1.0->0.8)
     charlie_pos.py  MDI key rate vs Charlie position (0.1-0.9)
@@ -39,7 +40,7 @@ Sweeps run:
 Examples:
     python scripts/P2P/compare/run_all.py
     python scripts/P2P/compare/run_all.py --runtimes 20 --workers 7
-    python scripts/P2P/compare/run_all.py --error shade --config configs/layer5_realistic.json
+    python scripts/P2P/compare/run_all.py --error shade --config configs/layer9_bs_eff.json
     python scripts/P2P/compare/run_all.py --output-dir results/p2p --runtimes 50
     python scripts/P2P/compare/run_all.py --show
 """
