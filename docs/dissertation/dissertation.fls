@@ -1,6 +1,6 @@
-PWD /home/prometheus/Desktop/UCL/Project/netsquid-qkd/docs/dissertation
+PWD /home/spartacus/UCL/netsquid-qkd/docs/dissertation
 INPUT /usr/share/texmf-dist/web2c/texmf.cnf
-INPUT /var/lib/texmf/web2c/pdftex/pdflatex.fmt
+INPUT /home/spartacus/.texlive/texmf-var/web2c/pdftex/pdflatex.fmt
 INPUT dissertation.tex
 OUTPUT dissertation.log
 INPUT /usr/share/texmf-dist/tex/latex/base/article.cls
@@ -8,7 +8,6 @@ INPUT /usr/share/texmf-dist/tex/latex/base/article.cls
 INPUT /usr/share/texmf-dist/tex/latex/base/size12.clo
 INPUT /usr/share/texmf-dist/tex/latex/base/size12.clo
 INPUT /usr/share/texmf-dist/tex/latex/base/size12.clo
-INPUT /usr/share/texmf-dist/fonts/map/fontname/texfonts.map
 INPUT /usr/share/texmf-dist/fonts/tfm/public/cm/cmr12.tfm
 INPUT /usr/share/texmf-dist/tex/latex/base/fontenc.sty
 INPUT /usr/share/texmf-dist/tex/latex/base/fontenc.sty
