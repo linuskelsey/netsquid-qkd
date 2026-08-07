@@ -42,11 +42,14 @@ _network = os.path.join(_root, "network")
 sys.path.insert(0, _root)
 sys.path.insert(0, _network)
 
+from lib.plotting import apply_thesis_style, save_bundle
 from lib.functions import load_config
 from lib.progress import Progress
 from topology import place_users, optimise_relays, Topology
 from bb84_network import run_bb84_network
 from mdi_network import run_mdi_network
+
+apply_thesis_style()
 
 
 def _fmt(seconds):
@@ -94,7 +97,7 @@ def main():
     parser.add_argument("--seed",     type=int,   default=None, help="Base random seed (random if omitted)")
     parser.add_argument("--config",   type=str,   default=None, help="Path to JSON config")
     parser.add_argument("--workers",  type=int,   default=None, help="Worker processes (default: 80%% of CPU cores)")
-    parser.add_argument("--save",     type=str,   default=None, help="Save figure to file instead of displaying")
+    parser.add_argument("--output-dir", type=str,  default=None, help="Save figure bundle to directory instead of displaying")
     args = parser.parse_args()
 
     if args.seed is None:
@@ -219,12 +222,8 @@ def main():
         gridspec_kw={"height_ratios": [3, 1.5]},
     )
     fig.subplots_adjust(hspace=0.08)
-    fig.suptitle(
-        f"Wall-clock time per pair per sim vs user count\n"
-        f"(area={args.area}×{args.area} km, runtimes={args.runtimes}, "
-        f"{args.seeds} seed{'s' if args.seeds > 1 else ''}, {n_workers_display} workers)",
-        fontsize=10,
-    )
+    title = "Wall-Clock Time vs User Count"
+    fig.suptitle(title, fontsize=10)
 
     ax1.errorbar(N_bb84, bb84_mean, yerr=bb84_std,
                  label="BB84", color="#377eb8", linestyle="--", capsize=4, lw=1.5, marker="s")
@@ -237,8 +236,8 @@ def main():
 
     ax2 = ax1.twinx()
     n_pairs_arr = [N * (N - 1) // 2 for N in N_bb84]
-    ax2.plot(N_bb84, n_pairs_arr, color="gray", linestyle=":", lw=1.2, label="N(N−1)/2 pairs")
-    ax2.set_ylabel("Number of pairs  N(N−1)/2", color="gray")
+    ax2.plot(N_bb84, n_pairs_arr, color="gray", linestyle=":", lw=1.2, label="N(N-1)/2 pairs")
+    ax2.set_ylabel("Number of pairs  N(N-1)/2", color="gray")
     ax2.tick_params(axis="y", labelcolor="gray")
     ax2.legend(loc="upper right")
 
@@ -255,9 +254,22 @@ def main():
     ax_cpu.grid(True, alpha=0.3)
     ax_cpu.legend(loc="lower right", fontsize=8)
 
-    if args.save:
-        plt.savefig(args.save, dpi=150, bbox_inches="tight")
-        print(f"Saved to {args.save}")
+    if args.output_dir:
+        save_bundle(
+            fig, args.output_dir, "time_vs_users",
+            title=title,
+            assumptions={
+                "User count sweep range": f"{args.n_min}-{args.n_max} (step {args.n_step})",
+                "Fixed area": f"{args.area} x {args.area} km",
+                "MDI relays": args.k,
+                "Runtimes per pair": args.runtimes,
+                "Random topologies averaged": args.seeds,
+                "Workers": n_workers_display,
+            },
+            notes=["Top: wall-clock per pair per simulation vs user count, with pair count N(N-1)/2 on secondary axis.",
+                   "Bottom: average CPU utilisation vs user count."],
+        )
+        print(f"Saved to {os.path.join(args.output_dir, 'time_vs_users')}")
     else:
         plt.show()
 

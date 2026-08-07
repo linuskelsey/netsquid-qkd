@@ -26,7 +26,9 @@ import time
 from lib.progress import Progress
 
 import matplotlib.pyplot as plt
+from lib.plotting import apply_thesis_style, save_bundle
 
+apply_thesis_style()
 
 Cx = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 
@@ -123,19 +125,29 @@ if __name__ == "__main__":
             _m, _s = divmod(int(time.time() - _ts), 60)
             print(f"✓ {name} complete  {_m}m {_s:02d}s")
             c = colors[ci]
-            ax1.plot(Cx, [r/1000 for r in res["avgs_mdi"]], '-', color=c, lw=1.5, label=f"MDI  — {name}")
-            ax1.axhline(res["bb84_avg"]/1000, linestyle='--', color=c, lw=1.2, label=f"BB84 — {name}")
+            ax1.plot(Cx, [r/1000 for r in res["avgs_mdi"]], '-', color=c, lw=1.5, label=f"MDI - {name}")
+            ax1.axhline(res["bb84_avg"]/1000, linestyle='--', color=c, lw=1.2, label=f"BB84 - {name}")
         ax1.set_yscale("log")
         ax1.set_xlabel("Charlie position (fraction from Alice)")
         ax1.set_ylabel("Secure key rate (kbps)")
         ax1.legend(fontsize=8)
         ax1.grid(True, alpha=0.3)
-        plt.title(f"Key rate vs Charlie position — config comparison\n(BB84 dashed, MDI solid)\n{', '.join(names)}")
+        plt.title("Key Rate vs Charlie Position (Comparison)")
         plt.tight_layout()
         if args.output_dir:
-            os.makedirs(args.output_dir, exist_ok=True)
-            fn = os.path.splitext(os.path.basename(__file__))[0] + "_compare.png"
-            plt.savefig(os.path.join(args.output_dir, fn), dpi=150, bbox_inches="tight")
+            save_bundle(
+                fig, args.output_dir, "charlie_pos_compare",
+                title="Key Rate vs Charlie Position (Comparison)",
+                assumptions={
+                    "Total Alice-Bob distance": f"{args.fibre} km",
+                    "Runtimes per point": args.runtimes,
+                    "Error display": args.error,
+                    "Charlie position sweep points (fraction from Alice)": Cx,
+                    "Configs compared": ", ".join(names),
+                },
+                notes=["BB84 dashed (flat reference, unaffected by relay placement), MDI solid.",
+                       "Each config's fixed parameters (loss, detector efficiency, etc.) come from its own JSON preset; see configs/ for exact values."],
+            )
             plt.close()
         else:
             plt.show()
@@ -235,17 +247,29 @@ if __name__ == "__main__":
              transform=ax1.get_xaxis_transform(),
              ha='center', va='top', fontsize=7, color='darkred', alpha=0.7, style='italic')
 
-    plt.title(f"Key rate vs Charlie position: MDI-QKD (BB84 reference)\n"
-              f"$L$={args.fibre} km  |  $\\alpha$={cfg['fibre_loss_db_per_km']} dB/km  |  "
-              f"$\\eta_d$={cfg['detector_efficiency']}  |  $d_c$={cfg['dark_count_rate']} cps\n"
-              f"$L_i$={cfg['init_loss']}  |  $L_n$={cfg['node_loss_db']} dB  |  "
-              f"$\\varepsilon_s$={cfg['source_error_rate']}  |  $\\beta$={cfg['dephasing_rate']} /km  |  "
-              f"$\\eta_{{bs}}$={cfg['bs_eff']}")
+    plt.title("Key Rate vs Charlie Position")
     plt.tight_layout()
     if args.output_dir:
-        os.makedirs(args.output_dir, exist_ok=True)
-        fig_name = os.path.splitext(os.path.basename(__file__))[0] + ".png"
-        plt.savefig(os.path.join(args.output_dir, fig_name), dpi=150, bbox_inches="tight")
+        save_bundle(
+            fig, args.output_dir, "charlie_pos",
+            title="Key Rate vs Charlie Position",
+            assumptions={
+                "Total Alice-Bob distance": f"{args.fibre} km",
+                "Fibre loss": f"{cfg['fibre_loss_db_per_km']} dB/km",
+                "Detector efficiency": cfg['detector_efficiency'],
+                "Dark count rate": f"{cfg['dark_count_rate']} cps",
+                "Init loss": cfg['init_loss'],
+                "Node loss": f"{cfg['node_loss_db']} dB",
+                "Source error rate": cfg['source_error_rate'],
+                "Dephasing rate": f"{cfg['dephasing_rate']} /km",
+                "Beam splitter efficiency": cfg['bs_eff'],
+                "Runtimes per point": args.runtimes,
+                "Error display": args.error,
+                "Charlie position sweep points (fraction from Alice)": Cx,
+            },
+            notes=["Total Alice-Bob distance is fixed; only the relay split changes.",
+                   "BB84 plotted as flat dashed reference — unaffected by relay placement."],
+        )
         plt.close()
     else:
         plt.show()

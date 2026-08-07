@@ -47,10 +47,13 @@ import matplotlib.pyplot as plt
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, ROOT)
 
+from lib.plotting import apply_thesis_style, save_bundle
 from BB84.BB84_run import run_BB84_sims
 from MDI.mdiRun import run_mdi_sims
 from lib.functions import load_config
 from lib.db import DEFAULT_DB_PATH
+
+apply_thesis_style()
 
 LAYERS = [
     ("layer0_ideal.json",       "Layer 0: Ideal"),
@@ -169,10 +172,19 @@ if __name__ == "__main__":
         ax_bb84.set_yscale("log")
         ax_bb84.grid(True, alpha=0.3)
         ax_bb84.legend(fontsize=7)
-        ax_bb84.set_title("Key rate vs distance: BB84 — cumulative modelling layers")
+        ax_bb84.set_title("BB84: Cumulative Modelling Layers")
         if args.output_dir:
-            os.makedirs(args.output_dir, exist_ok=True)
-            fig_bb84.savefig(os.path.join(args.output_dir, "layers_bb84.png"), dpi=150, bbox_inches="tight")
+            save_bundle(
+                fig_bb84, args.output_dir, "layers_bb84",
+                title="BB84: Cumulative Modelling Layers",
+                assumptions={
+                    "Distance sweep points (km)": Dx,
+                    "Runtimes per point": args.runtimes,
+                    "Layers (cumulative)": {label: fname for fname, label in LAYERS[:9]},
+                },
+                notes=["Each layer adds one parameter at its realistic value on top of all previous layers.",
+                       "BB84 runs layers 0-7 (no beam splitter)."],
+            )
             plt.close(fig_bb84)
 
     if run_mdi:
@@ -192,10 +204,19 @@ if __name__ == "__main__":
         ax_mdi.set_yscale("log")
         ax_mdi.grid(True, alpha=0.3)
         ax_mdi.legend(fontsize=7)
-        ax_mdi.set_title("Key rate vs distance: MDI-QKD — cumulative modelling layers")
+        ax_mdi.set_title("MDI: Cumulative Modelling Layers")
         if args.output_dir:
-            os.makedirs(args.output_dir, exist_ok=True)
-            fig_mdi.savefig(os.path.join(args.output_dir, "layers_mdi.png"), dpi=150, bbox_inches="tight")
+            save_bundle(
+                fig_mdi, args.output_dir, "layers_mdi",
+                title="MDI: Cumulative Modelling Layers",
+                assumptions={
+                    "Distance sweep points (km)": Dx,
+                    "Runtimes per point": args.runtimes,
+                    "Layers (cumulative)": {label: fname for fname, label in LAYERS},
+                },
+                notes=["Each layer adds one parameter at its realistic value on top of all previous layers.",
+                       "MDI runs layers 0-9 (includes beam splitter efficiency)."],
+            )
             plt.close(fig_mdi)
 
     if not args.output_dir:

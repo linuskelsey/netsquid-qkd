@@ -49,9 +49,12 @@ _network = os.path.join(_root, "network")
 sys.path.insert(0, _root)
 sys.path.insert(0, _network)
 
+from lib.plotting import apply_thesis_style, save_bundle
 from lib.functions import load_config
 from topology import Topology
 from mdi_network import run_mdi_network
+
+apply_thesis_style()
 
 
 # ─── shared ────────────────────────────────────────────────────────────────────
@@ -91,7 +94,7 @@ def exp1_grid(n, area, grid_res, cfg, runtimes, seed, workers):
     return xs, ys, mdi_grid, centroid, user_pos
 
 
-def plot_exp1(results_by_n, area, save):
+def plot_exp1(results_by_n, area, output_dir, grid_res, runtimes):
     n_vals = list(results_by_n.keys())
     fig, axes = plt.subplots(1, len(n_vals), figsize=(4 * len(n_vals), 4))
     if len(n_vals) == 1:
@@ -110,15 +113,31 @@ def plot_exp1(results_by_n, area, save):
         peak_iy, peak_ix = np.unravel_index(np.argmax(mdi_grid), mdi_grid.shape)
         ax.scatter(xs[peak_ix], ys[peak_iy], marker="X", s=150, c="yellow",
                    zorder=6, label="Peak")
-        ax.set_title(f"MDI-QKD  N={n}")
+        ax.set_title(f"N={n}")
         ax.set_xlabel("x (km)")
         ax.set_ylabel("y (km)")
         if col == 0:
             ax.legend(fontsize=7)
 
-    plt.suptitle("MDI-QKD key rate vs relay position (K=1, single cluster)", fontsize=12)
+    title = "MDI-QKD: Relay Position Sweep"
+    plt.suptitle(title, fontsize=12)
     plt.tight_layout()
-    _save_or_show(save)
+
+    if output_dir:
+        save_bundle(
+            fig, output_dir, "relay_placement_exp1",
+            title=title,
+            assumptions={
+                "Experiment": "1 — single cluster, K=1 relay",
+                "User counts swept": n_vals,
+                "Area": f"{area} x {area} km",
+                "Grid resolution": f"{grid_res} x {grid_res}",
+                "Runtimes per grid point": runtimes,
+            },
+            notes=["Validates that centroid placement maximises average MDI-QKD key rate."],
+        )
+    else:
+        plt.show()
 
 
 # ─── Experiment 2 ──────────────────────────────────────────────────────────────
@@ -186,10 +205,10 @@ def exp2(n_values, area, spread, cfg, runtimes, seed, n_seeds, workers):
     return data
 
 
-def plot_exp2(data, n_values, save):
+def plot_exp2(data, n_values, output_dir, area, spread, runtimes, n_seeds):
     N      = np.array(n_values)
     colors = {"centroid": "#e41a1c", "boundary": "#377eb8"}
-    labels = {"centroid": "Centroid", "boundary": "Boundary (1σ toward opposing cluster)"}
+    labels = {"centroid": "Centroid", "boundary": "Boundary (1 std toward opposing cluster)"}
 
     fig, ax = plt.subplots(figsize=(7, 5))
 
@@ -205,17 +224,24 @@ def plot_exp2(data, n_values, save):
     ax.legend()
     ax.grid(True, alpha=0.3)
 
-    plt.suptitle("Relay placement: centroid vs boundary (K=2, two clusters)", fontsize=12)
+    title = "Relay Placement: Centroid vs Boundary"
+    plt.suptitle(title, fontsize=12)
     plt.tight_layout()
-    _save_or_show(save)
 
-
-# ─── utils ─────────────────────────────────────────────────────────────────────
-
-def _save_or_show(save):
-    if save:
-        plt.savefig(save, dpi=150)
-        print(f"Saved to {save}")
+    if output_dir:
+        save_bundle(
+            fig, output_dir, "relay_placement_exp2",
+            title=title,
+            assumptions={
+                "Experiment": "2 — two clusters, K=2 relays",
+                "User count sweep range": f"{n_values[0]}-{n_values[-1]}",
+                "Area": f"{area} x {area} km",
+                "Cluster spread (std)": f"{spread:.2f} km",
+                "Runtimes per pair": runtimes,
+                "Random topologies averaged": n_seeds,
+            },
+            notes=["Boundary strategy displaces each relay 1 std toward the opposing cluster."],
+        )
     else:
         plt.show()
 
@@ -231,7 +257,7 @@ def main():
     parser.add_argument("--runtimes", type=int,   default=10,    help="Monte Carlo runs per pair")
     parser.add_argument("--config",   type=str,   default=None,  help="JSON config preset")
     parser.add_argument("--workers",  type=int,   default=None,  help="Worker processes")
-    parser.add_argument("--save",     type=str,   default=None,  help="Save figure to file")
+    parser.add_argument("--output-dir", type=str, default=None,  help="Save figure bundle to directory instead of displaying")
 
     # Exp 1
     parser.add_argument("--n-values", type=str, default="5,10,15,20",
@@ -260,7 +286,7 @@ def main():
             print(f"\n=== Exp 1: N={n}, grid={args.grid}×{args.grid} ===")
             results[n] = exp1_grid(n, args.area, args.grid, cfg, args.runtimes,
                                    args.seed, args.workers)
-        plot_exp1(results, args.area, args.save)
+        plot_exp1(results, args.area, args.output_dir, args.grid, args.runtimes)
 
     else:
         spread   = args.spread if args.spread is not None else args.area / 5
@@ -269,7 +295,7 @@ def main():
               f"{args.seeds} seeds ===")
         data = exp2(n_values, args.area, spread, cfg, args.runtimes,
                     args.seed, args.seeds, args.workers)
-        plot_exp2(data, n_values, args.save)
+        plot_exp2(data, n_values, args.output_dir, args.area, spread, args.runtimes, args.seeds)
 
 
 if __name__ == "__main__":

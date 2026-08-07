@@ -5,46 +5,46 @@ The style file: ieeetr.bst
 Database file #1: IEEEabrv.bib
 Database file #2: bibliography.bib
 Warning--string name "july" is undefined
---line 1131 of file bibliography.bib
-You've used 35 entries,
+--line 1168 of file bibliography.bib
+You've used 39 entries,
             1876 wiz_defined-function locations,
-            1225 strings with 19801 characters,
-and the built_in function-call counts, 8069 in all, are:
-= -- 757
-> -- 383
+            1245 strings with 20591 characters,
+and the built_in function-call counts, 9158 in all, are:
+= -- 859
+> -- 440
 < -- 0
-+ -- 143
-- -- 108
-* -- 517
-:= -- 1147
-add.period$ -- 35
-call.type$ -- 35
-change.case$ -- 35
++ -- 164
+- -- 125
+* -- 591
+:= -- 1300
+add.period$ -- 39
+call.type$ -- 39
+change.case$ -- 39
 chr.to.int$ -- 0
-cite$ -- 35
-duplicate$ -- 442
-empty$ -- 725
-format.name$ -- 108
-if$ -- 1988
+cite$ -- 39
+duplicate$ -- 492
+empty$ -- 821
+format.name$ -- 125
+if$ -- 2254
 int.to.chr$ -- 0
-int.to.str$ -- 35
-missing$ -- 24
-newline$ -- 108
-num.names$ -- 37
-pop$ -- 134
+int.to.str$ -- 39
+missing$ -- 26
+newline$ -- 120
+num.names$ -- 41
+pop$ -- 150
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 0
-skip$ -- 387
+skip$ -- 434
 stack$ -- 0
-substring$ -- 264
-swap$ -- 214
+substring$ -- 324
+swap$ -- 240
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
 type$ -- 0
 warning$ -- 0
-while$ -- 56
-width$ -- 37
-write$ -- 314
+while$ -- 64
+width$ -- 41
+write$ -- 351
 (There was 1 warning)

@@ -38,9 +38,12 @@ from datetime import datetime
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, ROOT)
 
+from lib.plotting import apply_thesis_style, save_bundle
 from BB84.BB84_run import run_BB84_sims
 from MDI.mdiRun import run_mdi_sims
 from lib.db import DEFAULT_DB_PATH, new_run_id, init_db, insert_p2p_rows
+
+apply_thesis_style()
 
 _Dx = [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 
@@ -151,10 +154,7 @@ def _plot_proto(proto_name, param_indices, runtimes, workers, db_path):
     ax.set_yscale("log")
     ax.grid(True, alpha=0.3)
     ax.legend(fontsize=7)
-    ax.set_title(
-        f"Key rate vs distance: {proto_name} — isolated parameter impact\n"
-        f"Each curve: ideal config with exactly one parameter at its realistic value"
-    )
+    ax.set_title(f"{proto_name}: Isolated Parameter Impact")
     return fig
 
 
@@ -186,11 +186,20 @@ if __name__ == "__main__":
         figs.append(("mdi",  _plot_proto("MDI",  _MDI_IDX,  args.runtimes, args.workers, db_path)))
 
     if args.output_dir:
-        os.makedirs(args.output_dir, exist_ok=True)
         for name, fig in figs:
-            path = os.path.join(args.output_dir, f"isolate_{name}.png")
-            fig.savefig(path, dpi=150, bbox_inches="tight")
-            print(f"Saved to {path}")
+            proto_name = "BB84" if name == "bb84" else "MDI"
+            save_bundle(
+                fig, args.output_dir, f"isolate_{name}",
+                title=f"{proto_name}: Isolated Parameter Impact",
+                assumptions={
+                    "Baseline": "fully ideal (layer 0): " + ", ".join(f"{k}={v}" for k, v in _IDEAL.items()),
+                    "Distance sweep points (km)": _Dx,
+                    "Runtimes per point": args.runtimes,
+                    "Realistic values tested (one at a time)": {p[0]: p[1] for p in _PARAMS},
+                },
+                notes=["Each curve sets exactly one parameter to its realistic value; all others stay ideal.",
+                       "bs_eff is MDI-only." if proto_name == "BB84" else "MDI includes bs_eff; BB84 does not."],
+            )
         plt.close("all")
     else:
         plt.show()

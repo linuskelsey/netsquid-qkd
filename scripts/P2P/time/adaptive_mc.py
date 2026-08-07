@@ -33,8 +33,11 @@ import matplotlib.pyplot as plt
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 sys.path.insert(0, ROOT)
 
+from lib.plotting import apply_thesis_style, save_bundle
 from BB84.BB84_run import run_BB84_sims
 from MDI.mdiRun import run_mdi_sims
+
+apply_thesis_style()
 
 # ── Sweep parameters ──────────────────────────────────────────────────────────
 _DISTANCES = [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
@@ -181,11 +184,7 @@ def plot_results(protocol, max_runs, batch_size, rel_tol,
     ax.set_xticklabels(_DISTANCES, fontsize=8)
     ax.set_ylim(0, max_runs * 1.15)
     ax.legend(fontsize=8)
-    ax.set_title(
-        f"{protocol} — Adaptive MC: runs used vs distance\n"
-        f"rel_tol={rel_tol}, batch={batch_size}  |  "
-        f"overall run saving: {run_saving.mean():.0f}%"
-    )
+    ax.set_title(f"{protocol}: Runs Used vs Distance")
 
     # ── Right: relative error vs fixed baseline ───────────────────────────────
     ax2 = axes[1]
@@ -199,18 +198,28 @@ def plot_results(protocol, max_runs, batch_size, rel_tol,
     ax2.set_xticks(_DISTANCES)
     ax2.set_xticklabels(_DISTANCES, fontsize=8)
     ax2.legend(fontsize=8)
-    ax2.set_title(
-        f"{protocol} — Accuracy cost of early stopping\n"
-        f"wall-clock saving: {overall_saving:.0f}%  "
-        f"({total_fixed:.0f}s → {total_adapt:.0f}s)"
-    )
+    ax2.set_title(f"{protocol}: Accuracy Cost")
 
     fig.tight_layout()
 
     if output_dir:
-        path = os.path.join(output_dir, f"adaptive_mc_{protocol.lower()}.png")
-        fig.savefig(path, dpi=150, bbox_inches="tight")
-        print(f"  Saved: {path}")
+        bundle_name = f"adaptive_mc_{protocol.lower()}"
+        save_bundle(
+            fig, output_dir, bundle_name,
+            title=f"{protocol}: Adaptive MC Benchmark",
+            assumptions={
+                "Protocol": protocol,
+                "Distance sweep points (km)": _DISTANCES,
+                "Fixed simulation params": _FIXED,
+                "Fixed baseline runs per point": max_runs,
+                "Adaptive batch size": batch_size,
+                "Convergence threshold (rel_tol)": rel_tol,
+                "Mean run saving": f"{run_saving.mean():.0f}%",
+                "Overall wall-clock saving": f"{overall_saving:.0f}% ({total_fixed:.0f}s -> {total_adapt:.0f}s)",
+            },
+            notes=["Left: adaptive runs used per distance vs fixed baseline.",
+                   "Right: relative error of adaptive mean vs fixed baseline mean."],
+        )
     return fig
 
 

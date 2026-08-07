@@ -36,9 +36,12 @@ import time
 from lib.progress import Progress
 
 import matplotlib.pyplot as plt
+from lib.plotting import apply_thesis_style, save_bundle
 import math
 import statistics
 import numpy as np
+
+apply_thesis_style()
 
 
 def qber(keyA, keyB):
@@ -200,20 +203,30 @@ if __name__ == "__main__":
             _m, _s = divmod(int(time.time() - _ts), 60)
             print(f"✓ {name} complete  {_m}m {_s:02d}s")
             c = colors[ci]
-            ax1.plot(Bx, [r/1000 for r in res["rates_bb84"]], '--', color=c, lw=1.5, label=f"BB84 — {name}")
-            ax1.plot(Bx, [r/1000 for r in res["rates_mdi"]],  '-',  color=c, lw=1.5, label=f"MDI  — {name}")
+            ax1.plot(Bx, [r/1000 for r in res["rates_bb84"]], '--', color=c, lw=1.5, label=f"BB84 - {name}")
+            ax1.plot(Bx, [r/1000 for r in res["rates_mdi"]],  '-',  color=c, lw=1.5, label=f"MDI - {name}")
         ax1.set_yscale("log")
         ax1.invert_xaxis()
         ax1.set_xlabel(r"X-basis detector efficiency $\eta_X$")
         ax1.set_ylabel("Secure key rate (kbps)")
         ax1.legend(fontsize=8)
         ax1.grid(True, alpha=0.3)
-        plt.title(f"Key rate vs detector basis bias — config comparison\n(BB84 dashed, MDI solid)\n{', '.join(names)}")
+        plt.title("Key Rate vs Basis Bias (Comparison)")
         plt.tight_layout()
         if args.output_dir:
-            os.makedirs(args.output_dir, exist_ok=True)
-            fn = os.path.splitext(os.path.basename(__file__))[0] + "_compare.png"
-            plt.savefig(os.path.join(args.output_dir, fn), dpi=150, bbox_inches="tight")
+            save_bundle(
+                fig, args.output_dir, "basis_bias_compare",
+                title="Key Rate vs Basis Bias (Comparison)",
+                assumptions={
+                    "Fibre length": f"{args.fibre} km",
+                    "Runtimes per point": args.runtimes,
+                    "Error display": args.error,
+                    "X-basis sweep points": Bx,
+                    "Configs compared": ", ".join(names),
+                },
+                notes=["BB84 dashed, MDI solid.",
+                       "Each config's fixed parameters (loss, dark count, etc.) come from its own JSON preset; see configs/ for exact values."],
+            )
             plt.close()
         else:
             plt.show()
@@ -324,13 +337,27 @@ if __name__ == "__main__":
              transform=ax1.get_xaxis_transform(),
              ha='center', va='top', fontsize=7, color='darkred', alpha=0.7, style='italic')
 
-    plt.title(f"Key rate vs detector basis bias: BB84 and MDI-QKD\n"
-              f"$\\eta_Z$={det_eff_z}  |  $L$={args.fibre} km  |  $\\alpha$={cfg['fibre_loss_db_per_km']} dB/km  |  $d_c$={cfg['dark_count_rate']} cps\n"
-              f"$L_i$={cfg['init_loss']}  |  $L_n$={cfg['node_loss_db']} dB  |  $\\varepsilon_s$={cfg['source_error_rate']}  |  $\\beta$={cfg['dephasing_rate']} /km  |  $\\eta_{{bs}}$={cfg['bs_eff']}")
+    plt.title("Key Rate vs Basis Bias")
     if args.output_dir:
-        os.makedirs(args.output_dir, exist_ok=True)
-        fig_name = os.path.splitext(os.path.basename(__file__))[0] + ".png"
-        plt.savefig(os.path.join(args.output_dir, fig_name), dpi=150, bbox_inches="tight")
+        save_bundle(
+            fig, args.output_dir, "basis_bias",
+            title="Key Rate vs Basis Bias",
+            assumptions={
+                "Z-basis detector efficiency (fixed)": det_eff_z,
+                "Fibre length": f"{args.fibre} km",
+                "Fibre loss": f"{cfg['fibre_loss_db_per_km']} dB/km",
+                "Dark count rate": f"{cfg['dark_count_rate']} cps",
+                "Init loss": cfg['init_loss'],
+                "Node loss": f"{cfg['node_loss_db']} dB",
+                "Source error rate": cfg['source_error_rate'],
+                "Dephasing rate": f"{cfg['dephasing_rate']} /km",
+                "Beam splitter efficiency": cfg['bs_eff'],
+                "Runtimes per point": args.runtimes,
+                "Error display": args.error,
+                "X-basis sweep points": Bx,
+            },
+            notes=["X-basis detector efficiency eta_X is the swept axis; eta_Z is held fixed."],
+        )
         plt.close()
     else:
         plt.show()

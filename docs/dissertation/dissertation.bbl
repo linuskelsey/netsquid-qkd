@@ -96,8 +96,20 @@ Corning, ``{SMF-28 Ultra Optical Fiber -- Product Information Sheet PI-1424-AEN}
 \bibitem{idq_id281}
 {ID Quantique}, ``{ID281 Superconducting Nanowire Single-Photon Detection System -- Product Datasheet}.'' Product datasheet, 2024.
 
+\bibitem{ozoptics_dts0092}
+{OZ Optics}, ``{Polarization Maintaining Fused Fiber Couplers/Splitters -- Product Datasheet (DTS0092)}.'' Product datasheet, 2013.
+
+\bibitem{Duplinskiy_2017}
+A.~Duplinskiy, V.~Ustimchik, A.~Kanapin, V.~Kurochkin, and Y.~Kurochkin, ``{Low loss QKD optical scheme for fast polarization encoding},'' {\em Optics Express}, vol.~25, no.~23, pp.~28886--28897, 2017.
+
 \bibitem{QuandelaSPS}
 Quandela, ``{Prometheus Single-Photon Source -- Product Datasheet}.'' Product datasheet, 2024.
+
+\bibitem{Grasselli_2025}
+F.~Grasselli, G.~Chesi, N.~Walk, H.~Kampermann, A.~Widomski, M.~Ogrodnik, M.~Karpi{\'n}ski, C.~Macchiavello, D.~Bru{\ss}, and N.~Wyderka, ``{Quantum Key Distribution with Basis-Dependent Detection Probability},'' {\em Physical Review Applied}, vol.~23, p.~044011, 2025.
+
+\bibitem{thorlabs_tn1550r5f2}
+Thorlabs, ``{TN1550R5F2 -- Narrowband Fiber Optic Coupler, 1550~nm, 50:50 Ratio -- Product Datasheet (TTN168601-S01, Rev C)}.'' Product datasheet, 2021.
 
 \bibitem{idq_id230}
 {ID Quantique}, ``{ID230 Infrared Single-Photon Detector -- Product Datasheet}.'' Product datasheet, 2024.

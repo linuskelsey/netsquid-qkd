@@ -25,7 +25,23 @@ import matplotlib.pyplot as plt
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 sys.path.insert(0, os.path.dirname(__file__))
 
+from lib.plotting import apply_thesis_style, save_bundle
 from db import COL_DEFAULTS, ERROR_MODES, SWEEP_COLS, count_p2p, query_p2p
+
+apply_thesis_style()
+
+_SHORT_TITLE = {
+    "fibre_len":       "Key Rate vs Distance",
+    "len_loss":        "Key Rate vs Fibre Loss",
+    "init_loss":       "Key Rate vs Init Loss",
+    "detector_eff_z":  "Key Rate vs Detector Efficiency",
+    "dark_count":      "Key Rate vs Dark Count Rate",
+    "node_loss_db":    "Key Rate vs Node Loss",
+    "source_err_rate": "Key Rate vs Source Error",
+    "detector_eff_x":  "Key Rate vs Basis Bias",
+    "dephasing_rate":  "Key Rate vs Dephasing Rate",
+    "bs_eff":          "Key Rate vs BS Efficiency",
+}
 
 _MARKERS = {"BB84": "o-", "MDI": "s-"}
 _COLOURS = {"BB84": "tab:blue", "MDI": "tab:orange"}
@@ -201,8 +217,8 @@ def _parse() -> argparse.Namespace:
     p.add_argument("--detector-eff-x", type=float, default=COL_DEFAULTS["detector_eff_x"], metavar="η")
     p.add_argument("--dephasing-rate", type=float, default=COL_DEFAULTS["dephasing_rate"])
     p.add_argument("--bs-eff",         type=float, default=COL_DEFAULTS["bs_eff"],         metavar="η")
-    p.add_argument("--save",           metavar="FILE",
-                   help="Save figure to file instead of displaying (e.g. out.png)")
+    p.add_argument("--output-dir",     metavar="DIR",
+                   help="Save figure bundle to directory instead of displaying")
     return p.parse_args()
 
 
@@ -303,12 +319,20 @@ def main() -> None:
 
     lo_n, hi_n = min(all_ns), max(all_ns)
     count_str = f"n={lo_n}" if lo_n == hi_n else f"n={lo_n}–{hi_n}"
-    plt.title(_build_title(args.sweep, fixed) + f"\n{count_str} sims/point", fontsize=9)
+    short_title = _SHORT_TITLE.get(args.sweep, f"Key Rate vs {args.sweep}")
+    plt.title(short_title, fontsize=9)
     plt.tight_layout()
 
-    if args.save:
-        plt.savefig(args.save, dpi=150, bbox_inches="tight")
-        print(f"[p2p] saved to {args.save}")
+    if args.output_dir:
+        save_bundle(
+            fig, args.output_dir, f"p2p_{args.sweep}",
+            title=short_title,
+            assumptions={**fixed, "Sweep column": args.sweep, "Protocols": protos,
+                         "Error display": args.error, "Rows queried": n_rows,
+                         "MC runs per point": count_str},
+            notes=["Reconstructed from results.db (not a fresh simulation run)."],
+        )
+        print(f"[p2p] saved to {os.path.join(args.output_dir, f'p2p_{args.sweep}')}")
     else:
         plt.show()
 

@@ -31,6 +31,7 @@ Error modes (same logic as compare scripts):
 Key bindings:
     q / ctrl+c — quit
 """
+import argparse
 import math
 import multiprocessing as mp
 import os
@@ -46,6 +47,10 @@ _NET_DIR = os.path.join(_ROOT, "network")
 sys.path.insert(0, _ROOT)
 sys.path.insert(0, _NET_DIR)          # so topology.py is importable in child processes
 sys.path.insert(0, os.path.dirname(__file__))
+
+from lib.plotting import apply_thesis_style, save_bundle
+
+apply_thesis_style()
 
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, ScrollableContainer, Vertical
@@ -147,6 +152,7 @@ def _errorbar_p2p(ax, d: dict, error_mode: str, proto: str) -> None:
 def _plot_p2p_thread(
     sweep_col: str, sweep_label: str,
     fixed_dict: dict, protocols: List[str], error_mode: str,
+    output_dir: Optional[str] = None,
 ) -> None:
     """Blocking — runs in a separate process via mp.Process."""
     try:
@@ -168,12 +174,22 @@ def _plot_p2p_thread(
         ax.set_yscale("log")
         ax.grid(True, alpha=0.3)
         ax.legend()
-        plt.title(
-            f"Key rate vs {sweep_label}  [{error_mode}]\n"
-            f"{_sim_count_label(all_ns)}"
-        )
+        short_title = f"Key Rate vs {sweep_label.split(' (')[0]}"
+        plt.title(short_title)
         plt.tight_layout()
-        plt.show()
+
+        if output_dir:
+            save_bundle(
+                fig, output_dir, f"p2p_{sweep_col}",
+                title=short_title,
+                assumptions={**fixed_dict, "Sweep column": sweep_col,
+                             "Protocols": protocols, "Error display": error_mode,
+                             "MC runs per point": _sim_count_label(all_ns)},
+                notes=["Reconstructed from results.db via the analyse TUI."],
+            )
+            print(f"[analyse] saved to {os.path.join(output_dir, f'p2p_{sweep_col}')}")
+        else:
+            plt.show()
     except Exception:
         traceback.print_exc()
 
@@ -217,9 +233,18 @@ def _errorbar_net(ax, d: dict, error_mode: str, proto: str, is_rate: bool) -> No
         ax.errorbar(x, y, yerr=[sem, sem], fmt=fmt, color=colour, label=proto, capsize=3)
 
 
+_SHORT_Y = {
+    "avg_key_rate": "Avg Key Rate",
+    "success_rate": "Success Rate",
+    "min_key_rate": "Min Key Rate",
+    "max_key_rate": "Max Key Rate",
+}
+
+
 def _plot_network_thread(
     x_col: str, y_col: str,
     fixed_dict: dict, protocols: List[str], error_mode: str,
+    output_dir: Optional[str] = None,
 ) -> None:
     """
     Blocking — runs in a separate process via mp.Process.
@@ -249,23 +274,34 @@ def _plot_network_thread(
             ax1.set_yscale("log")
         ax1.grid(True, alpha=0.3)
         ax1.legend()
-        fig1.suptitle(
-            f"{NET_Y_LABELS[y_col]} vs {x_col}  [{error_mode}]\n"
-            f"{_sim_count_label(all_ns)}"
-        )
+        x_label_short = "User Count" if x_col == "n_users" else "Relay Count"
+        short_title = f"{_SHORT_Y[y_col]} vs {x_label_short}"
+        fig1.suptitle(short_title)
         fig1.tight_layout()
 
         # Topology figure — only when a specific seed is selected
         seed = fixed_dict.get("seed")
         if seed is not None:
-            _try_topology_fig(x_col, data, fixed_dict, int(seed))
+            _try_topology_fig(x_col, data, fixed_dict, int(seed), output_dir)
 
-        plt.show()
+        if output_dir:
+            save_bundle(
+                fig1, output_dir, f"network_{x_col}_{y_col}",
+                title=short_title,
+                assumptions={**fixed_dict, "X axis": x_col, "Y axis": y_col,
+                             "Protocols": protocols, "Error display": error_mode,
+                             "MC runs per point": _sim_count_label(all_ns)},
+                notes=["Reconstructed from results.db via the analyse TUI."],
+            )
+            print(f"[analyse] saved to {os.path.join(output_dir, f'network_{x_col}_{y_col}')}")
+        else:
+            plt.show()
     except Exception:
         traceback.print_exc()
 
 
-def _try_topology_fig(x_col: str, data: dict, fixed_dict: dict, seed: int) -> None:
+def _try_topology_fig(x_col: str, data: dict, fixed_dict: dict, seed: int,
+                      output_dir: Optional[str] = None) -> None:
     """
     Attempt to produce an MDI topology figure for the given seed.
     Silently skips if required params are unavailable or topology import fails.
@@ -297,11 +333,14 @@ def _try_topology_fig(x_col: str, data: dict, fixed_dict: dict, seed: int) -> No
 
         fig2, ax2 = plt.subplots(figsize=(6, 6))
         _draw_mdi_topo(ax2, topo)
-        fig2.suptitle(
-            f"MDI-QKD topology  "
-            f"(N={topo_n}, K={topo_k}, seed={seed}, area={area} km)"
-        )
+        fig2.suptitle(f"MDI-QKD Topology (N={topo_n}, K={topo_k})")
         fig2.tight_layout()
+
+        if output_dir:
+            os.makedirs(output_dir, exist_ok=True)
+            topo_path = os.path.join(output_dir, "network_topology.png")
+            fig2.savefig(topo_path, dpi=150)
+            print(f"[analyse] topology saved to {topo_path}")
 
     except ImportError:
         print("[analyse] topology.py not importable — skipping topology figure.")
@@ -335,8 +374,9 @@ class AnalyseTUI(App):
     """
     BINDINGS = [("q", "quit", "Quit")]
 
-    def __init__(self) -> None:
+    def __init__(self, output_dir: Optional[str] = None) -> None:
         super().__init__()
+        self._output_dir = output_dir
         self._p2p_sweep_idx: int = 0
         self._p2p_error_idx: int = 0
         self._net_x_idx: int = 0
@@ -491,7 +531,8 @@ class AnalyseTUI(App):
             return
         mp.Process(
             target=_plot_p2p_thread,
-            args=(col, label, self._get_p2p_fixed(), protos, ERROR_MODES[self._p2p_error_idx]),
+            args=(col, label, self._get_p2p_fixed(), protos, ERROR_MODES[self._p2p_error_idx],
+                  self._output_dir),
         ).start()
 
     @on(Button.Pressed, "#p2p-reset")
@@ -513,6 +554,7 @@ class AnalyseTUI(App):
                 self._get_net_fixed(),
                 protos,
                 ERROR_MODES[self._net_error_idx],
+                self._output_dir,
             ),
         ).start()
 
@@ -574,4 +616,8 @@ class AnalyseTUI(App):
 
 
 if __name__ == "__main__":
-    AnalyseTUI().run()
+    _parser = argparse.ArgumentParser(description="Interactive TUI for reconstructing QKD figures from results.db")
+    _parser.add_argument("--output-dir", metavar="DIR", default=None,
+                         help="Save each Plot click as a figure bundle to this directory instead of opening a window")
+    _args = _parser.parse_args()
+    AnalyseTUI(output_dir=_args.output_dir).run()

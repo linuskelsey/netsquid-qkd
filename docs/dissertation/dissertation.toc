@@ -8,24 +8,24 @@
 \contentsline {subsection}{\numberline {3.1}Performance Analysis}{11}{subsection.3.1}%
 \contentsline {subsubsection}{\numberline {3.1.1}NetSquid Simulation Engine}{12}{subsubsection.3.1.1}%
 \contentsline {subsubsection}{\numberline {3.1.2}Hardware Model}{12}{subsubsection.3.1.2}%
-\contentsline {subsubsection}{\numberline {3.1.3}Bipartite Single-Link Analysis}{14}{subsubsection.3.1.3}%
-\contentsline {subsubsection}{\numberline {3.1.4}Multi-User Network Analysis}{16}{subsubsection.3.1.4}%
+\contentsline {subsubsection}{\numberline {3.1.3}Bipartite Single-Link Analysis}{15}{subsubsection.3.1.3}%
+\contentsline {subsubsection}{\numberline {3.1.4}Multi-User Network Analysis}{17}{subsubsection.3.1.4}%
 \contentsline {subsection}{\numberline {3.2}Cost Model}{18}{subsection.3.2}%
-\contentsline {subsubsection}{\numberline {3.2.1}Component Counts}{18}{subsubsection.3.2.1}%
-\contentsline {subsubsection}{\numberline {3.2.2}Symbolic Cost Formulae}{19}{subsubsection.3.2.2}%
-\contentsline {subsection}{\numberline {3.3}Scalability Analysis}{20}{subsection.3.3}%
-\contentsline {section}{\numberline {4}Results}{21}{section.4}%
-\contentsline {subsection}{\numberline {4.1}Point-to-Point Performance}{21}{subsection.4.1}%
-\contentsline {subsection}{\numberline {4.2}Network Performance}{21}{subsection.4.2}%
-\contentsline {subsection}{\numberline {4.3}Cost}{21}{subsection.4.3}%
-\contentsline {subsection}{\numberline {4.4}Scalability}{21}{subsection.4.4}%
-\contentsline {subsection}{\numberline {4.5}Deployment Recommendations}{21}{subsection.4.5}%
-\contentsline {section}{\numberline {5}Discussion}{22}{section.5}%
-\contentsline {subsection}{\numberline {5.1}The Security--Rate Trade-off}{22}{subsection.5.1}%
-\contentsline {subsection}{\numberline {5.2}Cost Model Limitations}{22}{subsection.5.2}%
-\contentsline {subsection}{\numberline {5.3}Simulation Model Limitations}{23}{subsection.5.3}%
-\contentsline {subsection}{\numberline {5.4}Implications for Protocol Selection}{25}{subsection.5.4}%
-\contentsline {section}{\numberline {6}Conclusion}{26}{section.6}%
-\contentsline {subsection}{\numberline {6.1}Summary of Contributions}{26}{subsection.6.1}%
-\contentsline {subsection}{\numberline {6.2}Findings}{26}{subsection.6.2}%
-\contentsline {subsection}{\numberline {6.3}Future Work}{27}{subsection.6.3}%
+\contentsline {subsubsection}{\numberline {3.2.1}Component Counts}{19}{subsubsection.3.2.1}%
+\contentsline {subsubsection}{\numberline {3.2.2}Symbolic Cost Formulae}{20}{subsubsection.3.2.2}%
+\contentsline {subsection}{\numberline {3.3}Scalability Analysis}{21}{subsection.3.3}%
+\contentsline {section}{\numberline {4}Results}{22}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Point-to-Point Performance}{22}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Network Performance}{22}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Cost}{22}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Scalability}{22}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.5}Deployment Recommendations}{22}{subsection.4.5}%
+\contentsline {section}{\numberline {5}Discussion}{23}{section.5}%
+\contentsline {subsection}{\numberline {5.1}The Security--Rate Trade-off}{23}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Cost Model Limitations}{23}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Simulation Model Limitations}{24}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Implications for Protocol Selection}{26}{subsection.5.4}%
+\contentsline {section}{\numberline {6}Conclusion}{27}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Summary of Contributions}{27}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Findings}{27}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Future Work}{28}{subsection.6.3}%

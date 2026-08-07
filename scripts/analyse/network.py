@@ -31,7 +31,17 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../network"))
 sys.path.insert(0, os.path.dirname(__file__))
 
+from lib.plotting import apply_thesis_style, save_bundle
 from db import ERROR_MODES, NET_X_COLS, NET_Y_COLS, NET_Y_LABELS, query_network
+
+apply_thesis_style()
+
+_SHORT_Y = {
+    "avg_key_rate": "Avg Key Rate",
+    "success_rate": "Success Rate",
+    "min_key_rate": "Min Key Rate",
+    "max_key_rate": "Max Key Rate",
+}
 
 _BB84_COL  = "#377eb8"
 _MDI_COL   = "#e41a1c"
@@ -69,8 +79,8 @@ def _parse() -> argparse.Namespace:
     p.add_argument("--seed",      type=int,   default=None,
                    help="Pin to a single seed. Omit to aggregate all seeds. "
                         "When set, also produces an MDI topology figure.")
-    p.add_argument("--save",      metavar="FILE",
-                   help="Save key-rate figure to file instead of displaying")
+    p.add_argument("--output-dir", metavar="DIR",
+                   help="Save key-rate figure bundle to directory instead of displaying")
     return p.parse_args()
 
 
@@ -111,7 +121,7 @@ def _draw_mdi_topo(ax, topo) -> None:
 
 
 def _topology_fig(x_col: str, data: dict, fixed_dict: dict, seed: int,
-                  save=None) -> None:
+                  output_dir=None) -> None:
     """
     Build an MDI topology figure for the given seed, using the median x-value
     to pick n_users or k_relays when that is the sweep axis.
@@ -131,13 +141,11 @@ def _topology_fig(x_col: str, data: dict, fixed_dict: dict, seed: int,
         topo      = Topology(user_pos, relay_pos)
         fig2, ax2 = plt.subplots(figsize=(6, 6))
         _draw_mdi_topo(ax2, topo)
-        fig2.suptitle(
-            f"MDI-QKD topology  (N={topo_n}, K={topo_k}, seed={seed}, area={area} km)"
-        )
+        fig2.suptitle(f"MDI-QKD Topology (N={topo_n}, K={topo_k})")
         fig2.tight_layout()
-        if save:
-            stem, ext = save.rsplit(".", 1) if "." in save else (save, "png")
-            topo_path = f"{stem}_topology.{ext}"
+        if output_dir:
+            os.makedirs(output_dir, exist_ok=True)
+            topo_path = os.path.join(output_dir, "network_topology.png")
             fig2.savefig(topo_path, dpi=150)
             print(f"[network] topology saved to {topo_path}")
     except ImportError:
@@ -250,21 +258,32 @@ def main() -> None:
     area         = fixed.get("area_km") or 25.0
     fixed_label  = (f"N={fixed_n}"  if args.x == "k_relays" else f"K={fixed_k}") \
                    if (fixed_n or fixed_k) else ""
-    x_label_long = "user count" if args.x == "n_users" else "relay count"
-    plt.title(
-        f"{NET_Y_LABELS[args.y]} vs {x_label_long}"
-        + (f"  ({fixed_label}, " if fixed_label else "  (")
-        + f"area={area}×{area} km, {seed_label})\n{count_str}",
-        fontsize=10,
-    )
+    x_label_long = "User Count" if args.x == "n_users" else "Relay Count"
+    short_title  = f"{_SHORT_Y[args.y]} vs {x_label_long}"
+    plt.title(short_title, fontsize=10)
     plt.tight_layout()
 
     if args.seed is not None:
-        _topology_fig(args.x, data, fixed, args.seed, save=args.save)
+        _topology_fig(args.x, data, fixed, args.seed, output_dir=args.output_dir)
 
-    if args.save:
-        plt.savefig(args.save, dpi=150)
-        print(f"[network] saved to {args.save}")
+    if args.output_dir:
+        save_bundle(
+            fig, args.output_dir, f"network_{args.x}_{args.y}",
+            title=short_title,
+            assumptions={
+                "X axis": args.x,
+                "Y axis": args.y,
+                "Fixed n_users":  fixed_n,
+                "Fixed k_relays": fixed_k,
+                "Area": f"{area} x {area} km",
+                "Seed": seed_label,
+                "Protocols": protos,
+                "Error display": args.error,
+                "MC runs per point": count_str,
+            },
+            notes=["Reconstructed from results.db (not a fresh simulation run)."],
+        )
+        print(f"[network] saved to {os.path.join(args.output_dir, f'network_{args.x}_{args.y}')}")
     else:
         plt.show()
 

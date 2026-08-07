@@ -35,7 +35,10 @@ from sklearn.gaussian_process.kernels import RBF, WhiteKernel, ConstantKernel
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 sys.path.insert(0, ROOT)
 
+from lib.plotting import apply_thesis_style, save_bundle
 from BB84.BB84_run import run_BB84_sims
+
+apply_thesis_style()
 
 # ── Surrogate trend parameters ────────────────────────────────────────────────
 _EVAL_SIZES = [100, 500, 1_000, 5_000, 10_000, 50_000, 100_000]
@@ -135,7 +138,7 @@ def plot_surrogate_trend(eval_sizes, gp_times_ms, speedups, sim_s_per_pt, output
     ax1.set_yscale("log")
     ax1.set_xlabel("Evaluation grid size")
     ax1.set_ylabel("GP inference time (ms)")
-    ax1.set_title("GP inference time scales sub-linearly\n(log–log)")
+    ax1.set_title("GP Inference Time Scaling")
     ax1.grid(True, which="both", alpha=0.3)
 
     # Right: speedup vs eval size
@@ -143,19 +146,24 @@ def plot_surrogate_trend(eval_sizes, gp_times_ms, speedups, sim_s_per_pt, output
     ax2.set_xscale("log")
     ax2.set_xlabel("Evaluation grid size")
     ax2.set_ylabel(r"Speedup vs simulation ($\times 10^6$)")
-    ax2.set_title(
-        f"Speedup scales with grid size\n"
-        f"(sim: {sim_s_per_pt:.0f}s/pt; GP trained on {256} pts)"
-    )
+    ax2.set_title("Speedup vs Grid Size")
     ax2.grid(True, which="both", alpha=0.3)
 
-    fig.suptitle("GP Surrogate: speedup trend vs evaluation density", fontsize=11)
+    fig.suptitle("GP Surrogate Speedup Trend", fontsize=11)
     fig.tight_layout()
 
     if output_dir:
-        path = os.path.join(output_dir, "trend_surrogate_speedup.png")
-        fig.savefig(path, dpi=150, bbox_inches="tight")
-        print(f"  Saved: {path}")
+        save_bundle(
+            fig, output_dir, "trend_surrogate_speedup",
+            title="GP Surrogate Speedup Trend",
+            assumptions={
+                "Evaluation grid sizes": eval_sizes,
+                "Simulation time per point": f"{sim_s_per_pt:.2f} s",
+                "GP training points": 256,
+            },
+            notes=["Left: GP inference wall-clock time vs evaluation grid size (log-log).",
+                   "Right: speedup of GP inference vs equivalent simulation cost."],
+        )
     return fig
 
 
@@ -244,8 +252,7 @@ def plot_adaptive_trend(budgets, fixed_times, adapt_times, adapt_runs,
     ax1.plot(budgets, adapt_times, "o-",  color="steelblue", lw=2, ms=7, label="Adaptive")
     ax1.set_xlabel("Simulation budget (max runs)")
     ax1.set_ylabel("Wall-clock time (s)")
-    ax1.set_title(f"BB84 — wall-clock at d={_TREND_DIST:.0f}km\n"
-                  f"(stable regime; adaptive stops at {_BATCH} runs)")
+    ax1.set_title("BB84 Wall-Clock vs Budget")
     ax1.legend()
     ax1.grid(True, alpha=0.3)
 
@@ -262,21 +269,28 @@ def plot_adaptive_trend(budgets, fixed_times, adapt_times, adapt_runs,
     ax2.set_xticklabels(budgets)
     ax2.set_xlabel("Simulation budget (max runs)")
     ax2.set_ylabel("Wall-clock saving (%)")
-    ax2.set_title("Saving grows with budget\n"
-                  "(small budgets: spawn overhead dominates)")
+    ax2.set_title("Wall-Clock Saving vs Budget")
     ax2.grid(True, alpha=0.3, axis="y")
 
-    fig.suptitle(
-        f"Adaptive MC: speedup trend vs simulation budget  "
-        f"(BB84, d={_TREND_DIST:.0f}km, batch={_BATCH}, tol={_REL_TOL})",
-        fontsize=11,
-    )
+    fig.suptitle("Adaptive MC Speedup Trend", fontsize=11)
     fig.tight_layout()
 
     if output_dir:
-        path = os.path.join(output_dir, "trend_adaptive_mc.png")
-        fig.savefig(path, dpi=150, bbox_inches="tight")
-        print(f"  Saved: {path}")
+        save_bundle(
+            fig, output_dir, "trend_adaptive_mc",
+            title="Adaptive MC Speedup Trend",
+            assumptions={
+                "Protocol": "BB84",
+                "Distance": f"{_TREND_DIST:.0f} km (stable regime)",
+                "Simulation budgets": budgets,
+                "Adaptive batch size": _BATCH,
+                "Convergence threshold (rel_tol)": _REL_TOL,
+                "Min runs before convergence check": _MIN_RUNS,
+                "Fixed simulation params": _FIXED_KWARGS,
+            },
+            notes=["Left: wall-clock time, fixed baseline vs adaptive, annotated with actual runs used.",
+                   "Right: wall-clock saving (%) of adaptive vs fixed at each budget."],
+        )
     return fig
 
 

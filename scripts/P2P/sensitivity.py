@@ -31,9 +31,12 @@ import matplotlib.pyplot as plt
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, ROOT)
 
+from lib.plotting import apply_thesis_style, save_bundle
 from BB84.BB84_run import run_BB84_sims
 from MDI.mdiRun import run_mdi_sims
 from lib.db import DEFAULT_DB_PATH
+
+apply_thesis_style()
 
 _IDEAL = {
     "fibre_loss_db_per_km": 0.0,
@@ -131,19 +134,28 @@ if __name__ == "__main__":
     ax.set_yticklabels(labels_s, fontsize=9)
     ax.set_xlabel("Key rate reduction from ideal (%)")
     ax.set_xlim(0, 105)
-    ax.set_title(
-        f"Parameter sensitivity ranking at {args.distance} km\n"
-        f"BB84 and MDI-QKD — each parameter at realistic value, all others ideal"
-    )
+    ax.set_title("Parameter Sensitivity Ranking")
     ax.legend()
     ax.grid(True, axis="x", alpha=0.3)
     plt.tight_layout()
 
     if args.output_dir:
-        os.makedirs(args.output_dir, exist_ok=True)
-        path = os.path.join(args.output_dir, "sensitivity.png")
-        fig.savefig(path, dpi=150, bbox_inches="tight")
-        print(f"Saved to {path}")
+        save_bundle(
+            fig, args.output_dir, "sensitivity",
+            title="Parameter Sensitivity Ranking",
+            assumptions={
+                "Operating distance": f"{args.distance} km",
+                "Runtimes per point": args.runtimes,
+                "Baseline": "fully ideal (layer 0): " + ", ".join(f"{k}={v}" for k, v in _IDEAL.items()),
+                "Realistic values tested (one at a time)": {p[0]: p[1] for p in _PARAMS},
+                "Ideal BB84 key rate": f"{r_ideal_bb84/1000:.2f} kbps",
+                "Ideal MDI key rate": f"{r_ideal_mdi/1000:.2f} kbps",
+            },
+            notes=["Sensitivity = (R_ideal - R_param) / R_ideal x 100%.",
+                   "bs_eff is MDI-only (BB84 bar set to 0).",
+                   "Results sorted by BB84 impact descending."],
+        )
+        print(f"Saved to {os.path.join(args.output_dir, 'sensitivity')}")
         plt.close()
     else:
         plt.show()

@@ -40,6 +40,7 @@ sys.path.insert(0, _root)
 sys.path.insert(0, _network)
 
 import time
+from lib.plotting import apply_thesis_style, save_bundle
 from lib.functions import load_config
 from lib.db import DEFAULT_DB_PATH
 from lib.progress import Progress
@@ -47,6 +48,8 @@ from topology import place_users, optimise_relays, Topology
 from bb84_network import run_bb84_network
 from mdi_network import run_mdi_network
 from visualise_network import draw_mdi, draw_bb84
+
+apply_thesis_style()
 
 
 def _pair_avgs(pair_rates):
@@ -217,19 +220,26 @@ def main():
     ax2.set_yscale("log")
 
     seed_label = f"seed={args.seed}" if args.seeds == 1 else f"{args.seeds} seeds (base={args.seed})"
-    plt.title(
-        f"Key rate vs relay count  (N={args.n}, area={args.area}×{args.area} km, {seed_label})",
-        fontsize=10
-    )
+    plt.title("Key Rate vs Relay Count", fontsize=10)
     plt.tight_layout()
 
     if not args.no_figure:
         if args.output_dir:
-            os.makedirs(args.output_dir, exist_ok=True)
-            fn = os.path.splitext(os.path.basename(__file__))[0] + ".png"
-            save_path = os.path.join(args.output_dir, fn)
-            plt.savefig(save_path, dpi=150, bbox_inches="tight")
-            print(f"Saved to {save_path}")
+            save_bundle(
+                fig, args.output_dir, "relay_sweep",
+                title="Key Rate vs Relay Count",
+                assumptions={
+                    "User count (fixed)": args.n,
+                    "Relay count sweep range": f"{args.k_min}-{args.k_max}",
+                    "Area": f"{args.area} x {args.area} km",
+                    "Seed": seed_label,
+                    "Tortuosity mean": args.tortuosity,
+                    "Runtimes per pair": args.runtimes,
+                    "Error display": args.error,
+                    "Fibre loss / detector / dark count / etc": "see configs/ preset used (--config)",
+                },
+            )
+            print(f"Saved to {os.path.join(args.output_dir, 'relay_sweep')}")
         else:
             plt.show()
 
@@ -242,10 +252,7 @@ def main():
         fig2, (axA, axB) = plt.subplots(1, 2, figsize=(12, 5))
         draw_mdi(axA, topo_mid, tortuosity_mean=args.tortuosity)
         draw_bb84(axB, topo_mid, tortuosity_mean=args.tortuosity)
-        plt.suptitle(
-            f"Network topology at K={K_mid}  (N={args.n}, {seed_label})",
-            fontsize=11
-        )
+        plt.suptitle(f"Network Topology (K={K_mid})", fontsize=11)
         plt.tight_layout()
 
         if args.output_dir:

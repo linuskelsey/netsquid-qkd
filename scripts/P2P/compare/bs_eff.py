@@ -37,9 +37,12 @@ import time
 from lib.progress import Progress
 
 import matplotlib.pyplot as plt
+from lib.plotting import apply_thesis_style, save_bundle
 import math
 import statistics
 import numpy as np
+
+apply_thesis_style()
 
 
 def qber(keyA, keyB):
@@ -199,20 +202,30 @@ if __name__ == "__main__":
             _m, _s = divmod(int(time.time() - _ts), 60)
             print(f"✓ {name} complete  {_m}m {_s:02d}s")
             c = colors[ci]
-            ax1.plot(BSx, [r/1000 for r in res["rates_bb84"]], '--', color=c, lw=1.5, label=f"BB84 — {name}")
-            ax1.plot(BSx, [r/1000 for r in res["rates_mdi"]],  '-',  color=c, lw=1.5, label=f"MDI  — {name}")
+            ax1.plot(BSx, [r/1000 for r in res["rates_bb84"]], '--', color=c, lw=1.5, label=f"BB84 - {name}")
+            ax1.plot(BSx, [r/1000 for r in res["rates_mdi"]],  '-',  color=c, lw=1.5, label=f"MDI - {name}")
         ax1.set_yscale("log")
         ax1.invert_xaxis()
         ax1.set_xlabel(r"Beam splitter efficiency $\eta_{bs}$")
         ax1.set_ylabel("Secure key rate (kbps)")
         ax1.legend(fontsize=8)
         ax1.grid(True, alpha=0.3)
-        plt.title(f"Key rate vs beam splitter efficiency — config comparison\n(BB84 dashed/flat, MDI solid)\n{', '.join(names)}")
+        plt.title("Key Rate vs BS Efficiency (Comparison)")
         plt.tight_layout()
         if args.output_dir:
-            os.makedirs(args.output_dir, exist_ok=True)
-            fn = os.path.splitext(os.path.basename(__file__))[0] + "_compare.png"
-            plt.savefig(os.path.join(args.output_dir, fn), dpi=150, bbox_inches="tight")
+            save_bundle(
+                fig, args.output_dir, "bs_eff_compare",
+                title="Key Rate vs BS Efficiency (Comparison)",
+                assumptions={
+                    "Fibre length": f"{args.fibre} km",
+                    "Runtimes per point": args.runtimes,
+                    "Error display": args.error,
+                    "Beam splitter efficiency sweep points": BSx,
+                    "Configs compared": ", ".join(names),
+                },
+                notes=["BB84 dashed/flat (unaffected by beam splitter efficiency), MDI solid.",
+                       "Each config's fixed parameters (loss, detector efficiency, etc.) come from its own JSON preset; see configs/ for exact values."],
+            )
             plt.close()
         else:
             plt.show()
@@ -312,13 +325,27 @@ if __name__ == "__main__":
              transform=ax1.get_xaxis_transform(),
              ha='center', va='top', fontsize=7, color='darkred', alpha=0.7, style='italic')
 
-    plt.title(f"Key rate vs beam splitter efficiency: BB84 and MDI-QKD\n"
-              f"$L$={args.fibre} km  |  $\\alpha$={cfg['fibre_loss_db_per_km']} dB/km  |  $\\eta_d$={cfg['detector_efficiency']}  |  $d_c$={cfg['dark_count_rate']} cps\n"
-              f"$L_i$={cfg['init_loss']}  |  $L_n$={cfg['node_loss_db']} dB  |  $\\varepsilon_s$={cfg['source_error_rate']}  |  $\\beta$={cfg['dephasing_rate']} /km")
+    plt.title("Key Rate vs BS Efficiency")
     if args.output_dir:
-        os.makedirs(args.output_dir, exist_ok=True)
-        fig_name = os.path.splitext(os.path.basename(__file__))[0] + ".png"
-        plt.savefig(os.path.join(args.output_dir, fig_name), dpi=150, bbox_inches="tight")
+        save_bundle(
+            fig, args.output_dir, "bs_eff",
+            title="Key Rate vs BS Efficiency",
+            assumptions={
+                "Fibre length": f"{args.fibre} km",
+                "Fibre loss": f"{cfg['fibre_loss_db_per_km']} dB/km",
+                "Detector efficiency": cfg['detector_efficiency'],
+                "Dark count rate": f"{cfg['dark_count_rate']} cps",
+                "Init loss": cfg['init_loss'],
+                "Node loss": f"{cfg['node_loss_db']} dB",
+                "Source error rate": cfg['source_error_rate'],
+                "Dephasing rate": f"{cfg['dephasing_rate']} /km",
+                "Runtimes per point": args.runtimes,
+                "Error display": args.error,
+                "Beam splitter efficiency sweep points": BSx,
+            },
+            notes=["Beam splitter efficiency is the swept axis; config value for it is ignored.",
+                   "BB84 is unaffected by beam splitter efficiency and appears as a flat reference line."],
+        )
         plt.close()
     else:
         plt.show()

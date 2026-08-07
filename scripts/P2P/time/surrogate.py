@@ -30,8 +30,11 @@ from sklearn.gaussian_process.kernels import RBF, WhiteKernel, ConstantKernel
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 sys.path.insert(0, ROOT)
 
+from lib.plotting import apply_thesis_style, save_bundle
 from BB84.BB84_run import run_BB84_sims
 from MDI.mdiRun import run_mdi_sims
+
+apply_thesis_style()
 
 # ── Coarse training grid (overridden by --grid-size at runtime) ───────────────
 _DISTANCES = [5, 15, 30, 50, 70, 90]        # km — spans metropolitan range
@@ -162,8 +165,7 @@ def plot_surrogate(protocol, X_train, y_train, DD, EE, Z_pred, Z_std,
                zorder=5, label=f"training pts (rate=0, n={(~ok).sum()})")
     ax.set_xlabel("Distance (km)")
     ax.set_ylabel(r"Detector efficiency $\eta_d$")
-    ax.set_title(f"{protocol} — GP surrogate: key rate surface\n"
-                 f"Trained on {n_train} pts, predicts {n_dense:,} pts")
+    ax.set_title(f"{protocol}: GP Key Rate Surface")
     ax.legend(fontsize=8, loc="lower left")
 
     # ── Right: uncertainty + speedup annotation ──────────────────────────────
@@ -172,20 +174,29 @@ def plot_surrogate(protocol, X_train, y_train, DD, EE, Z_pred, Z_std,
     plt.colorbar(cf2, ax=ax, label=r"GP std $\sigma$ (log$_{10}$ scale)")
     ax.set_xlabel("Distance (km)")
     ax.set_ylabel(r"Detector efficiency $\eta_d$")
-    ax.set_title(f"{protocol} — GP uncertainty (free from posterior)\n"
-                 f"High σ = where more simulation is most needed")
+    ax.set_title(f"{protocol}: GP Uncertainty Map")
 
-    fig.suptitle(
-        f"{protocol} surrogate  |  sim: {sim_s:.1f}s/pt  ·  GP: {gp_ms:.1f}ms/{n_dense:,}pts  "
-        f"·  {speedup:,.0f}× speedup",
-        fontsize=10, y=1.01,
-    )
+    fig.suptitle(f"{protocol}: Surrogate Speedup", fontsize=10, y=1.01)
     fig.tight_layout()
 
     if output_dir:
-        path = os.path.join(output_dir, f"surrogate_{protocol.lower()}.png")
-        fig.savefig(path, dpi=150, bbox_inches="tight")
-        print(f"  Saved: {path}")
+        save_bundle(
+            fig, output_dir, f"surrogate_{protocol.lower()}",
+            title=f"{protocol}: Surrogate Speedup",
+            assumptions={
+                "Protocol": protocol,
+                "Training grid distances (km)": _DISTANCES,
+                "Training grid detector efficiencies": _DET_EFFS,
+                "Dense evaluation grid": f"{n_dense:,} points",
+                "Training points": n_train,
+                "Fixed simulation params": _FIXED,
+                "Simulation time per point": f"{sim_s:.1f} s",
+                "GP inference time (full dense grid)": f"{gp_ms:.1f} ms",
+                "Speedup": f"{speedup:,.0f}x",
+            },
+            notes=["Left: GP-predicted key rate surface with training points overlaid.",
+                   "Right: GP posterior standard deviation (uncertainty)."],
+        )
     return fig
 
 
