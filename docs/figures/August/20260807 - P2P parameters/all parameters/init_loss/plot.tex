@@ -1,0 +1,224 @@
+% This file was created with tikzplotlib v0.10.1.
+\begin{tikzpicture}
+
+\definecolor{darkgray176}{RGB}{176,176,176}
+\definecolor{darkorange25512714}{RGB}{255,127,14}
+\definecolor{darkred}{RGB}{139,0,0}
+\definecolor{dimgray}{RGB}{105,105,105}
+\definecolor{lightgray204}{RGB}{204,204,204}
+\definecolor{steelblue31119180}{RGB}{31,119,180}
+
+\begin{axis}[
+legend cell align={left},
+legend style={
+  fill opacity=0.8,
+  draw opacity=1,
+  text opacity=1,
+  at={(0.03,0.03)},
+  anchor=south west,
+  draw=lightgray204
+},
+log basis y={10},
+tick align=outside,
+tick pos=left,
+x grid style={darkgray176},
+xlabel={TX insertion loss \(\displaystyle L_i\) (linear fraction)},
+xmajorgrids,
+xmin=-0.025, xmax=0.525,
+xtick style={color=black},
+xtick={-0.1,0,0.1,0.2,0.3,0.4,0.5,0.6},
+xticklabels={
+  \(\displaystyle {\ensuremath{-}0.1}\),
+  \(\displaystyle {0.0}\),
+  \(\displaystyle {0.1}\),
+  \(\displaystyle {0.2}\),
+  \(\displaystyle {0.3}\),
+  \(\displaystyle {0.4}\),
+  \(\displaystyle {0.5}\),
+  \(\displaystyle {0.6}\)
+},
+y grid style={darkgray176},
+ylabel={Absolute secure key rate (kbps)},
+ymajorgrids,
+ymin=7.82184023253514, ymax=6300.11358745349,
+ymode=log,
+ytick style={color=black},
+ytick={0.1,1,10,100,1000,10000,100000},
+yticklabels={
+  \(\displaystyle {10^{-1}}\),
+  \(\displaystyle {10^{0}}\),
+  \(\displaystyle {10^{1}}\),
+  \(\displaystyle {10^{2}}\),
+  \(\displaystyle {10^{3}}\),
+  \(\displaystyle {10^{4}}\),
+  \(\displaystyle {10^{5}}\)
+}
+]
+\path [draw=red, fill=red, opacity=0.08]
+(axis cs:0.05,0)
+--(axis cs:0.05,1)
+--(axis cs:0.2,1)
+--(axis cs:0.2,0)
+--cycle;
+\path [draw=steelblue31119180, fill=steelblue31119180, opacity=0.15]
+(axis cs:0,389.271009198248)
+--(axis cs:0,328.002247577076)
+--(axis cs:0.05,310.284524568658)
+--(axis cs:0.1,292.84478127487)
+--(axis cs:0.15,275.839482550486)
+--(axis cs:0.2,259.787891633053)
+--(axis cs:0.25,242.9203923519)
+--(axis cs:0.3,225.410347217633)
+--(axis cs:0.4,191.438765329167)
+--(axis cs:0.5,158.789765865043)
+--(axis cs:0.5,201.453333724528)
+--(axis cs:0.5,201.453333724528)
+--(axis cs:0.4,240.760257307317)
+--(axis cs:0.3,277.482161756255)
+--(axis cs:0.25,297.118285429959)
+--(axis cs:0.2,313.364974367156)
+--(axis cs:0.15,331.922198746421)
+--(axis cs:0.1,352.009057454694)
+--(axis cs:0.05,370.872326720658)
+--(axis cs:0,389.271009198248)
+--cycle;
+
+\path [draw=darkorange25512714, fill=darkorange25512714, opacity=0.15]
+(axis cs:0,95.3464917202433)
+--(axis cs:0,58.3822546320347)
+--(axis cs:0.05,51.393607994822)
+--(axis cs:0.1,46.269734351982)
+--(axis cs:0.15,40.4683343917476)
+--(axis cs:0.2,36.0067382218157)
+--(axis cs:0.25,29.8590328962751)
+--(axis cs:0.3,24.3960052860646)
+--(axis cs:0.4,16.7652601490364)
+--(axis cs:0.5,10.6023379348756)
+--(axis cs:0.5,32.2197835083968)
+--(axis cs:0.5,32.2197835083968)
+--(axis cs:0.4,43.2783703909454)
+--(axis cs:0.3,56.4402695259086)
+--(axis cs:0.25,61.4438689808628)
+--(axis cs:0.2,69.1356688067814)
+--(axis cs:0.15,74.5220427436914)
+--(axis cs:0.1,80.8811471996582)
+--(axis cs:0.05,90.8545829867735)
+--(axis cs:0,95.3464917202433)
+--cycle;
+
+\addplot [semithick, steelblue31119180, mark=*, mark size=3, mark options={solid}]
+table {%
+0 357.325853995512
+0.05 339.228453364678
+0.1 321.066995247243
+0.15 302.584281728632
+0.2 285.321618533348
+0.25 268.656082141405
+0.3 250.09468292664
+0.4 214.6877881931
+0.5 178.853928374107
+};
+\addlegendentry{BB84}
+\addplot [semithick, darkorange25512714, mark=square*, mark size=3, mark options={solid}]
+table {%
+0 74.6092699192428
+0.05 68.3326043887928
+0.1 61.1747431135738
+0.15 54.9161446690116
+0.2 49.8933856188967
+0.25 42.8328671136313
+0.3 37.1068337870665
+0.4 26.936464846571
+0.5 18.4825602378176
+};
+\addlegendentry{MDI}
+\addplot [line width=0.48pt, black, dotted, forget plot]
+table {%
+0.05 7.82184023253514
+0.05 6300.1135874535
+};
+\addplot [line width=0.48pt, black, dotted, forget plot]
+table {%
+0.2 7.82184023253514
+0.2 6300.1135874535
+};
+\addplot [line width=0.48pt, black, dashed]
+table {%
+0 4647.88825168334
+0.05 4376.26609937997
+0.1 4109.66352927759
+0.15 3847.89837871914
+0.2 3590.79822471587
+0.25 3338.19970175497
+0.3 3089.94787830903
+0.4 2605.90339676985
+0.5 2137.57346934165
+};
+\addlegendentry{PLOB bound}
+\draw (axis cs:0.0434,0.01) node[
+  scale=0.35,
+  anchor=south east,
+  text=dimgray,
+  rotate=0.0
+]{0.05};
+\draw (axis cs:0.125,0.97) node[
+  scale=0.35,
+  anchor=north,
+  text=darkred,
+  rotate=0.0
+]{\itshape Realistic hardware regime};
+\end{axis}
+
+\begin{axis}[
+axis y line=right,
+log basis y={10},
+tick align=outside,
+title={Key Rate vs Init Loss},
+x grid style={darkgray176},
+xmin=-0.025, xmax=0.525,
+xtick pos=left,
+xtick style={color=black},
+y grid style={darkgray176},
+ylabel={Relative secure key rate},
+ymin=0.0446049004539635, ymax=1.15961844722753,
+ymode=log,
+ytick pos=right,
+ytick style={color=black},
+ytick={0.001,0.01,0.1,1,10,100},
+yticklabel style={anchor=west},
+yticklabels={
+  \(\displaystyle {10^{-3}}\),
+  \(\displaystyle {10^{-2}}\),
+  \(\displaystyle {10^{-1}}\),
+  \(\displaystyle {10^{0}}\),
+  \(\displaystyle {10^{1}}\),
+  \(\displaystyle {10^{2}}\)
+}
+]
+\addplot [semithick, steelblue31119180, opacity=0, mark=*, mark size=3, mark options={solid}]
+table {%
+0 1
+0.05 0.949353229192698
+0.1 0.898527189278824
+0.15 0.846802094909238
+0.2 0.798491391940901
+0.25 0.751851787765628
+0.3 0.699906486278996
+0.4 0.60081795311625
+0.5 0.500534529965339
+};
+\addplot [semithick, darkorange25512714, opacity=0, mark=square*, mark size=3, mark options={solid}]
+table {%
+0 0.208798969022208
+0.05 0.191233306027867
+0.1 0.171201558548132
+0.15 0.153686457486788
+0.2 0.139629934584928
+0.25 0.119870607275367
+0.3 0.103845924867033
+0.4 0.0753834757417506
+0.5 0.0517246654031637
+};
+\end{axis}
+
+\end{tikzpicture}
