@@ -1,4 +1,4 @@
-numpy
+numpy<2
 matplotlib==3.5.3   # pinned: tikzplotlib 0.10.1 needs mpl internals (dash seq, backend_pgf) gone from mpl>=3.6
 webcolors==1.13     # pinned: tikzplotlib needs webcolors.CSS3_HEX_TO_NAMES, removed in webcolors>=24
 tikzplotlib
