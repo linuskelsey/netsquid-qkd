@@ -16,16 +16,17 @@
 \contentsline {subsection}{\numberline {3.3}Scalability Analysis}{21}{subsection.3.3}%
 \contentsline {section}{\numberline {4}Results}{22}{section.4}%
 \contentsline {subsection}{\numberline {4.1}Point-to-Point Performance}{22}{subsection.4.1}%
-\contentsline {subsection}{\numberline {4.2}Network Performance}{22}{subsection.4.2}%
-\contentsline {subsection}{\numberline {4.3}Cost}{22}{subsection.4.3}%
-\contentsline {subsection}{\numberline {4.4}Scalability}{22}{subsection.4.4}%
-\contentsline {subsection}{\numberline {4.5}Deployment Recommendations}{22}{subsection.4.5}%
-\contentsline {section}{\numberline {5}Discussion}{23}{section.5}%
-\contentsline {subsection}{\numberline {5.1}The Security--Rate Trade-off}{23}{subsection.5.1}%
-\contentsline {subsection}{\numberline {5.2}Cost Model Limitations}{24}{subsection.5.2}%
-\contentsline {subsection}{\numberline {5.3}Simulation Model Limitations}{24}{subsection.5.3}%
-\contentsline {subsection}{\numberline {5.4}Implications for Protocol Selection}{27}{subsection.5.4}%
-\contentsline {section}{\numberline {6}Conclusion}{28}{section.6}%
-\contentsline {subsection}{\numberline {6.1}Summary of Contributions}{28}{subsection.6.1}%
-\contentsline {subsection}{\numberline {6.2}Findings}{28}{subsection.6.2}%
-\contentsline {subsection}{\numberline {6.3}Future Work}{29}{subsection.6.3}%
+\contentsline {subsection}{\numberline {4.2}Network Performance}{26}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Cost}{26}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Scalability}{26}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.5}Deployment Recommendations}{26}{subsection.4.5}%
+\contentsline {section}{\numberline {5}Discussion}{27}{section.5}%
+\contentsline {subsection}{\numberline {5.1}The Security--Rate Trade-off}{27}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Cost Model Limitations}{28}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Simulation Model Limitations}{29}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Implications for Protocol Selection}{31}{subsection.5.4}%
+\contentsline {section}{\numberline {6}Conclusion}{33}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Summary of Contributions}{33}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Findings}{33}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Future Work}{34}{subsection.6.3}%
+\contentsline {section}{\numberline {A}Additional Point-to-Point Parameter Sweeps}{36}{appendix.A}%

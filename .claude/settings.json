@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pdftoppm *)",
+      "Bash(pacman -Ss *)",
+      "Bash(pdfinfo *)"
+    ]
+  }
+}

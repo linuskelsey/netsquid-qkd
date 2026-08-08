@@ -9,6 +9,8 @@
 \usepackage{cite}
 \usepackage{tikz}
 \usetikzlibrary{positioning,calc,fit,shapes.geometric,arrows.meta}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
 \usepackage{quantikz}
 \usepackage{booktabs}
 \usepackage{float}
@@ -17,6 +19,15 @@
 \usepackage[hidelinks]{hyperref}
 \usepackage{fancyhdr}
 \usepackage{titlesec}
+\makeatletter
+\setlength{\@fptop}{0pt}
+\setlength{\@fpsep}{8pt}
+\setlength{\@fpbot}{0pt}
+\makeatother
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.9}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.85}
 \titleformat{\section}{\LARGE\bfseries}{\thesection}{1em}{}
 \titleformat{\subsection}{\large\bfseries}{\thesubsection}{1em}{}
 \titleformat{\subsubsection}{\normalsize\bfseries}{\thesubsubsection}{1em}{}
@@ -380,6 +391,50 @@ Scalability is characterised through two orthogonal sweeps.
 \subsection{Point-to-Point Performance}
 \label{sec:results_p2p}
 
+Eleven independent parameter sweeps characterise bipartite BB84 and MDI-QKD key rate around a common metropolitan operating point: 20~km Alice--Bob separation, 0.18~dB/km fibre attenuation, $\eta_d = 0.9$ detector efficiency, 50~cps dark count rate, $L_i = 0.1$ TX insertion loss, 2.0~dB node loss, $\varepsilon_s = 0.015$ source error rate, $\beta = 3.2\times10^{-7}$/km fibre dephasing, and $\eta_{bs} = 0.97$ beam-splitter efficiency, with a single parameter varied at a time and all others held at this operating point. Each point is the mean secure key rate over 1000 Monte Carlo runs; shaded bands show the sample spread. Four sweeps that isolate the dominant geometric and hardware effects --- distance, detector efficiency, receiver (node/connector) loss, and Charlie's relay position --- are discussed here; the full set of eleven, including these four, is reproduced in Appendix~\ref{sec:appendix_p2p}.
+
+\textbf{Distance.} Figure~\ref{fig:p2p_length} sweeps Alice--Bob separation from 1--100~km at fixed attenuation.
+
+\begin{figure}[H]
+    \centering
+    \resizebox{0.92\textwidth}{!}{\input{figures/p2p_sweeps/length.tex}}
+    \caption{Absolute and relative secure key rate versus Alice--Bob separation, at fixed 0.18~dB/km fibre attenuation. The PLOB bound is overlaid on the left axis. Shaded vertical bands mark the metropolitan ($5$--$50$~km) and long-range ($>80$~km) regimes.}
+    \label{fig:p2p_length}
+\end{figure}
+
+The BB84/MDI ratio stays close to a factor of five throughout: 4.3--5.5$\times$ over the full 1--100~km range, varying by no more than $\pm15\%$ even as the underlying key rate itself falls by close to three orders of magnitude --- Figure~\ref{fig:p2p_charlie_pos} below explains why this ratio is so stable. Both protocols also fall well below the PLOB bound, and increasingly so with distance: at 1~km, BB84 and MDI sit a factor of 5.2$\times$ and 22.5$\times$ below PLOB respectively; by 100~km this has widened to 43$\times$ and 204$\times$. This growing shortfall is the practical motivation for the range-extending architectures discussed in Section~\ref{sec:security_rate} (\textit{Metropolitan network scope}) and revisited as future work in Section~\ref{sec:conclusion}.
+
+\textbf{Detector- and receiver-side parameters.} Figure~\ref{fig:p2p_efficiency} sweeps detector efficiency $\eta_d$ from 1.0 down to 0.15, shaded to mark the efficiency bands typical of SNSPD (0.8--0.95) and InGaAs SPAD (0.15--0.30) technology, and Figure~\ref{fig:p2p_node_loss} sweeps receiver node/connector loss from 0--6~dB.
+
+\begin{figure}[H]
+    \centering
+    \resizebox{0.92\textwidth}{!}{\input{figures/p2p_sweeps/efficiency.tex}}
+    \caption{Absolute and relative secure key rate versus detector efficiency $\eta_d$, at fixed 20~km separation and 0.18~dB/km attenuation. Shaded bands mark typical SNSPD and InGaAs SPAD operating ranges.}
+    \label{fig:p2p_efficiency}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \resizebox{0.92\textwidth}{!}{\input{figures/p2p_sweeps/node_loss.tex}}
+    \caption{Absolute and relative secure key rate versus receiver node/connector loss, at fixed 20~km separation and 0.18~dB/km attenuation. The PLOB bound is overlaid on the left axis; the shaded band marks the realistic hardware regime (0.5--4.0~dB).}
+    \label{fig:p2p_node_loss}
+\end{figure}
+
+Unlike distance, the BB84/MDI ratio is not stable under either of these sweeps: under detector efficiency it grows from 4.7$\times$ at $\eta_d=1.0$ to 25.4$\times$ at $\eta_d=0.15$, a 5.4-fold widening across the sweep; under receiver loss it grows from 3.3$\times$ at 0~dB to 13.1$\times$ at 6~dB, a 4.0-fold widening. This is the direct empirical signature of parameters that act \emph{per arm}, after Alice's and Bob's photons have already diverged towards Charlie: detector efficiency and receiver optics loss both enter MDI's coincidence probability once per arm (quadratically in total) but BB84's single-photon detection probability only once (Section~\ref{sec:security_rate}), so a degradation in either parameter degrades MDI disproportionately --- the same mechanism, acting on two different pieces of hardware. This has direct practical implications. The choice between SNSPD and InGaAs SPAD detectors matters far more for an MDI deployment than for a BB84 deployment of otherwise identical geometry. It also sharpens the caveat raised in Section~\ref{sec:simulation_limitations} (\textit{Receiver node loss}): since the model applies a single lumped $\Delta_n = 2.0$~dB uniformly to BB84's Bob-side optics and MDI's Charlie-side optics, and MDI's true receiver components (HOM beam splitter, PBS, optical switch) plausibly carry higher insertion loss than BB84's simpler EOM/PBS chain, this sweep's widening ratio should be read as a lower bound on how much receiver hardware choice actually separates the two protocols.
+
+\textbf{Relay placement.} Figure~\ref{fig:p2p_charlie_pos} sweeps Charlie's position as a fraction of a fixed 20~km Alice--Bob distance.
+
+\begin{figure}[H]
+    \centering
+    \resizebox{0.92\textwidth}{!}{\input{figures/p2p_sweeps/charlie_pos.tex}}
+    \caption{MDI key rate versus Charlie's position as a fraction of the fixed 20~km Alice--Bob distance, with BB84 plotted as a distance-independent reference. The shaded band marks the near-symmetric regime.}
+    \label{fig:p2p_charlie_pos}
+\end{figure}
+
+MDI key rate peaks at the symmetric midpoint (61.7~kbps at 0.5) and falls by over a third towards either end (39.0~kbps at 0.1; 39.2~kbps at 0.9), confirming that Charlie sitting at the arm midpoint is rate-optimal. This is what makes the distance ratio above so stable: with each arm carrying half of the total channel loss at that optimum, the two-photon coincidence probability $\eta_\text{arm}^2\,\eta_{bs}\,\eta_d^2$ scales with total link transmittance in step with BB84's single-photon term $\eta_\text{link}\,\eta_d$ (Section~\ref{sec:security_rate}), so channel-side loss scales both protocols together rather than opening up the gap between them. Moving Charlie off-centre breaks this cancellation and the BB84/MDI ratio widens to 8.2--8.3$\times$ at the sweep extremes, close to a 60\% increase over the midpoint ratio of 5.2$\times$ --- a clean illustration that relay geometry, and not only raw hardware quality, materially affects the security--rate trade-off.
+
+Together, these four sweeps indicate that within the metropolitan regime studied here, the BB84/MDI key rate gap is set primarily by a roughly constant structural factor of $\sim$5$\times$ arising from the two-photon BSM requirement and Charlie's optimal midpoint placement, and that per-arm hardware parameters --- detector efficiency and receiver loss, not link distance or relay geometry --- are what is most likely to widen this gap substantially in practice.
+
 \subsection{Network Performance}
 \label{sec:results_network}
 
@@ -403,7 +458,7 @@ The results presented in Section~\ref{sec:results} support a consistent picture 
 \subsection{The Security--Rate Trade-off}
 \label{sec:security_rate}
 
-MDI-QKD's elimination of detector side-channel attacks comes at a key rate penalty rooted in its physical architecture. Whereas BB84 requires one photon to traverse the full link and be detected, MDI requires two photons --- one from each party --- to arrive at Charlie's relay simultaneously and produce a coincidence event. Loss on each arm compounds multiplicatively: if the single-arm transmittance is $\eta_\text{arm}$, the BSM detection probability scales as $\eta_\text{arm}^2\,\eta_\text{BS}\,\eta_d^2$, compared to $\eta_\text{link}\,\eta_d$ for BB84. At metropolitan distances and typical detector efficiencies, this effectively squares the channel transmittance, consistent with the order-of-magnitude rate gap between the two protocols in the bipartite setting.
+MDI-QKD's elimination of detector side-channel attacks comes at a key rate penalty rooted in its physical architecture. Whereas BB84 requires one photon to traverse the full link and be detected, MDI requires two photons --- one from each party --- to arrive at Charlie's relay simultaneously and produce a coincidence event. Loss on each arm compounds multiplicatively: if the single-arm transmittance is $\eta_\text{arm}$, the BSM detection probability scales as $\eta_\text{arm}^2\,\eta_\text{BS}\,\eta_d^2$, compared to $\eta_\text{link}\,\eta_d$ for BB84. At metropolitan distances and typical detector efficiencies, this effectively squares the channel transmittance, consistent with the order-of-magnitude rate gap between the two protocols in the bipartite setting. This is borne out empirically by the point-to-point sweeps in Section~\ref{sec:results_p2p}: the BB84/MDI ratio stays close to a constant $\sim$5$\times$ under channel-side sweeps (distance, attenuation) but widens to over 25$\times$ under a detector efficiency sweep (Figure~\ref{fig:p2p_efficiency}), the signature of a parameter that acts quadratically on MDI's coincidence probability but only linearly on BB84's single-photon detection probability.
 
 At the network level, the rate gap between MDI and BB84 widens relative to the bipartite case. MDI users route photons to a relay rather than directly to their communication partner, incurring a geometric detour for cross-cluster pairs. This routing overhead is absent in BB84's direct mesh. The relay distance advantage is a function of relay count $K$ and user distribution; the relay sweep quantifies the extent to which increasing $K$ can recover the MDI rate penalty.
 
@@ -424,6 +479,7 @@ The cost model is a first-order CapEx-only algebraic estimate. Several factors a
 
 
 \subsection{Simulation Model Limitations}
+\label{sec:simulation_limitations}
 
 \textit{Source brightness and insertion loss decoupling.} The Quandela Prometheus single-photon source used as the reference product operates at 975~nm and achieves a minimum fibred brightness of 40\%, with frequency conversion required to reach the 1550~nm telecom band. In the simulation, source brightness is absorbed into the effective source repetition rate (\texttt{source\_freq} = $10^7$~Hz, consistent with the 32~MHz raw rate after 40\% brightness), and the \texttt{init\_loss} parameter models separate optical path losses independently. Frequency conversion efficiency, additional conversion-stage noise, and the explicit coupling between source brightness and photon rate are not separately modelled. This is a deliberate simplification; a full model would propagate each loss stage independently and account for Raman background photons introduced by the conversion stage.
 
@@ -499,6 +555,69 @@ Several extensions are of immediate interest.
 \textit{Trusted-node relay networks.} At wide-area scales where metropolitan link distances are exceeded and direct MDI-QKD links become loss-limited, trusted-node relay architectures become relevant. Extending the cost model and simulation to trusted-node BB84 would enable comparison across the full distance regime.
 
 \textit{Traffic modelling.} A model of key request rates, buffer occupancy, and WDM channel sharing would give a more realistic picture of BB84 and MDI at large $N$, where the direct-mesh assumption becomes economically unphysical.
+
+\appendix
+\section{Additional Point-to-Point Parameter Sweeps}
+\label{sec:appendix_p2p}
+
+Section~\ref{sec:results_p2p} discussed four of the eleven point-to-point parameter sweeps produced for this work: distance, detector efficiency, receiver loss, and Charlie's relay position. Figure~\ref{fig:appx_grid} reproduces the remaining seven; the discussion below repeatedly compares these against detector efficiency (Figure~\ref{fig:p2p_efficiency}) and receiver loss (Figure~\ref{fig:p2p_node_loss}) from Section~\ref{sec:results_p2p}. In every panel, only the swept parameter deviates from its layer-9 default in Table~\ref{tab:layers}; all other parameters are held at that default operating point (20~km Alice--Bob separation, 0.18~dB/km fibre attenuation, $\eta_d = 0.9$ detector efficiency, 50~cps dark count rate, $L_i = 0.1$ TX insertion loss, 2.0~dB node loss, $\varepsilon_s = 0.015$ source error rate, $\beta = 3.2\times10^{-7}$/km fibre dephasing, $\eta_{bs} = 0.97$ beam-splitter efficiency, Charlie at the arm midpoint), with 1000 Monte Carlo runs per point and shaded bands showing the sample spread.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.24\textwidth}
+        \centering
+        \resizebox{\textwidth}{!}{\input{figures/p2p_sweeps/grid/loss.tex}}
+        \caption{Fibre loss}
+        \label{fig:appx_loss}
+    \end{subfigure}%
+    \begin{subfigure}[b]{0.24\textwidth}
+        \centering
+        \resizebox{\textwidth}{!}{\input{figures/p2p_sweeps/grid/bs_eff.tex}}
+        \caption{BS efficiency}
+        \label{fig:appx_bs_eff}
+    \end{subfigure}%
+    \begin{subfigure}[b]{0.24\textwidth}
+        \centering
+        \resizebox{\textwidth}{!}{\input{figures/p2p_sweeps/grid/init_loss.tex}}
+        \caption{TX insertion loss}
+        \label{fig:appx_init_loss}
+    \end{subfigure}%
+    \begin{subfigure}[b]{0.24\textwidth}
+        \centering
+        \resizebox{\textwidth}{!}{\input{figures/p2p_sweeps/grid/basis_bias.tex}}
+        \caption{Basis bias}
+        \label{fig:appx_basis_bias}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{0.24\textwidth}
+        \centering
+        \resizebox{\textwidth}{!}{\input{figures/p2p_sweeps/grid/dark_count.tex}}
+        \caption{Dark count rate}
+        \label{fig:appx_dark_count}
+    \end{subfigure}%
+    \begin{subfigure}[b]{0.24\textwidth}
+        \centering
+        \resizebox{\textwidth}{!}{\input{figures/p2p_sweeps/grid/dephasing.tex}}
+        \caption{Fibre dephasing}
+        \label{fig:appx_dephasing}
+    \end{subfigure}%
+    \begin{subfigure}[b]{0.24\textwidth}
+        \centering
+        \resizebox{\textwidth}{!}{\input{figures/p2p_sweeps/grid/source_err.tex}}
+        \caption{Source error rate}
+        \label{fig:appx_source_err}
+    \end{subfigure}
+    \caption{Remaining point-to-point parameter sweeps. BB84 in blue (circles), MDI in orange (squares); shaded bands show Monte Carlo sample spread. Except for the parameter swept in each panel, all hardware parameters take their layer-9 default values from Table~\ref{tab:layers}.}
+    \label{fig:appx_grid}
+\end{figure}
+
+Three groupings emerge from these seven sweeps, extending the channel-versus-per-arm pattern established in Section~\ref{sec:results_p2p}.
+
+\textbf{Channel-side loss.} Fibre attenuation (Figure~\ref{fig:appx_loss}) behaves exactly like the distance sweep of Section~\ref{sec:results_p2p}: the BB84/MDI ratio stays close to 5.2--5.3$\times$ across the full 0--0.3~dB/km range, confirming that fibre attenuation --- like distance --- acts on the shared channel before Alice's and Bob's photons diverge towards Charlie, so it scales both protocols together rather than widening the gap between them.
+
+\textbf{Per-arm hardware loss.} Beam-splitter efficiency (Figure~\ref{fig:appx_bs_eff}) and TX insertion loss (Figure~\ref{fig:appx_init_loss}) both act after the split, and both widen the ratio, consistent with detector efficiency and receiver loss in Section~\ref{sec:results_p2p}. Beam-splitter efficiency is unique among all eleven sweeps in that BB84 is structurally unaffected by it (the dashed reference line in Figure~\ref{fig:appx_bs_eff} is exactly flat, since $\eta_{bs}$ only enters MDI's Bell-state measurement); MDI key rate alone declines from 66.1~kbps at $\eta_{bs}=1.0$ to 42.3~kbps at $\eta_{bs}=0.8$, a 36\% reduction from a single power of $\eta_{bs}$ in the coincidence probability. TX insertion loss widens the BB84/MDI ratio from 4.8$\times$ at $L_i=0$ to 9.7$\times$ at $L_i=0.5$, the same per-arm doubling pattern seen under detector efficiency (Figure~\ref{fig:p2p_efficiency}) and receiver loss (Section~\ref{sec:results_p2p}). X-basis detector efficiency, or basis bias (Figure~\ref{fig:appx_basis_bias}), belongs to this group too but widens the ratio only modestly, from 5.0$\times$ at $\eta_X=1.0$ to 6.1$\times$ at $\eta_X=0.5$, far less than the full detector-efficiency sweep of Figure~\ref{fig:p2p_efficiency}, because here only one of the two measurement bases is degraded rather than both.
+
+\textbf{Noise-like parameters.} Dark count rate, fibre dephasing rate, and source error rate (Figures~\ref{fig:appx_dark_count}--\ref{fig:appx_source_err}) leave both protocols essentially flat across their full swept ranges at this metropolitan operating point, with the BB84/MDI ratio staying within a few percent of 5.2$\times$ throughout each. None of the three introduces a directional loss term on either arm, so none is expected to shift the ratio; as noted in Section~\ref{sec:simulation_limitations}, this flatness is specific to the signal rates achieved at 20~km and should not be extrapolated to longer, detection-starved links.
 
 \bibliographystyle{ieeetr}
 \bibliography{IEEEabrv,bibliography}
