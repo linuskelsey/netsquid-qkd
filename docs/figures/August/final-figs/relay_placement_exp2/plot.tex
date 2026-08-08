@@ -1,0 +1,166 @@
+% This file was created with tikzplotlib v0.10.1.
+\begin{tikzpicture}
+
+\definecolor{crimson2282628}{RGB}{228,26,28}
+\definecolor{darkgray176}{RGB}{176,176,176}
+\definecolor{lightgray204}{RGB}{204,204,204}
+\definecolor{steelblue55126184}{RGB}{55,126,184}
+
+\begin{axis}[
+legend cell align={left},
+legend style={fill opacity=0.8, draw opacity=1, text opacity=1, draw=lightgray204},
+tick align=outside,
+tick pos=left,
+title={MDI-QKD},
+x grid style={darkgray176},
+xlabel={Total users N},
+xmajorgrids,
+xmin=4.75, xmax=10.25,
+xtick style={color=black},
+xtick={4,5,6,7,8,9,10,11},
+xticklabels={
+  \(\displaystyle {4}\),
+  \(\displaystyle {5}\),
+  \(\displaystyle {6}\),
+  \(\displaystyle {7}\),
+  \(\displaystyle {8}\),
+  \(\displaystyle {9}\),
+  \(\displaystyle {10}\),
+  \(\displaystyle {11}\)
+},
+y grid style={darkgray176},
+ylabel={Avg key rate (kbps)},
+ymajorgrids,
+ymin=68.6909208806407, ymax=140.739345553461,
+ytick style={color=black},
+ytick={60,70,80,90,100,110,120,130,140,150},
+yticklabels={
+  \(\displaystyle {60}\),
+  \(\displaystyle {70}\),
+  \(\displaystyle {80}\),
+  \(\displaystyle {90}\),
+  \(\displaystyle {100}\),
+  \(\displaystyle {110}\),
+  \(\displaystyle {120}\),
+  \(\displaystyle {130}\),
+  \(\displaystyle {140}\),
+  \(\displaystyle {150}\)
+}
+]
+\path [draw=crimson2282628, semithick]
+(axis cs:5,85.6016801511867)
+--(axis cs:5,137.464417159242);
+
+\path [draw=crimson2282628, semithick]
+(axis cs:6,87.6265442237596)
+--(axis cs:6,112.167616978122);
+
+\path [draw=crimson2282628, semithick]
+(axis cs:7,80.3676316729058)
+--(axis cs:7,104.107424393571);
+
+\path [draw=crimson2282628, semithick]
+(axis cs:8,71.9658492748598)
+--(axis cs:8,97.6707058061393);
+
+\path [draw=crimson2282628, semithick]
+(axis cs:9,73.7407291989522)
+--(axis cs:9,113.020550595406);
+
+\path [draw=crimson2282628, semithick]
+(axis cs:10,75.6974941726905)
+--(axis cs:10,105.076095664977);
+
+\addplot [semithick, crimson2282628, mark=-, mark size=4, mark options={solid}, only marks]
+table {%
+5 85.6016801511867
+6 87.6265442237596
+7 80.3676316729058
+8 71.9658492748598
+9 73.7407291989522
+10 75.6974941726905
+};
+\addlegendentry{Boundary (1 std toward opposing cluster)}
+\addplot [semithick, crimson2282628, mark=-, mark size=4, mark options={solid}, only marks]
+table {%
+5 137.464417159242
+6 112.167616978122
+7 104.107424393571
+8 97.6707058061393
+9 113.020550595406
+10 105.076095664977
+};
+\addlegendentry{Boundary (1 std toward opposing cluster)}
+\path [draw=steelblue55126184, semithick]
+(axis cs:5,73.2209380443777)
+--(axis cs:5,99.7538679757539);
+
+\path [draw=steelblue55126184, semithick]
+(axis cs:6,86.8447636467226)
+--(axis cs:6,103.061651194525);
+
+\path [draw=steelblue55126184, semithick]
+(axis cs:7,84.4608058783463)
+--(axis cs:7,95.4214393352918);
+
+\path [draw=steelblue55126184, semithick]
+(axis cs:8,79.2275050921897)
+--(axis cs:8,92.8541302822281);
+
+\path [draw=steelblue55126184, semithick]
+(axis cs:9,76.9878214710331)
+--(axis cs:9,95.6047205495013);
+
+\path [draw=steelblue55126184, semithick]
+(axis cs:10,84.0251293580814)
+--(axis cs:10,95.7964000620663);
+
+\addplot [semithick, steelblue55126184, mark=-, mark size=4, mark options={solid}, only marks]
+table {%
+5 73.2209380443777
+6 86.8447636467226
+7 84.4608058783463
+8 79.2275050921897
+9 76.9878214710331
+10 84.0251293580814
+};
+\addlegendentry{Boundary (1 std toward opposing cluster)}
+\addplot [semithick, steelblue55126184, mark=-, mark size=4, mark options={solid}, only marks]
+table {%
+5 99.7538679757539
+6 103.061651194525
+7 95.4214393352918
+8 92.8541302822281
+9 95.6047205495013
+10 95.7964000620663
+};
+\addlegendentry{Boundary (1 std toward opposing cluster)}
+\addplot [semithick, crimson2282628, mark=*, mark size=3, mark options={solid}]
+table {%
+5 111.533048655214
+6 99.8970806009408
+7 92.2375280332386
+8 84.8182775404995
+9 93.380639897179
+10 90.3867949188338
+};
+\addlegendentry{Boundary (1 std toward opposing cluster)}
+\addplot [semithick, steelblue55126184, mark=square*, mark size=3, mark options={solid}]
+table {%
+5 86.4874030100658
+6 94.9532074206236
+7 89.941122606819
+8 86.0408176872089
+9 86.2962710102672
+10 89.9107647100738
+};
+\addlegendentry{Boundary (1 std toward opposing cluster)}
+\end{axis}
+
+\draw ({$(current bounding box.south west)!0.5!(current bounding box.south east)$}|-{$(current bounding box.south west)!0.98!(current bounding box.north west)$}) node[
+  scale=0.6,
+  anchor=north,
+  text=black,
+  rotate=0.0
+]{Relay Placement: Centroid vs Boundary};
+\end{tikzpicture}
