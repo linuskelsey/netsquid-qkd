@@ -47,6 +47,7 @@ from lib.progress import Progress
 from topology import place_users, optimise_relays, Topology
 from bb84_network import run_bb84_network
 from mdi_network import run_mdi_network
+from visualise_network import draw_mdi, draw_bb84
 
 apply_thesis_style()
 
@@ -131,6 +132,9 @@ def main():
 
     total_start = time.time()
 
+    _user_pos_by_seed  = {}
+    _relay_pos_by_seed = {}
+
     for s_idx, seed in enumerate(seeds):
         print(f"\n--- Seed {s_idx+1}/{args.seeds}  (seed={seed}) ---")
         seed_start = time.time()
@@ -144,6 +148,20 @@ def main():
             topo_bb84 = Topology(user_pos)
             topo_mdi  = Topology(user_pos, relay_pos)
             mean_dist[area].append(_mean_pair_dist(topo_bb84))
+            if area == areas[-1]:
+                _user_pos_by_seed[seed]  = np.round(user_pos, 3).tolist()
+                _relay_pos_by_seed[seed] = np.round(np.array(relay_pos), 3).tolist()
+
+            if args.output_dir:
+                _topo_dir = os.path.join(args.output_dir, "topologies")
+                os.makedirs(_topo_dir, exist_ok=True)
+                fig_t, (axA, axB) = plt.subplots(1, 2, figsize=(12, 5))
+                draw_mdi(axA, topo_mdi)
+                draw_bb84(axB, topo_mdi)
+                plt.suptitle(f"Network Topology (seed={seed}, area={area:.1f} km)", fontsize=11)
+                plt.tight_layout()
+                fig_t.savefig(os.path.join(_topo_dir, f"seed{seed}_area{area:.1f}.png"), dpi=150, bbox_inches="tight")
+                plt.close(fig_t)
 
             # BB84
             prog.update(step, f"area={area:.1f} km  BB84 ({n_pairs} pairs)...")
@@ -277,6 +295,10 @@ def main():
                 "Area sweep range": f"{args.area_min}-{args.area_max} km (step {args.area_step})",
                 "Runtimes per pair": args.runtimes,
                 "Random topologies averaged": args.seeds,
+                "Seed (base)": args.seed,
+                "Seeds used": seeds,
+                "Final user positions (area=area_max, km, per seed)": _user_pos_by_seed,
+                "Relay positions (km, per seed)": _relay_pos_by_seed,
                 "Workers": n_workers_display,
                 "Mean pair-distance correlation (BB84)": f"r={bb84_corr:.3f}",
                 "Mean pair-distance correlation (MDI)": f"r={mdi_corr:.3f}",
@@ -285,6 +307,7 @@ def main():
                    "Bottom: average CPU utilisation vs area."],
         )
         print(f"Saved to {os.path.join(args.output_dir, 'time_vs_area')}")
+        print(f"Topologies saved to {os.path.join(args.output_dir, 'topologies')}")
     else:
         plt.show()
 

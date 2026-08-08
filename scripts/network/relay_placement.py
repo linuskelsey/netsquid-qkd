@@ -53,6 +53,7 @@ from lib.plotting import apply_thesis_style, save_bundle
 from lib.functions import load_config
 from topology import Topology
 from mdi_network import run_mdi_network
+from visualise_network import draw_mdi, draw_bb84
 
 apply_thesis_style()
 
@@ -94,11 +95,15 @@ def exp1_grid(n, area, grid_res, cfg, runtimes, seed, workers):
     return xs, ys, mdi_grid, centroid, user_pos
 
 
-def plot_exp1(results_by_n, area, output_dir, grid_res, runtimes):
+def plot_exp1(results_by_n, area, output_dir, grid_res, runtimes, seed):
     n_vals = list(results_by_n.keys())
     fig, axes = plt.subplots(1, len(n_vals), figsize=(4 * len(n_vals), 4))
     if len(n_vals) == 1:
         axes = [axes]
+
+    _user_pos_by_n = {}
+    _centroid_by_n = {}
+    _peak_by_n     = {}
 
     for col, n in enumerate(n_vals):
         xs, ys, mdi_grid, centroid, user_pos = results_by_n[n]
@@ -119,6 +124,23 @@ def plot_exp1(results_by_n, area, output_dir, grid_res, runtimes):
         if col == 0:
             ax.legend(fontsize=7)
 
+        _user_pos_by_n[n] = np.round(user_pos, 3).tolist()
+        _centroid_by_n[n] = np.round(centroid, 3).tolist()
+        peak_pos          = np.array([xs[peak_ix], ys[peak_iy]])
+        _peak_by_n[n]     = [round(float(peak_pos[0]), 3), round(float(peak_pos[1]), 3)]
+
+        if output_dir:
+            _topo_dir = os.path.join(output_dir, "topologies")
+            os.makedirs(_topo_dir, exist_ok=True)
+            topo_peak = Topology(user_pos, np.array([peak_pos]))
+            fig_t, (axA, axB) = plt.subplots(1, 2, figsize=(12, 5))
+            draw_mdi(axA, topo_peak)
+            draw_bb84(axB, topo_peak)
+            plt.suptitle(f"Network Topology (N={n}, peak relay position)", fontsize=11)
+            plt.tight_layout()
+            fig_t.savefig(os.path.join(_topo_dir, f"N{n}_peak.png"), dpi=150, bbox_inches="tight")
+            plt.close(fig_t)
+
     title = "MDI-QKD: Relay Position Sweep"
     plt.suptitle(title, fontsize=12)
     plt.tight_layout()
@@ -133,6 +155,10 @@ def plot_exp1(results_by_n, area, output_dir, grid_res, runtimes):
                 "Area": f"{area} x {area} km",
                 "Grid resolution": f"{grid_res} x {grid_res}",
                 "Runtimes per grid point": runtimes,
+                "Seed": seed,
+                "User positions per N (km)": _user_pos_by_n,
+                "Centroid per N (km)": _centroid_by_n,
+                "Peak grid position per N (km)": _peak_by_n,
             },
             notes=["Validates that centroid placement maximises average MDI-QKD key rate."],
         )
@@ -171,7 +197,7 @@ def _relay_boundary(user_pos, labels):
     ])
 
 
-def exp2(n_values, area, spread, cfg, runtimes, seed, n_seeds, workers):
+def exp2(n_values, area, spread, cfg, runtimes, seed, n_seeds, workers, output_dir=None):
     """
     Sweep N, compare centroid vs boundary relay placement for MDI-QKD.
     Returns dict: strategy → list[list[float]] (seeds × N).
@@ -183,29 +209,52 @@ def exp2(n_values, area, spread, cfg, runtimes, seed, n_seeds, workers):
         strat: {"mdi": [[] for _ in n_values]}
         for strat in ("centroid", "boundary")
     }
+    graph_data = {}
+    n_max = n_values[-1]
 
     for s_idx, s in enumerate(seeds):
         print(f"\n--- Seed {s_idx+1}/{n_seeds} (seed={s}) ---")
         for ni, n in enumerate(n_values):
             user_pos, labels = _place_two_clusters(n, area, spread, s)
+            relay_by_strat = {}
 
             for strat, relay_fn in [("centroid", _relay_centroid), ("boundary", _relay_boundary)]:
                 relay_pos = relay_fn(user_pos, labels)
+                relay_by_strat[strat] = relay_pos
                 topo      = Topology(user_pos, relay_pos)
+
+                if output_dir:
+                    _topo_dir = os.path.join(output_dir, "topologies")
+                    os.makedirs(_topo_dir, exist_ok=True)
+                    fig_t, (axA, axB) = plt.subplots(1, 2, figsize=(12, 5))
+                    draw_mdi(axA, topo)
+                    draw_bb84(axB, topo)
+                    plt.suptitle(f"Network Topology (seed={s}, N={n}, {strat})", fontsize=11)
+                    plt.tight_layout()
+                    fig_t.savefig(os.path.join(_topo_dir, f"seed{s}_N{n}_{strat}.png"), dpi=150, bbox_inches="tight")
+                    plt.close(fig_t)
 
                 mdi_res = run_mdi_network(topo, cfg, runtimes=runtimes, workers=workers,
                                           p2p_db_path=None, net_db_path=None)
 
                 data[strat]["mdi"][ni].append(_avg_rate(mdi_res["pair_rates"]))
 
+            if n == n_max:
+                graph_data[s] = {
+                    "user_positions": np.round(user_pos, 3).tolist(),
+                    "cluster_labels": labels.tolist(),
+                    "relay_positions_centroid": np.round(relay_by_strat["centroid"], 3).tolist(),
+                    "relay_positions_boundary": np.round(relay_by_strat["boundary"], 3).tolist(),
+                }
+
             print(f"  N={n:3d}  "
                   f"MDI  cent={np.mean(data['centroid']['mdi'][ni])/1000:.2f}k  "
                   f"bnd={np.mean(data['boundary']['mdi'][ni])/1000:.2f}k bps")
 
-    return data
+    return data, seeds, graph_data
 
 
-def plot_exp2(data, n_values, output_dir, area, spread, runtimes, n_seeds):
+def plot_exp2(data, n_values, output_dir, area, spread, runtimes, n_seeds, seed, seeds, graph_data):
     N      = np.array(n_values)
     colors = {"centroid": "#e41a1c", "boundary": "#377eb8"}
     labels = {"centroid": "Centroid", "boundary": "Boundary (1 std toward opposing cluster)"}
@@ -239,6 +288,9 @@ def plot_exp2(data, n_values, output_dir, area, spread, runtimes, n_seeds):
                 "Cluster spread (std)": f"{spread:.2f} km",
                 "Runtimes per pair": runtimes,
                 "Random topologies averaged": n_seeds,
+                "Seed (base)": seed,
+                "Seeds used": seeds,
+                "Final graph per seed (N=n_max, km)": graph_data,
             },
             notes=["Boundary strategy displaces each relay 1 std toward the opposing cluster."],
         )
@@ -286,16 +338,17 @@ def main():
             print(f"\n=== Exp 1: N={n}, grid={args.grid}×{args.grid} ===")
             results[n] = exp1_grid(n, args.area, args.grid, cfg, args.runtimes,
                                    args.seed, args.workers)
-        plot_exp1(results, args.area, args.output_dir, args.grid, args.runtimes)
+        plot_exp1(results, args.area, args.output_dir, args.grid, args.runtimes, args.seed)
 
     else:
         spread   = args.spread if args.spread is not None else args.area / 5
         n_values = list(range(args.n_min, args.n_max + 1, args.n_step))
         print(f"\n=== Exp 2: N={n_values[0]}..{n_values[-1]}, spread={spread:.1f} km, "
               f"{args.seeds} seeds ===")
-        data = exp2(n_values, args.area, spread, cfg, args.runtimes,
-                    args.seed, args.seeds, args.workers)
-        plot_exp2(data, n_values, args.output_dir, args.area, spread, args.runtimes, args.seeds)
+        data, seeds, graph_data = exp2(n_values, args.area, spread, cfg, args.runtimes,
+                    args.seed, args.seeds, args.workers, output_dir=args.output_dir)
+        plot_exp2(data, n_values, args.output_dir, args.area, spread, args.runtimes, args.seeds,
+                  args.seed, seeds, graph_data)
 
 
 if __name__ == "__main__":

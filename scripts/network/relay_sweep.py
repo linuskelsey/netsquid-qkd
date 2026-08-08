@@ -106,12 +106,16 @@ def main():
     seed_total  = 1 + len(K_values)
     total_start = time.time()
 
+    _user_pos_by_seed  = {}
+    _relay_pos_by_seed = {}
+
     for s_idx, seed in enumerate(seeds):
         print(f"\n--- Seed {s_idx+1}/{args.seeds}  (seed={seed}) ---")
         seed_start = time.time()
         prog = Progress(seed_total)
         step = 0
         user_pos = place_users(args.n, area_km=args.area, seed=seed)
+        _user_pos_by_seed[seed] = np.round(user_pos, 3).tolist()
 
         prog.update(step, f"BB84 reference running...")
         topo_bb84  = Topology(user_pos)
@@ -132,7 +136,20 @@ def main():
         for K in K_values:
             prog.update(step, f"Relay count: {K}/{K_values[-1]}  MDI running...")
             relay_pos  = optimise_relays(user_pos, K, seed=seed)
+            _relay_pos_by_seed.setdefault(seed, {})[K] = np.round(np.array(relay_pos), 3).tolist()
             topo       = Topology(user_pos, relay_pos)
+
+            if args.output_dir and not args.no_figure:
+                _topo_dir = os.path.join(args.output_dir, "topologies")
+                os.makedirs(_topo_dir, exist_ok=True)
+                fig_t, (axA, axB) = plt.subplots(1, 2, figsize=(12, 5))
+                draw_mdi(axA, topo, tortuosity_mean=args.tortuosity)
+                draw_bb84(axB, topo, tortuosity_mean=args.tortuosity)
+                plt.suptitle(f"Network Topology (seed={seed}, K={K})", fontsize=11)
+                plt.tight_layout()
+                fig_t.savefig(os.path.join(_topo_dir, f"seed{seed}_K{K}.png"), dpi=150, bbox_inches="tight")
+                plt.close(fig_t)
+
             mdi_res    = run_mdi_network(topo, cfg, runtimes=args.runtimes, workers=args.workers,
                              p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
                              net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
@@ -220,7 +237,7 @@ def main():
     ax2.set_ylabel("Relative key rate")
     ax2.set_yscale("log")
 
-    seed_label = f"seed={args.seed}" if args.seeds == 1 else f"{args.seeds} seeds (base={args.seed})"
+    seed_label = f"seed={args.seed}" if args.seeds == 1 else f"{args.seeds} seeds (base={args.seed}): {seeds}"
     plt.title("Key Rate vs Relay Count", fontsize=10)
     plt.tight_layout()
 
@@ -238,31 +255,16 @@ def main():
                     "Runtimes per pair": args.runtimes,
                     "Error display": args.error,
                     "Fibre loss / detector / dark count / etc": "see configs/ preset used (--config)",
+                    "Final user positions (km, per seed)": _user_pos_by_seed,
+                    "Relay positions (km, per seed per K)": _relay_pos_by_seed,
                 },
             )
             print(f"Saved to {os.path.join(args.output_dir, 'relay_sweep')}")
         else:
             plt.show()
 
-    # --- Figure 2: topology at midpoint K (single seed only) ---
-    if args.seeds == 1 and not args.no_figure:
-        K_mid      = K_values[len(K_values) // 2]
-        topo_users = place_users(args.n, area_km=args.area, seed=seeds[0])
-        topo_mid   = Topology(topo_users, optimise_relays(topo_users, K_mid, seed=seeds[0]))
-
-        fig2, (axA, axB) = plt.subplots(1, 2, figsize=(12, 5))
-        draw_mdi(axA, topo_mid, tortuosity_mean=args.tortuosity)
-        draw_bb84(axB, topo_mid, tortuosity_mean=args.tortuosity)
-        plt.suptitle(f"Network Topology (K={K_mid})", fontsize=11)
-        plt.tight_layout()
-
-        if args.output_dir:
-            topo_fn = os.path.splitext(os.path.basename(__file__))[0] + "_topology.png"
-            topo_save = os.path.join(args.output_dir, topo_fn)
-            plt.savefig(topo_save, dpi=150, bbox_inches="tight")
-            print(f"Topology saved to {topo_save}")
-        else:
-            plt.show()
+    if args.output_dir and not args.no_figure:
+        print(f"Topologies saved to {os.path.join(args.output_dir, 'topologies')}")
 
 
 if __name__ == "__main__":

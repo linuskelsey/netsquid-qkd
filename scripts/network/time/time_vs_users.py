@@ -48,6 +48,7 @@ from lib.progress import Progress
 from topology import place_users, optimise_relays, Topology
 from bb84_network import run_bb84_network
 from mdi_network import run_mdi_network
+from visualise_network import draw_mdi, draw_bb84
 
 apply_thesis_style()
 
@@ -117,6 +118,9 @@ def main():
 
     total_start = time.time()
 
+    _user_pos_by_seed  = {}
+    _relay_pos_by_seed = {}
+
     for s_idx, seed in enumerate(seeds):
         print(f"\n--- Seed {s_idx+1}/{args.seeds}  (seed={seed}) ---")
         seed_start = time.time()
@@ -130,6 +134,8 @@ def main():
             prog.update(step, f"N={N}  building topology...")
             user_pos  = place_users(N, area_km=args.area, seed=seed)
             topo_bb84 = Topology(user_pos)
+            if N == N_values[-1]:
+                _user_pos_by_seed[seed] = np.round(user_pos, 3).tolist()
 
             prog.update(step, f"N={N}  BB84 ({n_pairs} pairs)...")
             _, bb84_wall, bb84_pct = _timed_run(
@@ -141,7 +147,21 @@ def main():
 
             if N > K and K >= 1:
                 relay_pos = optimise_relays(user_pos, K, seed=seed)
+                if N == N_values[-1]:
+                    _relay_pos_by_seed[seed] = np.round(np.array(relay_pos), 3).tolist()
                 topo_mdi  = Topology(user_pos, relay_pos)
+
+                if args.output_dir:
+                    _topo_dir = os.path.join(args.output_dir, "topologies")
+                    os.makedirs(_topo_dir, exist_ok=True)
+                    fig_t, (axA, axB) = plt.subplots(1, 2, figsize=(12, 5))
+                    draw_mdi(axA, topo_mdi)
+                    draw_bb84(axB, topo_mdi)
+                    plt.suptitle(f"Network Topology (seed={seed}, N={N})", fontsize=11)
+                    plt.tight_layout()
+                    fig_t.savefig(os.path.join(_topo_dir, f"seed{seed}_N{N}.png"), dpi=150, bbox_inches="tight")
+                    plt.close(fig_t)
+
                 prog.update(step, f"N={N}  MDI  ({n_pairs} pairs)...")
                 _, mdi_wall, mdi_pct = _timed_run(
                     run_mdi_network, topo_mdi, cfg,
@@ -264,12 +284,17 @@ def main():
                 "MDI relays": args.k,
                 "Runtimes per pair": args.runtimes,
                 "Random topologies averaged": args.seeds,
+                "Seed (base)": args.seed,
+                "Seeds used": seeds,
+                "Final user positions (N=n_max, km, per seed)": _user_pos_by_seed,
+                "Relay positions (km, per seed)": _relay_pos_by_seed,
                 "Workers": n_workers_display,
             },
             notes=["Top: wall-clock per pair per simulation vs user count, with pair count N(N-1)/2 on secondary axis.",
                    "Bottom: average CPU utilisation vs user count."],
         )
         print(f"Saved to {os.path.join(args.output_dir, 'time_vs_users')}")
+        print(f"Topologies saved to {os.path.join(args.output_dir, 'topologies')}")
     else:
         plt.show()
 

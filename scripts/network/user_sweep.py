@@ -144,6 +144,9 @@ def main():
     seed_total  = len(N_values)
     total_start = time.time()
 
+    _user_pos_by_seed  = {}
+    _relay_pos_by_seed = {}
+
     for s_idx, seed in enumerate(seeds):
         print(f"\n--- Seed {s_idx+1}/{args.seeds}  (seed={seed}) ---")
         seed_start = time.time()
@@ -162,6 +165,9 @@ def main():
         else:
             all_user_pos = place_users(args.n_max, area_km=_area_km, seed=seed)
 
+        _user_pos_by_seed[seed]  = np.round(all_user_pos, 3).tolist()
+        _relay_pos_by_seed[seed] = np.round(np.array(relay_pos), 3).tolist()
+
         for N in N_values:
             if N < _K:
                 step += 1
@@ -171,6 +177,17 @@ def main():
             user_pos = all_user_pos[:N]
             topo_bb84 = Topology(user_pos)
             topo_mdi  = Topology(user_pos, relay_pos)
+
+            if args.output_dir and not args.no_figure:
+                _topo_dir = os.path.join(args.output_dir, "topologies")
+                os.makedirs(_topo_dir, exist_ok=True)
+                fig_t, (axA, axB) = plt.subplots(1, 2, figsize=(12, 5))
+                draw_mdi(axA, topo_mdi, tortuosity_mean=args.tortuosity)
+                draw_bb84(axB, topo_mdi, tortuosity_mean=args.tortuosity)
+                plt.suptitle(f"Network Topology (seed={seed}, N={N})", fontsize=11)
+                plt.tight_layout()
+                fig_t.savefig(os.path.join(_topo_dir, f"seed{seed}_N{N}.png"), dpi=150, bbox_inches="tight")
+                plt.close(fig_t)
 
             bb84_res = run_bb84_network(topo_bb84, cfg, runtimes=args.runtimes, workers=args.workers,
                               p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
@@ -309,7 +326,7 @@ def main():
     ax2.set_ylabel("Relative key rate")
     ax2.set_yscale("log")
 
-    seed_label = f"seed={args.seed}" if args.seeds == 1 else f"{args.seeds} seeds (base={args.seed})"
+    seed_label = f"seed={args.seed}" if args.seeds == 1 else f"{args.seeds} seeds (base={args.seed}): {seeds}"
     area_label = f"{args.real}" if args.real else f"{_area_km}×{_area_km} km"
     plt.title("Key Rate vs User Count", fontsize=10)
     plt.tight_layout()
@@ -330,41 +347,16 @@ def main():
                     "Runtimes per pair": args.runtimes,
                     "Error display": args.error,
                     "Real topology": args.real if args.real else "none (synthetic)",
+                    "Final user positions (N=n_max, km, per seed)": _user_pos_by_seed,
+                    "Final relay positions (km, per seed)": _relay_pos_by_seed,
                 },
             )
             print(f"Saved to {os.path.join(args.output_dir, 'user_sweep')}")
         else:
             plt.show()
 
-    # --- Figure 2: topology at midpoint N (single seed only) ---
-    if args.seeds == 1 and not args.no_figure:
-        N_mid    = N_arr_final[len(N_arr_final) // 2]
-        # reuse the incremental user pool from the single seed run
-        if _fixed_relay_pos is not None:
-            relay_mid = _fixed_relay_pos
-        else:
-            ref_mid   = place_users(ref_n, area_km=_area_km, seed=seeds[0])
-            relay_mid = optimise_relays(ref_mid, _K, seed=seeds[0])
-        if args.placement == "clustered":
-            _mid_all = place_users_clustered(args.n_max, relay_mid, area_km=_area_km,
-                                             seed=seeds[0], max_radius_km=_max_radius)
-        else:
-            _mid_all = place_users(args.n_max, area_km=_area_km, seed=seeds[0])
-        topo_mid = Topology(_mid_all[:N_mid], relay_mid)
-
-        fig2, (axA, axB) = plt.subplots(1, 2, figsize=(12, 5))
-        draw_mdi(axA, topo_mid, tortuosity_mean=args.tortuosity)
-        draw_bb84(axB, topo_mid, tortuosity_mean=args.tortuosity)
-        plt.suptitle(f"Network Topology (N={N_mid})", fontsize=11)
-        plt.tight_layout()
-
-        if args.output_dir:
-            topo_fn = os.path.splitext(os.path.basename(__file__))[0] + "_topology.png"
-            topo_save = os.path.join(args.output_dir, topo_fn)
-            plt.savefig(topo_save, dpi=150, bbox_inches="tight")
-            print(f"Topology saved to {topo_save}")
-        else:
-            plt.show()
+    if args.output_dir and not args.no_figure:
+        print(f"Topologies saved to {os.path.join(args.output_dir, 'topologies')}")
 
 
 if __name__ == "__main__":
