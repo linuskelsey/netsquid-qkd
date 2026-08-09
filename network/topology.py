@@ -44,10 +44,59 @@ def place_users_clustered(N, relay_pos, area_km=10.0, seed=None, max_radius_km=N
     return positions
 
 
-def optimise_relays(user_pos, K, n_init=10, seed=None):
+def optimise_relays(user_pos, K, n_init=10, seed=None, max_iter=500, tol=1e-9):
+    """Relay placement by the generalised (multi-facility) Weiszfeld iteration.
+
+    Minimises total fibre length (spoke + fully-meshed backbone), the network's
+    actual linear-cost objective, rather than the sum of squared distances that
+    a plain k-means centroid minimises. Cluster assignment is initialised by
+    k-means; relay position is then refined by the backbone-coupled Weiszfeld
+    fixed-point update, alternating with nearest-relay reassignment, until
+    total fibre length changes by less than `tol` km between iterations. For
+    K=1 the backbone term is absent and this reduces to the plain single-
+    facility Weiszfeld iteration (the geometric median).
+    """
+    user_pos = np.array(user_pos)
     km = KMeans(n_clusters=K, n_init=n_init, random_state=seed)
-    km.fit(user_pos)
-    return km.cluster_centers_
+    labels    = km.fit_predict(user_pos)
+    relay_pos = km.cluster_centers_.copy()
+
+    def _total_fibre(relay_pos, labels):
+        spoke    = sum(_dist(relay_pos[labels[i]], user_pos[i]) for i in range(len(user_pos)))
+        backbone = sum(_dist(relay_pos[k], relay_pos[l]) for k in range(K) for l in range(k + 1, K))
+        return spoke + backbone
+
+    eps    = 1e-9
+    prev_L = _total_fibre(relay_pos, labels)
+
+    for _ in range(max_iter):
+        new_relay_pos = np.empty_like(relay_pos)
+        for k in range(K):
+            num = np.zeros(2)
+            den = 0.0
+            for p in user_pos[labels == k]:
+                d = max(_dist(relay_pos[k], p), eps)
+                num += p / d
+                den += 1.0 / d
+            for l in range(K):
+                if l == k:
+                    continue
+                d = max(_dist(relay_pos[k], relay_pos[l]), eps)
+                num += relay_pos[l] / d
+                den += 1.0 / d
+            new_relay_pos[k] = num / den if den > 0 else relay_pos[k]
+
+        relay_pos = new_relay_pos
+        labels    = np.argmin(
+            np.linalg.norm(user_pos[:, None, :] - relay_pos[None, :, :], axis=2), axis=1
+        )
+
+        L = _total_fibre(relay_pos, labels)
+        if abs(prev_L - L) < tol:
+            break
+        prev_L = L
+
+    return relay_pos
 
 
 def _dist(a, b):
