@@ -389,9 +389,9 @@ Manufacturer prices for quantum dot photon sources and single-photon detectors a
 \end{equation}
 where $\bar{d}_\text{BB84}$ is the mean user-pair distance in the BB84 mesh, $\bar{d}_u$ the mean user-to-relay distance, and $\bar{d}_r$ the mean relay-to-relay backbone link length. Passive relay hardware (HOM beam splitters, polarising beam splitters, optical switches) contributes additional fixed cost per relay and is omitted here for clarity.
 
-The dominant asymptotic difference between the two protocols is the fibre term: BB84 scales as $\mathcal{O}(N^2)$ (one dedicated link per user pair) whilst MDI scales as $\mathcal{O}(N)$ at fixed relay count $K$. Setting $C_\text{BB84} = C_\text{MDI}$ and solving for $N$ yields a crossover threshold $N^*$ above which MDI is cheaper, whose value depends on the ratio $c_d/c_f$, relay count $K$, and network geometry. Since the $\mathcal{O}(N^2)$ fibre term dominates at large $N$ for any positive $c_f$, the crossover always exists; the practical question is whether it falls within the user counts of realistic metropolitan deployments.
+The dominant asymptotic difference between the two protocols is the fibre term: BB84 scales as $\mathcal{O}(N^2)$ (one dedicated link per user pair) whilst MDI scales as $\mathcal{O}(N)$ at fixed relay count $K$. Setting $C_\text{BB84} = C_\text{MDI}$ and solving for $N$ yields a crossover threshold $N^*$ above which MDI is cheaper, whose value depends on the ratio $c_d/c_f$, relay count $K$, and network geometry.
 
-Commercial SNSPD detectors are typically sold as multi-channel units integrating several channels within a single cryostat (e.g.\ 2--8 channels per unit). An MDI relay requiring four SPDs may therefore be equipped with a single unit, reducing per-relay detector cost below $4c_d$; this narrows the MDI cost advantage at small $N$ and shifts $N^*$ upward. This packaging effect cannot be quantified without product pricing and is treated as a sensitivity consideration.
+Commercial SNSPD detectors are typically sold as multi-channel units integrating several channels within a single cryostat (e.g.\ 2--8 channels per unit), so an MDI relay's four SPDs may in practice be equipped with a single packaged unit rather than four independent $c_d$ purchases; this packaging effect is not reflected in Equation~\ref{eq:cost_mdi}, and its implications for the cost crossover are discussed in Section~\ref{sec:results_cost}.
 
 In practice, installed cable follows duct routes longer than the straight-line Euclidean distance. We model this through per-link tortuosity: each physical cable $(i,j)$ is assigned an independent factor $\tau_{ij}$ drawn from a truncated normal distribution:
 \begin{equation}
@@ -516,11 +516,14 @@ The two parameters singled out above behave in structurally different ways acros
 \subsection{Network Performance}
 \label{sec:results_network}
 
+The user-count and relay-count sweeps of Section~\ref{sec:scalability} are reported together here, since both characterise network-level key rate as a function of the same underlying variables ($N$ and $K$) rather than testing independent hypotheses.
+
 \subsection{Cost}
 \label{sec:results_cost}
 
-\subsection{Scalability}
-\label{sec:results_scalability}
+The cost formulae of Section~\ref{sec:cost_model} predict that the fibre term dominates at large $N$ for any positive $c_f$, so a crossover user count $N^*$ above which MDI is cheaper always exists; the practical question is whether $N^*$ falls within the user counts of realistic metropolitan deployments, which depends on the ratio $c_d/c_f$, relay count $K$, and network geometry.
+
+Commercial detector packaging complicates this picture. SNSPDs are typically sold as multi-channel units integrating several channels within a single cryostat (e.g.\ 2--8 channels per unit), so an MDI relay's four SPDs may in practice be equipped with a single packaged unit rather than four independent $c_d$ purchases, reducing per-relay detector cost below $4c_d$. This narrows MDI's cost advantage at small $N$ and shifts $N^*$ upward; since it cannot be quantified without product pricing, it is treated here as a sensitivity consideration on the crossover result rather than a correction to Equation~\ref{eq:cost_mdi}.
 
 \subsection{Deployment Recommendations}
 
