@@ -6,45 +6,45 @@ Database file #1: IEEEabrv.bib
 Database file #2: bibliography.bib
 Warning--string name "july" is undefined
 --line 1168 of file bibliography.bib
-You've used 39 entries,
+You've used 43 entries,
             1876 wiz_defined-function locations,
-            1245 strings with 20591 characters,
-and the built_in function-call counts, 9158 in all, are:
-= -- 859
-> -- 440
+            1275 strings with 21070 characters,
+and the built_in function-call counts, 10307 in all, are:
+= -- 991
+> -- 460
 < -- 0
-+ -- 164
-- -- 125
-* -- 591
-:= -- 1300
-add.period$ -- 39
-call.type$ -- 39
-change.case$ -- 39
++ -- 173
+- -- 130
+* -- 672
+:= -- 1454
+add.period$ -- 43
+call.type$ -- 43
+change.case$ -- 43
 chr.to.int$ -- 0
-cite$ -- 39
-duplicate$ -- 492
-empty$ -- 821
-format.name$ -- 125
-if$ -- 2254
+cite$ -- 43
+duplicate$ -- 552
+empty$ -- 932
+format.name$ -- 130
+if$ -- 2540
 int.to.chr$ -- 0
-int.to.str$ -- 39
-missing$ -- 26
-newline$ -- 120
-num.names$ -- 41
-pop$ -- 150
+int.to.str$ -- 43
+missing$ -- 30
+newline$ -- 132
+num.names$ -- 45
+pop$ -- 154
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 0
-skip$ -- 434
+skip$ -- 479
 stack$ -- 0
-substring$ -- 324
-swap$ -- 240
+substring$ -- 429
+swap$ -- 268
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
 type$ -- 0
 warning$ -- 0
-while$ -- 64
-width$ -- 41
-write$ -- 351
+while$ -- 80
+width$ -- 45
+write$ -- 395
 (There was 1 warning)

@@ -300,7 +300,30 @@ Consistent with the linear-optical BSM constraint~\cite{Lo_2012}, only $|\Psi^\p
 \subsubsection{Multi-User Network Analysis}
 \label{sec:network_analysis}
 
-The multi-user simulation models a metropolitan network of $N$ users within an $A \times A$~km service area. Users are placed uniformly at random within the grid. Relay positions are determined by $k$-means clustering of user positions with $n_\text{init} = 10$ random restarts: each relay is placed at the centroid of its assigned user cluster. The centroid minimises the sum of squared Euclidean distances from cluster members to the relay, which directly minimises mean squared user-to-relay path length and hence mean path loss. For $K = 1$ the centroid minimises the sum of squared user-to-relay distances and is the known single-relay optimum; $k$-means generalises this to $K > 1$ heuristically. User-to-relay assignment is by nearest relay: $\texttt{user\_relay}[i] = \arg\min_k \|u_i - r_k\|_2$, computed at topology construction and independent of the catchment used to generate user positions.
+The multi-user simulation models a metropolitan network of $N$ users within an $A \times A$~km service area. Users are placed uniformly at random within the grid.
+
+\paragraph{Relay placement.}
+\label{sec:relay_placement}
+Placing the $K$ MDI relay nodes is a facility-location problem: given fixed user locations and free relay nodes that connect to their assigned users and, for $K>1$, to each other over a fully meshed backbone (Table~\ref{tab:components}), the placement that minimises deployment cost is the one that minimises total fibre length, since fibre enters the cost model linearly through $c_f$ (Equation~\ref{eq:cost_mdi}, Section~\ref{sec:cost_model}). Two closed-form single-facility results bound the problem. Minimising the sum of \emph{squared} distances from a set of fixed points to one free node is solved by the centroid (the mean position), the standard least-squares result obtained by zeroing the gradient of a sum of quadratics. Minimising the sum of \emph{unsquared} Euclidean distances instead is solved by the geometric median (the Weber point), which has no closed form in general and is instead obtained iteratively via Weiszfeld's algorithm,
+\begin{equation}
+    x^{(t+1)} = \frac{\sum_i p_i / \|x^{(t)} - p_i\|}{\sum_i 1/\|x^{(t)} - p_i\|},
+    \label{eq:weiszfeld}
+\end{equation}
+iterated to convergence. The two solutions coincide only for symmetric configurations. Since total fibre length is a sum of \emph{unsquared} distances, the geometric median --- not the centroid --- is the objective that actually matches the network's linear cost structure; the centroid instead minimises mean squared path length, a quantity relevant to statistical clustering (and to path loss under a squared-distance model) but not to CapEx.
+
+For $K>1$ fully-meshed relays, the placement problem does not decompose into $K$ independent per-cluster geometric medians, because the inter-relay backbone term couples all relay positions together. Writing cluster $k$'s user set as $C_k$ and its relay position as $x_k$, total fibre length is
+\begin{equation}
+    L(x_1,\dots,x_K) = \underbrace{\sum_{k=1}^{K}\sum_{i \in C_k} \|x_k - p_i\|}_{\text{spoke cost}} \;+\; \underbrace{\sum_{k<l} \|x_k - x_l\|}_{\text{backbone (mesh) cost}}.
+    \label{eq:hub_objective}
+\end{equation}
+This is the classical multi-facility Weber problem, dating to Miehle's original network-of-junctions formulation~\cite{Miehle_1958} and specialised to hub-and-spoke interconnection by O'Kelly~\cite{OKelly_1986}; Alumur and Kara~\cite{Alumur_2008} survey the broader hub-location literature that has since grown around it. $L$ is jointly convex in $(x_1,\dots,x_K)$, being a sum of norms, so a unique global minimum exists; but setting each $x_k$ independently to its own cluster's geometric median ignores the gradient contribution of the mesh term and is generally suboptimal. Zeroing $\nabla_{x_k} L$ gives the generalised (multi-facility) Weiszfeld fixed-point update, with convergence to the joint optimum guaranteed by convexity~\cite{Kuhn_1973}:
+\begin{equation}
+    x_k^{(t+1)} = \frac{\displaystyle\sum_{i \in C_k} \dfrac{p_i}{\|x_k^{(t)} - p_i\|} + \sum_{l \neq k} \dfrac{x_l^{(t)}}{\|x_k^{(t)} - x_l^{(t)}\|}}{\displaystyle\sum_{i \in C_k} \dfrac{1}{\|x_k^{(t)} - p_i\|} + \sum_{l \neq k} \dfrac{1}{\|x_k^{(t)} - x_l^{(t)}\|}},
+    \label{eq:generalized_weiszfeld}
+\end{equation}
+updating all $K$ relays simultaneously each iteration.
+
+This work places relays by the generalised Weiszfeld iteration of Equation~\ref{eq:generalized_weiszfeld}, in place of a plain $k$-means centroid. Cluster assignment (spoke membership $C_k$) is still initialised by $k$-means with $n_\text{init} = 10$ random restarts, a reasonable heuristic for partitioning users spatially; relay \emph{position} within each cluster is then refined by Equation~\ref{eq:generalized_weiszfeld} rather than fixed at the cluster centroid, and assignment is re-evaluated against nearest-relay distance after each position update, alternating position refinement and reassignment to convergence. For $K=1$ this reduces to the plain single-facility Weiszfeld iteration of Equation~\ref{eq:weiszfeld}, since the mesh term is absent; the joint coupling in Equation~\ref{eq:generalized_weiszfeld} has an effect only for $K>1$. User-to-relay assignment remains $\texttt{user\_relay}[i] = \arg\min_k \|u_i - r_k\|_2$, evaluated against the converged relay positions. This is a methodological change from earlier $k$-means-centroid placement used elsewhere in this work's development; no network-level key rate results have yet been generated under it, and the geometric-median objective could revert to a plain centroid if the fibre-length cost model is later judged not to warrant the added iteration.
 
 To decouple topology variability from Monte Carlo noise, all network experiments are repeated across $S$ independently drawn user placements (seeds), with relay positions re-optimised per seed. Aggregate statistics across seeds produce error bars that characterise topology uncertainty --- the variance arising from user placement --- rather than the sampling noise of a fixed topology. The number of seeds is chosen such that the inter-seed standard deviation of the protocol comparison metric (mean key rate) is small relative to the protocol gap.
 
@@ -433,7 +456,62 @@ Unlike distance, the BB84/MDI ratio is not stable under either of these sweeps: 
 
 MDI key rate peaks at the symmetric midpoint (61.7~kbps at 0.5) and falls by over a third towards either end (39.0~kbps at 0.1; 39.2~kbps at 0.9), confirming that Charlie sitting at the arm midpoint is rate-optimal. This is what makes the distance ratio above so stable: with each arm carrying half of the total channel loss at that optimum, the two-photon coincidence probability $\eta_\text{arm}^2\,\eta_{bs}\,\eta_d^2$ scales with total link transmittance in step with BB84's single-photon term $\eta_\text{link}\,\eta_d$ (Section~\ref{sec:security_rate}), so channel-side loss scales both protocols together rather than opening up the gap between them. Moving Charlie off-centre breaks this cancellation and the BB84/MDI ratio widens to 8.2--8.3$\times$ at the sweep extremes, close to a 60\% increase over the midpoint ratio of 5.2$\times$ --- a clean illustration that relay geometry, and not only raw hardware quality, materially affects the security--rate trade-off.
 
-Together, these four sweeps indicate that within the metropolitan regime studied here, the BB84/MDI key rate gap is set primarily by a roughly constant structural factor of $\sim$5$\times$ arising from the two-photon BSM requirement and Charlie's optimal midpoint placement, and that per-arm hardware parameters --- detector efficiency and receiver loss, not link distance or relay geometry --- are what is most likely to widen this gap substantially in practice.
+Together, these four sweeps indicate that within the metropolitan regime studied here, the BB84/MDI key rate gap is set primarily by a roughly constant structural factor of $\sim$5$\times$ arising from the two-photon BSM requirement and Charlie's optimal midpoint placement, and that per-arm hardware parameters --- detector efficiency and receiver loss, not link distance or relay geometry --- are what is most likely to widen this gap substantially in practice. Three further views of the same operating point --- the cumulative hardware layers of Table~\ref{tab:layers} swept against distance, a fixed-distance ranking of all nine parameters by relative impact, and the isolated per-parameter distance sweeps that connect the two --- test this conclusion directly.
+
+\textbf{Cumulative hardware layers.} Figure~\ref{fig:layers} sweeps distance for each of the ten cumulative hardware layers of Table~\ref{tab:layers} in turn, rather than isolating one parameter at a time as in the sweeps above.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \resizebox{\textwidth}{!}{\input{figures/layers/layers_bb84.tex}}
+        \caption{BB84}
+        \label{fig:layers_bb84}
+    \end{subfigure}%
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \resizebox{\textwidth}{!}{\input{figures/layers/layers_mdi.tex}}
+        \caption{MDI}
+        \label{fig:layers_mdi}
+    \end{subfigure}
+    \caption{Secure key rate versus Alice--Bob separation under each cumulative hardware layer of Table~\ref{tab:layers}, from the ideal baseline (layer~0, darkest) to the full realistic model (layer~8 for BB84, layer~9 for MDI, lightest). Each layer includes all impairments of the previous one plus the parameter named in its legend entry. Error bars show the Monte Carlo sample spread.}
+    \label{fig:layers}
+\end{figure}
+
+Both protocols show the same qualitative shape: a large step from layer~0 to layer~1 followed by a sequence of comparatively small further steps. For BB84 the layer~0-to-1 step (adding fibre attenuation alone) is barely visible at 1~km --- 4447.7~kbps falls to 4274.8~kbps, a 3.9\% reduction --- but dominates entirely by 100~km, where the same step takes the rate from 374.4~kbps to 5.9~kbps, a 98.4\% reduction. MDI shows the identical pattern: 3.4\% at 1~km widening to 98.5\% at 100~km. Fibre attenuation is therefore not a fixed per-parameter penalty in the way the other eight layers are; its fractional impact is itself a function of distance, negligible at short range and overwhelming at long range, consistent with it being the sole layer whose loss probability scales with $L$ directly (Section~\ref{sec:hardware_model}) rather than acting as a fixed multiplicative factor at any given operating point. Against this backdrop, layer~5 (node loss) stands out among the remaining eight as the one further step large enough to see clearly even at short range: for BB84 the layer~4-to-5 step at 1~km takes 3653.3~kbps to 2310.2~kbps, a 36.8\% reduction; for MDI, 1508.8~kbps to 598.1~kbps, a 60.4\% reduction. Both figures are consistent with the sensitivity ranking below, and both closely match the isolated node-loss impact reported next, despite being measured from an entirely different sweep (cumulative layer stacking rather than single-parameter isolation).
+
+\textbf{Parameter sensitivity ranking.} Figure~\ref{fig:sensitivity} ranks all nine layer-9 hardware parameters directly by their individual contribution to key-rate loss, at a fixed 25~km operating point (ideal key rate 1223.85~kbps for BB84, 482.15~kbps for MDI).
+
+\begin{figure}[H]
+    \centering
+    \resizebox{0.75\textwidth}{!}{\input{figures/sensitivity/sensitivity.tex}}
+    \caption{Percentage key-rate reduction from the ideal (layer-0) baseline at 25~km separation, for each parameter set individually to its layer-9 realistic value (Table~\ref{tab:layers}). BS efficiency applies to MDI only; the BB84 bar is fixed at zero.}
+    \label{fig:sensitivity}
+\end{figure}
+
+Fibre attenuation dominates both protocols almost identically at this fixed distance (64.5\% BB84, 64.3\% MDI), the two curves not yet having diverged the way they do by 100~km in Figure~\ref{fig:layers}. Every other parameter instead reproduces the per-arm asymmetry established in Section~\ref{sec:results_p2p}: node loss reduces BB84 by 36.7\% but MDI by 60.5\%; basis bias by 14.1\% versus 24.5\%; TX insertion loss by 10.0\% versus 19.4\%; detector efficiency by 4.8\% versus 9.4\% --- each roughly 1.6--2$\times$ more damaging to MDI than to BB84, the signature of a parameter acting once per arm rather than once per link. Beam-splitter efficiency, applicable to MDI alone, contributes a further 6.0\%. Dark count rate, source error rate, and fibre dephasing are negligible for both protocols at this operating point (under 1\% in every case), matching the "noise-like parameters" grouping of the appendix sweeps (Appendix~\ref{sec:appendix_p2p}).
+
+\textbf{Isolated parameter impact.} Figure~\ref{fig:isolate} extends the fixed-distance ranking above across the full 1--100~km range, setting exactly one parameter to its layer-9 value at a time against an otherwise fully ideal baseline.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \resizebox{\textwidth}{!}{\input{figures/layers/isolate_bb84.tex}}
+        \caption{BB84}
+        \label{fig:isolate_bb84}
+    \end{subfigure}%
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \resizebox{\textwidth}{!}{\input{figures/layers/isolate_mdi.tex}}
+        \caption{MDI}
+        \label{fig:isolate_mdi}
+    \end{subfigure}
+    \caption{Secure key rate versus Alice--Bob separation with exactly one hardware parameter set to its layer-9 realistic value (Table~\ref{tab:layers}) and all others held ideal, against an ideal (baseline) reference. Error bars show the Monte Carlo sample spread.}
+    \label{fig:isolate}
+\end{figure}
+
+The two parameters singled out above behave in structurally different ways across distance. Fibre loss (blue) tracks the ideal baseline closely at short range and then pulls away with distance --- for BB84, a 4.3\% reduction at 1~km widening to 98.4\% at 100~km; for MDI, 3.7\% widening to 98.2\% --- confirming, from an independent sweep, the same distance-dependence seen in Figure~\ref{fig:layers}. Node loss instead reduces key rate by an essentially \emph{constant fraction at every distance}: 36.9\% at 1~km versus 36.8\% at 100~km for BB84, and 60.3\% at both distances for MDI, matching the 25~km sensitivity figures (36.7\% and 60.5\%) to within Monte Carlo noise. This distinction reflects the two parameters' underlying physics: fibre loss is proportional to path length, so its effect is negligible over short arms and dominant over long ones, whereas node loss is a fixed per-arm insertion loss applied once regardless of distance, so its fractional impact does not change as the link is extended. Node loss, basis bias, TX insertion loss, and (for MDI) beam-splitter efficiency therefore constitute a qualitatively distinct category of impairment from fibre attenuation: fixed-fraction, per-arm penalties that erode key rate even over the shortest simulated separations and that consistently favour BB84 over MDI by the $\sim$1.6--2$\times$ margin identified throughout this section, rather than range-dependent losses that only become significant as the link is extended.
 
 \subsection{Network Performance}
 \label{sec:results_network}
@@ -458,7 +536,7 @@ The results presented in Section~\ref{sec:results} support a consistent picture 
 \subsection{The Security--Rate Trade-off}
 \label{sec:security_rate}
 
-MDI-QKD's elimination of detector side-channel attacks comes at a key rate penalty rooted in its physical architecture. Whereas BB84 requires one photon to traverse the full link and be detected, MDI requires two photons --- one from each party --- to arrive at Charlie's relay simultaneously and produce a coincidence event. Loss on each arm compounds multiplicatively: if the single-arm transmittance is $\eta_\text{arm}$, the BSM detection probability scales as $\eta_\text{arm}^2\,\eta_\text{BS}\,\eta_d^2$, compared to $\eta_\text{link}\,\eta_d$ for BB84. At metropolitan distances and typical detector efficiencies, this effectively squares the channel transmittance, consistent with the order-of-magnitude rate gap between the two protocols in the bipartite setting. This is borne out empirically by the point-to-point sweeps in Section~\ref{sec:results_p2p}: the BB84/MDI ratio stays close to a constant $\sim$5$\times$ under channel-side sweeps (distance, attenuation) but widens to over 25$\times$ under a detector efficiency sweep (Figure~\ref{fig:p2p_efficiency}), the signature of a parameter that acts quadratically on MDI's coincidence probability but only linearly on BB84's single-photon detection probability.
+MDI-QKD's elimination of detector side-channel attacks comes at a key rate penalty rooted in its physical architecture. Whereas BB84 requires one photon to traverse the full link and be detected, MDI requires two photons --- one from each party --- to arrive at Charlie's relay simultaneously and produce a coincidence event. Loss on each arm compounds multiplicatively: if the single-arm transmittance is $\eta_\text{arm}$, the BSM detection probability scales as $\eta_\text{arm}^2\,\eta_\text{BS}\,\eta_d^2$, compared to $\eta_\text{link}\,\eta_d$ for BB84. At metropolitan distances and typical detector efficiencies, this effectively squares the channel transmittance, consistent with the order-of-magnitude rate gap between the two protocols in the bipartite setting. This is borne out empirically by the point-to-point sweeps in Section~\ref{sec:results_p2p}: the BB84/MDI ratio stays close to a constant $\sim$5$\times$ under channel-side sweeps (distance, attenuation) but widens to over 25$\times$ under a detector efficiency sweep (Figure~\ref{fig:p2p_efficiency}), the signature of a parameter that acts quadratically on MDI's coincidence probability but only linearly on BB84's single-photon detection probability. The sensitivity ranking in Figure~\ref{fig:sensitivity} quantifies this split directly at a fixed 25~km operating point: fibre attenuation degrades both protocols by almost the same fraction (64.5\% BB84, 64.3\% MDI), while every per-arm parameter --- node loss, basis bias, TX insertion loss, detector efficiency, and (MDI-only) beam-splitter efficiency --- degrades MDI by roughly 1.6--2$\times$ more than BB84 in relative terms. The cumulative-layer and isolated-parameter sweeps of Figure~\ref{fig:layers} and Figure~\ref{fig:isolate} show why the two channel-side and per-arm categories behave so differently with distance: fibre attenuation's fractional impact grows from a few percent at 1~km to over 98\% at 100~km for both protocols, since loss probability scales with path length directly, whereas node loss removes an essentially constant fraction of key rate --- around 37\% for BB84 and 60\% for MDI --- at every distance from 1--100~km, since it is a fixed per-arm insertion loss applied once regardless of link length.
 
 At the network level, the rate gap between MDI and BB84 widens relative to the bipartite case. MDI users route photons to a relay rather than directly to their communication partner, incurring a geometric detour for cross-cluster pairs. This routing overhead is absent in BB84's direct mesh. The relay distance advantage is a function of relay count $K$ and user distribution; the relay sweep quantifies the extent to which increasing $K$ can recover the MDI rate penalty.
 
@@ -489,7 +567,7 @@ The cost model is a first-order CapEx-only algebraic estimate. Several factors a
 
 \textit{Relay placement.} $k$-means relay placement minimises mean user-to-relay distance but is not provably optimal for network key rate or cost. ILP-based placement~\cite{DBLP:conf/ondm/KaraviasHBLP25} could provide tighter lower bounds on minimum MDI deployment cost, and would be a valuable extension of this work.
 
-\textit{Receiver node loss.} The model applies a single lumped node loss $\Delta_n = 2.0$~dB uniformly to both BB84 and MDI-QKD receivers. In reality, the optical components at each receiver are protocol-specific: BB84 uses an EOM and PBS, whilst MDI arms use a HOM beam splitter, PBS, and (for cross-cluster routing) an optical switch. These components carry different insertion losses and are purchased and maintained separately. A rigorous model would assign per-component losses derived from product datasheets, track them independently in the cost model, and apply the correct protocol-specific total at each receiver. This is left as future work; the current lumped approximation introduces a systematic bias in the relative key rate comparison that cannot be quantified without the component-level data.
+\textit{Receiver node loss.} The model applies a single lumped node loss $\Delta_n = 2.0$~dB uniformly to both BB84 and MDI-QKD receivers. In reality, the optical components at each receiver are protocol-specific: BB84 uses an EOM and PBS, whilst MDI arms use a HOM beam splitter, PBS, and (for cross-cluster routing) an optical switch. These components carry different insertion losses and are purchased and maintained separately. A rigorous model would assign per-component losses derived from product datasheets, track them independently in the cost model, and apply the correct protocol-specific total at each receiver. This is left as future work; the current lumped approximation introduces a systematic bias in the relative key rate comparison that cannot be quantified without the component-level data. The size of this bias is not negligible: Figure~\ref{fig:sensitivity} shows node loss alone accounting for a 36.7\% key-rate reduction for BB84 versus 60.5\% for MDI at 25~km, the single largest per-arm contributor to the BB84/MDI gap identified in this work, so a protocol-specific breakdown of $\Delta_n$ would plausibly shift this margin further rather than narrow it, given MDI's additional relay-side components.
 
 \textit{NetSquid discrete-event simulation.} The simulations in this work model each photon trial as an independent, identically distributed (i.i.d.) draw: no channel memory, no inter-trial correlations, no time-varying network state. Under this assumption, the key rate distributions produced by NetSquid are in principle reproducible by a simple analytical probability model operating on the same physical parameters. NetSquid's overhead --- launching a DES engine, propagating quantum state objects, managing event queues --- is not necessary for the i.i.d. regime. The justification for using NetSquid is extensibility: the DES framework supports temporally correlated dynamics (detector deadtime, jitter, burst traffic, entanglement distillation protocols) that an i.i.d. model cannot accommodate, and these effects become important if this infrastructure is extended to quantum repeater chains or adaptive network protocols. The computational cost of the DES approach is non-negligible: network sweeps across multiple seeds and user counts required on the order of hours of wall-clock time on a multi-core workstation. This constrained the number of seeds and Monte Carlo runs feasible within the project timeline, and limits the statistical confidence of the topology-averaged results. Table~\ref{tab:timing} summarises representative wall-clock costs on a multi-core workstation: a full point-to-point parameter sweep completes in minutes, but cost grows sharply with network size, reaching hours for a $N{=}20$ relay sweep and an estimated weeks for $N{=}100$ --- infeasible within the project timeline. The dominant cost drivers are the $\mathcal{O}(N^2)$ user-pair count, the sequential causal event loop within each NetSquid run (which cannot be parallelised across a single trial), and multiprocessing spawn overhead of approximately 2--3~s per Monte Carlo batch, independent of workload.
 
@@ -618,6 +696,79 @@ Three groupings emerge from these seven sweeps, extending the channel-versus-per
 \textbf{Per-arm hardware loss.} Beam-splitter efficiency (Figure~\ref{fig:appx_bs_eff}) and TX insertion loss (Figure~\ref{fig:appx_init_loss}) both act after the split, and both widen the ratio, consistent with detector efficiency and receiver loss in Section~\ref{sec:results_p2p}. Beam-splitter efficiency is unique among all eleven sweeps in that BB84 is structurally unaffected by it (the dashed reference line in Figure~\ref{fig:appx_bs_eff} is exactly flat, since $\eta_{bs}$ only enters MDI's Bell-state measurement); MDI key rate alone declines from 66.1~kbps at $\eta_{bs}=1.0$ to 42.3~kbps at $\eta_{bs}=0.8$, a 36\% reduction from a single power of $\eta_{bs}$ in the coincidence probability. TX insertion loss widens the BB84/MDI ratio from 4.8$\times$ at $L_i=0$ to 9.7$\times$ at $L_i=0.5$, the same per-arm doubling pattern seen under detector efficiency (Figure~\ref{fig:p2p_efficiency}) and receiver loss (Section~\ref{sec:results_p2p}). X-basis detector efficiency, or basis bias (Figure~\ref{fig:appx_basis_bias}), belongs to this group too but widens the ratio only modestly, from 5.0$\times$ at $\eta_X=1.0$ to 6.1$\times$ at $\eta_X=0.5$, far less than the full detector-efficiency sweep of Figure~\ref{fig:p2p_efficiency}, because here only one of the two measurement bases is degraded rather than both.
 
 \textbf{Noise-like parameters.} Dark count rate, fibre dephasing rate, and source error rate (Figures~\ref{fig:appx_dark_count}--\ref{fig:appx_source_err}) leave both protocols essentially flat across their full swept ranges at this metropolitan operating point, with the BB84/MDI ratio staying within a few percent of 5.2$\times$ throughout each. None of the three introduces a directional loss term on either arm, so none is expected to shift the ratio; as noted in Section~\ref{sec:simulation_limitations}, this flatness is specific to the signal rates achieved at 20~km and should not be extrapolated to longer, detection-starved links.
+
+\section{Relay Placement Optimisation}
+\label{sec:appendix_relay}
+
+Section~\ref{sec:relay_placement} proposed replacing the plain $k$-means-centroid relay placement used elsewhere in this work's development with a generalised Weiszfeld iteration, on the grounds that it correctly minimises total fibre length --- the network's actual linear-cost objective --- rather than the sum of squared distances that $k$-means centroids minimise. This appendix works through that argument in more detail: it derives the coupled update of Equation~\ref{eq:generalized_weiszfeld} from first principles, works a small example to build intuition for how and why the two objectives diverge, and reports a self-contained geometric comparison of the two placement methods across synthetic topologies matching those used in Section~\ref{sec:network_analysis}. This comparison is purely geometric --- total fibre length under each placement, independent of NetSquid --- since, as noted in Section~\ref{sec:relay_placement}, no network-level key rate results have yet been generated under the new placement method; the discussion questions at the end of this appendix are correspondingly open rather than resolved.
+
+\subsection{Derivation of the Coupled Update}
+
+Recall the total fibre length objective from Equation~\ref{eq:hub_objective},
+$$
+L(x_1,\dots,x_K) = \sum_{k=1}^{K}\sum_{i \in C_k} \|x_k - p_i\| + \sum_{k<l} \|x_k - x_l\|,
+$$
+where $C_k$ is the fixed set of users assigned to relay $k$ and $x_k$ its free position. Away from the (measure-zero) configurations where $x_k$ coincides with a user $p_i$ or another relay $x_l$, $L$ is differentiable, and each term contributes a unit vector pointing from the fixed point towards $x_k$, scaled by the reciprocal distance:
+$$
+\nabla_{x_k} L = \sum_{i \in C_k} \frac{x_k - p_i}{\|x_k - p_i\|} + \sum_{l \neq k} \frac{x_k - x_l}{\|x_k - x_l\|}.
+$$
+Setting $\nabla_{x_k} L = 0$ and separating the $x_k$-weighted terms from the fixed-point-weighted terms on each side gives
+$$
+x_k \left(\sum_{i \in C_k} \frac{1}{\|x_k - p_i\|} + \sum_{l \neq k} \frac{1}{\|x_k - x_l\|}\right) = \sum_{i \in C_k} \frac{p_i}{\|x_k - p_i\|} + \sum_{l \neq k} \frac{x_l}{\|x_k - x_l\|},
+$$
+which rearranges directly to the fixed-point update of Equation~\ref{eq:generalized_weiszfeld} by evaluating the right-hand side at iteration $t$ and solving for $x_k$ at iteration $t+1$. This is a majorize-minimise step, not a gradient step: each relay is repositioned to the weighted mean of the points pulling on it, with weights set by the \emph{previous} iterate's distances, and iterating is guaranteed to be non-increasing in $L$ (Kuhn~\cite{Kuhn_1973}) even though no step size is chosen explicitly.
+
+The degenerate case, where an iterate $x_k^{(t)}$ lands exactly on a $p_i$ or $x_l$, produces a division by zero, since the corresponding term is non-differentiable there (the norm has a subgradient of unit magnitude in any direction rather than a unique gradient). In practice, and in the numerical experiments below, this is handled by flooring every pairwise distance at a small $\epsilon$ (we use $\epsilon = 10^{-9}$~km) before taking its reciprocal; this perturbs the objective negligibly at realistic network scales but avoids the singularity entirely. A more principled fix --- checking the subgradient optimality condition explicitly at any iterate landing within $\epsilon$ of a fixed point, as in the standard single-facility Weiszfeld literature --- was not needed at the $N$, $K$ scales explored here, since exact coincidence between a continuous-uniform random draw and another point has probability zero and was never observed in $30 \times 9 = 270$ seeded topology trials.
+
+\subsection{Worked Example: Centroid vs.\ Geometric Median}
+
+Figure~\ref{fig:relay_worked_example} illustrates the divergence between the two objectives on a small hand-constructed instance: eight users in two well-separated groups of four, one of which (top right) contains a single point noticeably further from the other three than they are from each other. The $k$-means centroid of the top-right cluster is pulled visibly towards this one distant point, since it enters the sum-of-squares objective quadratically; the geometric median instead settles closer to the tight group of three, since the same point enters the sum-of-\emph{unsquared}-distances objective only linearly. This is the standard robustness property of the median relative to the mean, familiar from one-dimensional statistics, applied here to a two-dimensional facility-location setting. The effect on total fibre length is modest but directionally consistent with every trial in the larger comparison below: 15.53~km under the $k$-means centroid versus 14.62~km under the coupled Weiszfeld update, a 5.9\% reduction, obtained without changing which users are assigned to which relay (cluster assignment is identical between the two panels).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.92\textwidth]{figures/relay_placement/worked_example.png}
+    \caption{A small eight-user, two-relay instance comparing $k$-means centroid placement (left) against the generalised Weiszfeld placement (right). Coloured points are users, coloured lines are spoke links, the dashed grey line is the backbone link, and black stars mark relay positions. Cluster assignment is identical in both panels; only relay position differs.}
+    \label{fig:relay_worked_example}
+\end{figure}
+
+\subsection{Geometric Comparison Across Network Topologies}
+\label{sec:appendix_relay_comparison}
+
+To quantify the fibre-length reduction at realistic network scales, both placement methods were run on synthetic topologies generated identically to those used in Section~\ref{sec:network_analysis}: $N$ users placed uniformly at random within a $10\times10$~km service area, for $N \in \{10, 20, 50\}$ and relay counts $K \in \{2, 3, 5\}$, over 30 independent seeds per $(N,K)$ pair. For each seed, $k$-means clustering ($n_\text{init}=10$) provides both the baseline centroid placement and the initial cluster assignment for the coupled Weiszfeld refinement (Equation~\ref{eq:generalized_weiszfeld}), which then alternates position updates with nearest-relay reassignment until total fibre length changes by less than $10^{-9}$~km between iterations (typically several dozen iterations; up to 146 in the smallest, most relay-dense case). Table~\ref{tab:relay_comparison} reports total fibre length --- spoke plus backbone, Equation~\ref{eq:hub_objective} --- under each method, averaged across seeds.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{ccccc}
+\toprule
+$N$ & $K$ & $k$-means length (km) & Weiszfeld length (km) & Reduction \\
+\midrule
+10 & 2 & 29.95 & 28.57 & 4.6\% $\pm$ 2.7 \\
+10 & 3 & 35.42 & 30.92 & 12.6\% $\pm$ 3.8 \\
+10 & 5 & 69.58 & 37.89 & 45.6\% $\pm$ 3.7 \\
+20 & 2 & 57.23 & 56.00 & 2.1\% $\pm$ 1.4 \\
+20 & 3 & 56.31 & 53.61 & 4.8\% $\pm$ 1.8 \\
+20 & 5 & 84.80 & 67.13 & 20.8\% $\pm$ 4.6 \\
+50 & 2 & 143.01 & 142.11 & 0.6\% $\pm$ 0.4 \\
+50 & 3 & 124.03 & 122.06 & 1.6\% $\pm$ 0.8 \\
+50 & 5 & 133.63 & 126.01 & 5.7\% $\pm$ 1.9 \\
+\bottomrule
+\end{tabular}
+\caption{Mean total fibre length (spoke + backbone) under $k$-means centroid versus generalised Weiszfeld relay placement, across 30 seeds per $(N,K)$ pair, $10\times10$~km service area. Reduction is $100(L_\text{kmeans}-L_\text{Weiszfeld})/L_\text{kmeans}$, mean $\pm$ one standard deviation across seeds.}
+\label{tab:relay_comparison}
+\end{table}
+
+The reduction is positive in every trial --- consistent with the monotonic non-increase guarantee noted above, since the Weiszfeld iteration starts from the $k$-means solution and never leaves it worse off --- and grows sharply with $K$ at fixed $N$: from 4.6\% at $K=2$ to 45.6\% at $K=5$ for $N=10$, and from 0.6\% to 5.7\% across the same $K$ range for $N=50$. This follows directly from Equation~\ref{eq:hub_objective}: the backbone term has $K(K-1)/2$ pairwise contributions, growing quadratically in $K$, while the spoke term grows only linearly in $N$; at larger $K$ the backbone increasingly dominates total cost, and it is precisely the backbone coupling that a per-cluster centroid ignores entirely. Conversely, the reduction shrinks as $N$ grows at fixed $K$ --- from 45.6\% to 5.7\% at $K=5$ between $N=10$ and $N=50$ --- because a larger user base dilutes each relay's positioning error relative to the now spoke-dominated total, and because tighter, more populated clusters leave less room for a single geometric outlier to pull the centroid away from the coupled optimum. The practical implication is that this refinement matters most exactly where the MDI network topology already carries a real relay count $K$ relative to $N$ --- the regime the cost-crossover analysis of Section~\ref{sec:results_cost} identifies as commercially relevant for smaller deployments before BB84's $\mathcal{O}(N^2)$ fibre term dominates --- and least where $N$ is large enough that per-user fibre cost already dominates the network total regardless of relay placement.
+
+\subsection{Open Questions}
+
+The comparison above resolves the geometric question --- which placement minimises total fibre length for a \emph{fixed} backbone topology and cluster assignment --- but leaves several modelling questions open, appropriate for discussion before the new placement method is adopted for the network-level key rate sweeps of Section~\ref{sec:network_analysis}:
+
+\begin{itemize}
+    \item \textit{Backbone topology.} Table~\ref{tab:components} assumes a full $K(K-1)/2$ relay mesh. A minimum spanning tree or Steiner-tree backbone would in general have strictly lower total length for $K>2$, and would change the placement problem itself (the coupling term in Equation~\ref{eq:hub_objective} would run over tree edges rather than all pairs). Whether the full mesh is retained for redundancy/latency reasons independent of cost, or replaced with a cheaper backbone topology, should be decided before the cost model and placement method are finalised together.
+    \item \textit{Assignment optimality.} Cluster reassignment after each position update is by nearest Euclidean distance to a relay, which is the correct assignment rule for the spoke term alone but does not account for the backbone term: a user could in principle be assigned to a farther relay if doing so allowed both relays to move to a jointly cheaper configuration. This is a combinatorial partitioning question distinct from the continuous position optimisation solved by Equation~\ref{eq:generalized_weiszfeld}, and was not explored here.
+    \item \textit{Convergence cost.} The Weiszfeld refinement took up to 146 outer iterations to reach a $10^{-9}$~km convergence tolerance at the smallest, most relay-dense configuration tested ($N=10$, $K=5$); this is negligible against NetSquid's own per-trial cost (Section~\ref{sec:simulation_limitations}) but would be worth profiling at the $N=100$ scale flagged there as currently infeasible.
+    \item \textit{Net effect on key rate.} A shorter mean path length should translate into a modest key rate improvement through reduced fibre attenuation (Section~\ref{sec:hardware_model}, layer~1), but by how much depends on where in the loss-versus-distance curve of Figure~\ref{fig:layers} the affected links sit; this can only be answered by re-running the network-level sweeps of Section~\ref{sec:network_analysis} under the new placement, which had not yet been done at the time of writing.
+\end{itemize}
 
 \bibliographystyle{ieeetr}
 \bibliography{IEEEabrv,bibliography}

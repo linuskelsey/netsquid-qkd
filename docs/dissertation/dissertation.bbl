@@ -175,6 +175,23 @@ Thorlabs, ``{TN1550R5F2 -- Narrowband Fiber Optic Coupler, 1550~nm, 50:50 Ratio
 {ID Quantique}, ``{ID230 Infrared Single-Photon Detector -- Product
   Datasheet}.'' Product datasheet, 2024.
 
+\bibitem{Miehle_1958}
+W.~Miehle, ``{Link-Length Minimization in Networks},'' {\em Operations
+  Research}, vol.~6, no.~2, pp.~232--243, 1958.
+
+\bibitem{OKelly_1986}
+M.~E. O'Kelly, ``{The Location of Interacting Hub Facilities},'' {\em
+  Transportation Science}, vol.~20, no.~2, pp.~92--106, 1986.
+
+\bibitem{Alumur_2008}
+S.~Alumur and B.~Y. Kara, ``{Network hub location problems: The state of the
+  art},'' {\em European Journal of Operational Research}, vol.~190, no.~1,
+  pp.~1--21, 2008.
+
+\bibitem{Kuhn_1973}
+H.~W. Kuhn, ``{A note on Fermat's problem},'' {\em Mathematical Programming},
+  vol.~4, no.~1, pp.~98--107, 1973.
+
 \bibitem{Song-2012}
 T.-T. Song, Q.-Y. Wen, F.-Z. Guo, and X.-Q. Tan, ``{Finite-key analysis for
   measurement-device-independent quantum key distribution},'' {\em Phys. Rev.
