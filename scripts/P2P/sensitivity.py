@@ -52,7 +52,8 @@ _IDEAL = {
 
 _PARAMS = [
     ("fibre_loss_db_per_km", 0.18,   r"Fibre loss ($\alpha$=0.18 dB/km)"),
-    ("detector_efficiency",  0.90,   r"Detector eff ($\eta_d$=0.90)"),
+    ("detector_efficiency",  0.20,   r"Detector eff SPAD ($\eta_d$=0.20, IDQ ID230)"),
+    ("detector_efficiency",  0.90,   r"Detector eff SNSPD ($\eta_d$=0.90, IDQ ID281)"),
     ("dark_count_rate",      50,     r"Dark count ($d_c$=50 cps)"),
     ("init_loss",            0.1,    r"Init loss ($L_i$=0.10)"),
     ("node_loss_db",         2.0,    r"Node loss ($L_n$=2.0 dB)"),
@@ -147,7 +148,7 @@ if __name__ == "__main__":
                 "Operating distance": f"{args.distance} km",
                 "Runtimes per point": args.runtimes,
                 "Baseline": "fully ideal (layer 0): " + ", ".join(f"{k}={v}" for k, v in _IDEAL.items()),
-                "Realistic values tested (one at a time)": {p[0]: p[1] for p in _PARAMS},
+                "Realistic values tested (one at a time)": {p[2]: p[1] for p in _PARAMS},
                 "Ideal BB84 key rate": f"{r_ideal_bb84/1000:.2f} kbps",
                 "Ideal MDI key rate": f"{r_ideal_mdi/1000:.2f} kbps",
             },

@@ -341,7 +341,7 @@ if __name__ == "__main__":
     ax1.legend()
 
     SNSPD_MIN, SNSPD_MAX = 0.80, 0.95
-    SPAD_MIN,  SPAD_MAX  = 0.15, 0.30
+    SPAD_MIN,  SPAD_MAX  = 0.10, 0.25
 
     ax1.axvspan(SNSPD_MIN, SNSPD_MAX, alpha=0.08, color='green', zorder=0)
     ax1.axvspan(SPAD_MIN,  SPAD_MAX,  alpha=0.08, color='red',   zorder=0)
@@ -358,8 +358,8 @@ if __name__ == "__main__":
     for _xv, _lbl, _ha, _mid in [
         (SNSPD_MIN, "0.80", _ha_min, (SNSPD_MIN + SNSPD_MAX) / 2),
         (SNSPD_MAX, "0.95", _ha_max, (SNSPD_MIN + SNSPD_MAX) / 2),
-        (SPAD_MIN,  "0.15", _ha_min, (SPAD_MIN  + SPAD_MAX)  / 2),
-        (SPAD_MAX,  "0.30", _ha_max, (SPAD_MIN  + SPAD_MAX)  / 2),
+        (SPAD_MIN,  "0.10", _ha_min, (SPAD_MIN  + SPAD_MAX)  / 2),
+        (SPAD_MAX,  "0.25", _ha_max, (SPAD_MIN  + SPAD_MAX)  / 2),
     ]:
         if not any(abs(_xv - _t) < max(abs(_xv), 1e-9) * 1e-3 + 1e-9 for _t in _ticks):
             _xpos = _xv - _dx if _xv < _mid else _xv + _dx
@@ -369,7 +369,7 @@ if __name__ == "__main__":
     ax1.text((SNSPD_MIN + SNSPD_MAX) / 2, 0.97, "SNSPD",
              transform=ax1.get_xaxis_transform(),
              ha='center', va='top', fontsize=7, color='darkgreen', alpha=0.7, style='italic')
-    ax1.text((SPAD_MIN + SPAD_MAX) / 2, 0.97, "InGaAs SPAD",
+    ax1.text((SPAD_MIN + SPAD_MAX) / 2, 0.97, "IDQ ID230 SPAD",
              transform=ax1.get_xaxis_transform(),
              ha='center', va='top', fontsize=7, color='darkred', alpha=0.7, style='italic')
 
