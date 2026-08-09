@@ -201,9 +201,59 @@ def _relay_boundary(user_pos, labels):
     ])
 
 
+def _relay_weiszfeld(user_pos, labels, max_iter=500, tol=1e-9):
+    """Backbone-coupled Weiszfeld relay position for two fixed clusters (no reassignment)."""
+    clusters  = [user_pos[labels == k] for k in (0, 1)]
+    relay_pos = np.array([c.mean(axis=0) for c in clusters])
+    eps = 1e-9
+
+    def _total_fibre(rp):
+        spoke    = sum(np.linalg.norm(rp[k] - p) for k in (0, 1) for p in clusters[k])
+        backbone = np.linalg.norm(rp[0] - rp[1])
+        return spoke + backbone
+
+    prev_L = _total_fibre(relay_pos)
+    for _ in range(max_iter):
+        new_rp = np.empty_like(relay_pos)
+        for k in (0, 1):
+            l = 1 - k
+            num = np.zeros(2)
+            den = 0.0
+            for p in clusters[k]:
+                d = max(np.linalg.norm(relay_pos[k] - p), eps)
+                num += p / d
+                den += 1.0 / d
+            d = max(np.linalg.norm(relay_pos[k] - relay_pos[l]), eps)
+            num += relay_pos[l] / d
+            den += 1.0 / d
+            new_rp[k] = num / den if den > 0 else relay_pos[k]
+
+        relay_pos = new_rp
+        L = _total_fibre(relay_pos)
+        if abs(prev_L - L) < tol:
+            break
+        prev_L = L
+
+    return relay_pos
+
+
+_STRATEGIES = [
+    ("centroid",  _relay_centroid),
+    ("boundary",  _relay_boundary),
+    ("weiszfeld", _relay_weiszfeld),
+]
+_STRAT_COLOR  = {"centroid": "#e41a1c", "boundary": "#377eb8", "weiszfeld": "#4daf4a"}
+_STRAT_MARKER = {"centroid": "o",       "boundary": "s",       "weiszfeld": "^"}
+_STRAT_LABEL  = {
+    "centroid":  "Centroid",
+    "boundary":  "Boundary (1 std toward opposing cluster)",
+    "weiszfeld": "Weiszfeld (backbone-coupled)",
+}
+
+
 def exp2(n_values, area, spread, cfg, runtimes, seed, n_seeds, workers, output_dir=None):
     """
-    Sweep N, compare centroid vs boundary relay placement for MDI-QKD.
+    Sweep N, compare centroid vs boundary vs weiszfeld relay placement for MDI-QKD.
     Returns dict: strategy → list[list[float]] (seeds × N).
     """
     rng   = np.random.default_rng(seed)
@@ -211,7 +261,7 @@ def exp2(n_values, area, spread, cfg, runtimes, seed, n_seeds, workers, output_d
 
     data = {
         strat: {"mdi": [[] for _ in n_values]}
-        for strat in ("centroid", "boundary")
+        for strat, _ in _STRATEGIES
     }
     graph_data = {}
     n_max = n_values[-1]
@@ -222,7 +272,7 @@ def exp2(n_values, area, spread, cfg, runtimes, seed, n_seeds, workers, output_d
             user_pos, labels = _place_two_clusters(n, area, spread, s)
             relay_by_strat = {}
 
-            for strat, relay_fn in [("centroid", _relay_centroid), ("boundary", _relay_boundary)]:
+            for strat, relay_fn in _STRATEGIES:
                 relay_pos = relay_fn(user_pos, labels)
                 relay_by_strat[strat] = relay_pos
                 topo      = Topology(user_pos, relay_pos)
@@ -251,20 +301,26 @@ def exp2(n_values, area, spread, cfg, runtimes, seed, n_seeds, workers, output_d
                 graph_data[s] = {
                     "user_positions": np.round(user_pos, 3).tolist(),
                     "cluster_labels": labels.tolist(),
-                    "relay_positions_centroid": np.round(relay_by_strat["centroid"], 3).tolist(),
-                    "relay_positions_boundary": np.round(relay_by_strat["boundary"], 3).tolist(),
+                    **{
+                        f"relay_positions_{strat}": np.round(relay_by_strat[strat], 3).tolist()
+                        for strat, _ in _STRATEGIES
+                    },
                 }
 
-            print(f"  N={n:3d}  "
-                  f"MDI  cent={np.mean(data['centroid']['mdi'][ni])/1000:.2f}k  "
-                  f"bnd={np.mean(data['boundary']['mdi'][ni])/1000:.2f}k bps")
+            print(f"  N={n:3d}  MDI  " + "  ".join(
+                f"{strat}={np.mean(data[strat]['mdi'][ni])/1000:.2f}k" for strat, _ in _STRATEGIES
+            ) + " bps")
 
         if output_dir:
-            seed_cent = [data["centroid"]["mdi"][ni][s_idx] for ni in range(len(n_values))]
-            seed_bnd  = [data["boundary"]["mdi"][ni][s_idx]  for ni in range(len(n_values))]
+            seed_vals = {
+                strat: [data[strat]["mdi"][ni][s_idx] for ni in range(len(n_values))]
+                for strat, _ in _STRATEGIES
+            }
             fig_s, ax_s = plt.subplots(figsize=(7, 5))
-            ax_s.plot(n_values, np.array(seed_cent) / 1000, marker="o", color="#e41a1c", label="Centroid")
-            ax_s.plot(n_values, np.array(seed_bnd)  / 1000, marker="s", color="#377eb8", label="Boundary")
+            for strat, _ in _STRATEGIES:
+                ax_s.plot(n_values, np.array(seed_vals[strat]) / 1000,
+                          marker=_STRAT_MARKER[strat], color=_STRAT_COLOR[strat],
+                          label=_STRAT_LABEL[strat])
             ax_s.set_xlabel("Total users N")
             ax_s.set_ylabel("Avg key rate (kbps)")
             ax_s.set_title(f"MDI-QKD (seed={s})")
@@ -273,15 +329,17 @@ def exp2(n_values, area, spread, cfg, runtimes, seed, n_seeds, workers, output_d
             plt.tight_layout()
             save_bundle(
                 fig_s, os.path.join(output_dir, "relay_placement_exp2"), f"seed{s}",
-                title=f"Relay Placement: Centroid vs Boundary (seed={s})",
+                title=f"Relay Placement: Centroid vs Boundary vs Weiszfeld (seed={s})",
                 assumptions={
                     "Seed": s,
                     "User count sweep range": f"{n_values[0]}-{n_values[-1]}",
                     "Area": f"{area} x {area} km",
                     "Cluster spread (std)": f"{spread:.2f} km",
                     "Runtimes per pair": runtimes,
-                    "MDI key rate (bps) — centroid": dict(zip(n_values, seed_cent)),
-                    "MDI key rate (bps) — boundary": dict(zip(n_values, seed_bnd)),
+                    **{
+                        f"MDI key rate (bps) — {strat}": dict(zip(n_values, seed_vals[strat]))
+                        for strat, _ in _STRATEGIES
+                    },
                 },
             )
 
@@ -289,17 +347,15 @@ def exp2(n_values, area, spread, cfg, runtimes, seed, n_seeds, workers, output_d
 
 
 def plot_exp2(data, n_values, output_dir, area, spread, runtimes, n_seeds, seed, seeds, graph_data):
-    N      = np.array(n_values)
-    colors = {"centroid": "#e41a1c", "boundary": "#377eb8"}
-    labels = {"centroid": "Centroid", "boundary": "Boundary (1 std toward opposing cluster)"}
+    N = np.array(n_values)
 
     fig, ax = plt.subplots(figsize=(7, 5))
 
-    for strat in ("centroid", "boundary"):
+    for strat, _ in _STRATEGIES:
         means = np.array([np.mean(data[strat]["mdi"][i]) for i in range(len(N))]) / 1000
         stds  = np.array([np.std( data[strat]["mdi"][i]) for i in range(len(N))]) / 1000
-        ax.errorbar(N, means, yerr=stds, label=labels[strat],
-                    color=colors[strat], marker="o" if strat == "centroid" else "s",
+        ax.errorbar(N, means, yerr=stds, label=_STRAT_LABEL[strat],
+                    color=_STRAT_COLOR[strat], marker=_STRAT_MARKER[strat],
                     capsize=4, lw=1.5)
     ax.set_xlabel("Total users N")
     ax.set_ylabel("Avg key rate (kbps)")
@@ -307,7 +363,7 @@ def plot_exp2(data, n_values, output_dir, area, spread, runtimes, n_seeds, seed,
     ax.legend()
     ax.grid(True, alpha=0.3)
 
-    title = "Relay Placement: Centroid vs Boundary"
+    title = "Relay Placement: Centroid vs Boundary vs Weiszfeld"
     plt.suptitle(title, fontsize=12)
     plt.tight_layout()
 
@@ -328,10 +384,12 @@ def plot_exp2(data, n_values, output_dir, area, spread, runtimes, n_seeds, seed,
                 "MDI key rate (bps) per strategy, N, seed": {
                     strat: {n_values[ni]: dict(zip(seeds, data[strat]["mdi"][ni]))
                             for ni in range(len(n_values))}
-                    for strat in ("centroid", "boundary")
+                    for strat, _ in _STRATEGIES
                 },
             },
-            notes=["Boundary strategy displaces each relay 1 std toward the opposing cluster."],
+            notes=["Boundary strategy displaces each relay 1 std toward the opposing cluster.",
+                   "Weiszfeld strategy is the backbone-coupled geometric median (Equation eq:generalized_weiszfeld), "
+                   "starting from each cluster's centroid, with cluster membership held fixed."],
         )
     else:
         plt.show()
