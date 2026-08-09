@@ -153,15 +153,19 @@ def main():
                 _relay_pos_by_seed[seed] = np.round(np.array(relay_pos), 3).tolist()
 
             if args.output_dir:
-                _topo_dir = os.path.join(args.output_dir, "topologies")
+                _topo_dir = os.path.join(args.output_dir, "time_vs_area", f"seed{seed}", "topologies")
                 os.makedirs(_topo_dir, exist_ok=True)
-                fig_t, (axA, axB) = plt.subplots(1, 2, figsize=(12, 5))
-                draw_mdi(axA, topo_mdi)
-                draw_bb84(axB, topo_mdi)
-                plt.suptitle(f"Network Topology (seed={seed}, area={area:.1f} km)", fontsize=11)
+                fig_m, ax_m = plt.subplots(figsize=(6, 5))
+                draw_mdi(ax_m, topo_mdi)
                 plt.tight_layout()
-                fig_t.savefig(os.path.join(_topo_dir, f"seed{seed}_area{area:.1f}.png"), dpi=150, bbox_inches="tight")
-                plt.close(fig_t)
+                fig_m.savefig(os.path.join(_topo_dir, f"area{area:.1f}_mdi.png"), dpi=150, bbox_inches="tight")
+                plt.close(fig_m)
+
+                fig_b, ax_b = plt.subplots(figsize=(6, 5))
+                draw_bb84(ax_b, topo_mdi)
+                plt.tight_layout()
+                fig_b.savefig(os.path.join(_topo_dir, f"area{area:.1f}_bb84.png"), dpi=150, bbox_inches="tight")
+                plt.close(fig_b)
 
             # BB84
             prog.update(step, f"area={area:.1f} km  BB84 ({n_pairs} pairs)...")
@@ -191,6 +195,32 @@ def main():
         prog.stop()
         m, s = divmod(int(time.time() - seed_start), 60)
         print(f"✓ Seed {s_idx+1}/{args.seeds} complete  {m}m {s:02d}s")
+
+        if args.output_dir:
+            seed_bb84 = [bb84_tpp[a][s_idx] for a in areas]
+            seed_mdi  = [mdi_tpp[a][s_idx]  for a in areas]
+            fig_s, ax_s = plt.subplots(figsize=(8, 5))
+            ax_s.plot(areas, seed_bb84, '--', color="#377eb8", lw=1.5, marker="s", label="BB84")
+            ax_s.plot(areas, seed_mdi,  color="#e41a1c", lw=1.5, marker="o", label="MDI")
+            ax_s.set_xlabel("Area side length (km)")
+            ax_s.set_ylabel("Wall-clock per pair per sim (s)")
+            ax_s.legend()
+            ax_s.grid(True, alpha=0.3)
+            ax_s.set_title(f"Wall-Clock Time vs Area (seed={seed})", fontsize=10)
+            plt.tight_layout()
+            save_bundle(
+                fig_s, os.path.join(args.output_dir, "time_vs_area"), f"seed{seed}",
+                title=f"Wall-Clock Time vs Area (seed={seed})",
+                assumptions={
+                    "Seed": seed,
+                    "Fixed user count": args.n,
+                    "MDI relays": K,
+                    "Area sweep range": f"{args.area_min}-{args.area_max} km (step {args.area_step})",
+                    "Runtimes per pair": args.runtimes,
+                    "BB84 s/sim per area": dict(zip(areas, seed_bb84)),
+                    "MDI s/sim per area": dict(zip(areas, seed_mdi)),
+                },
+            )
 
     m, s = divmod(int(time.time() - total_start), 60)
     print(f"✓ complete  total {m}m {s:02d}s")
@@ -307,7 +337,7 @@ def main():
                    "Bottom: average CPU utilisation vs area."],
         )
         print(f"Saved to {os.path.join(args.output_dir, 'time_vs_area')}")
-        print(f"Topologies saved to {os.path.join(args.output_dir, 'topologies')}")
+        print(f"Per-seed plots + topologies saved under {os.path.join(args.output_dir, 'time_vs_area')}/seed<seed>/")
     else:
         plt.show()
 

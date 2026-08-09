@@ -140,15 +140,19 @@ def main():
             topo       = Topology(user_pos, relay_pos)
 
             if args.output_dir and not args.no_figure:
-                _topo_dir = os.path.join(args.output_dir, "topologies")
+                _topo_dir = os.path.join(args.output_dir, "relay_sweep", f"seed{seed}", "topologies")
                 os.makedirs(_topo_dir, exist_ok=True)
-                fig_t, (axA, axB) = plt.subplots(1, 2, figsize=(12, 5))
-                draw_mdi(axA, topo, tortuosity_mean=args.tortuosity)
-                draw_bb84(axB, topo, tortuosity_mean=args.tortuosity)
-                plt.suptitle(f"Network Topology (seed={seed}, K={K})", fontsize=11)
+                fig_m, ax_m = plt.subplots(figsize=(6, 5))
+                draw_mdi(ax_m, topo, tortuosity_mean=args.tortuosity)
                 plt.tight_layout()
-                fig_t.savefig(os.path.join(_topo_dir, f"seed{seed}_K{K}.png"), dpi=150, bbox_inches="tight")
-                plt.close(fig_t)
+                fig_m.savefig(os.path.join(_topo_dir, f"K{K}_mdi.png"), dpi=150, bbox_inches="tight")
+                plt.close(fig_m)
+
+                fig_b, ax_b = plt.subplots(figsize=(6, 5))
+                draw_bb84(ax_b, topo, tortuosity_mean=args.tortuosity)
+                plt.tight_layout()
+                fig_b.savefig(os.path.join(_topo_dir, f"K{K}_bb84.png"), dpi=150, bbox_inches="tight")
+                plt.close(fig_b)
 
             mdi_res    = run_mdi_network(topo, cfg, runtimes=args.runtimes, workers=args.workers,
                              p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
@@ -167,6 +171,35 @@ def main():
         prog.stop()
         m, s = divmod(int(time.time() - seed_start), 60)
         print(f"✓ Seed {s_idx+1}/{args.seeds} complete  {m}m {s:02d}s")
+
+        if args.output_dir and not args.no_figure:
+            seed_bb84 = [bb84_per_seed[s_idx]] * len(K_values)
+            seed_mdi  = [mdi_per_seed[K][s_idx] for K in K_values]
+            fig_s, ax_s = plt.subplots(figsize=(8, 5))
+            ax_s.plot(K_values, np.array(seed_bb84) / 1000, '--', color="#377eb8", lw=1.5, label="BB84")
+            ax_s.plot(K_values, np.array(seed_mdi)  / 1000, color="#e41a1c", marker="o", lw=1.5, label="MDI")
+            ax_s.set_yscale("log")
+            ax_s.set_xlabel("Relay count K")
+            ax_s.set_ylabel("Avg key rate (kbps)")
+            ax_s.set_xticks(K_values)
+            ax_s.legend()
+            ax_s.grid(True, alpha=0.3)
+            ax_s.set_title(f"Key Rate vs Relay Count (seed={seed})", fontsize=10)
+            plt.tight_layout()
+            save_bundle(
+                fig_s, os.path.join(args.output_dir, "relay_sweep"), f"seed{seed}",
+                title=f"Key Rate vs Relay Count (seed={seed})",
+                assumptions={
+                    "Seed": seed,
+                    "User count (fixed)": args.n,
+                    "Relay count sweep range": f"{args.k_min}-{args.k_max}",
+                    "Area": f"{args.area} x {args.area} km",
+                    "Tortuosity mean": args.tortuosity,
+                    "Runtimes per pair": args.runtimes,
+                    "BB84 key rate (bps)": seed_bb84[0],
+                    "MDI key rate (bps) per K": dict(zip(K_values, seed_mdi)),
+                },
+            )
 
     m, s = divmod(int(time.time() - total_start), 60)
     print(f"✓ complete  total {m}m {s:02d}s")
@@ -257,6 +290,10 @@ def main():
                     "Fibre loss / detector / dark count / etc": "see configs/ preset used (--config)",
                     "Final user positions (km, per seed)": _user_pos_by_seed,
                     "Relay positions (km, per seed per K)": _relay_pos_by_seed,
+                    "BB84 key rate (bps) per seed": dict(zip(seeds, bb84_per_seed)),
+                    "MDI key rate (bps) per K per seed": {
+                        K: dict(zip(seeds, mdi_per_seed[K])) for K in K_values
+                    },
                 },
             )
             print(f"Saved to {os.path.join(args.output_dir, 'relay_sweep')}")
@@ -264,7 +301,7 @@ def main():
             plt.show()
 
     if args.output_dir and not args.no_figure:
-        print(f"Topologies saved to {os.path.join(args.output_dir, 'topologies')}")
+        print(f"Per-seed plots + topologies saved under {os.path.join(args.output_dir, 'relay_sweep')}/seed<seed>/")
 
 
 if __name__ == "__main__":

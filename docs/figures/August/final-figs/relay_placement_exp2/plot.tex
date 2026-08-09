@@ -31,10 +31,12 @@ xticklabels={
 y grid style={darkgray176},
 ylabel={Avg key rate (kbps)},
 ymajorgrids,
-ymin=68.6909208806407, ymax=140.739345553461,
+ymin=49.7733755463292, ymax=130.051024536203,
 ytick style={color=black},
-ytick={60,70,80,90,100,110,120,130,140,150},
+ytick={40,50,60,70,80,90,100,110,120,130,140},
 yticklabels={
+  \(\displaystyle {40}\),
+  \(\displaystyle {50}\),
   \(\displaystyle {60}\),
   \(\displaystyle {70}\),
   \(\displaystyle {80}\),
@@ -43,116 +45,115 @@ yticklabels={
   \(\displaystyle {110}\),
   \(\displaystyle {120}\),
   \(\displaystyle {130}\),
-  \(\displaystyle {140}\),
-  \(\displaystyle {150}\)
+  \(\displaystyle {140}\)
 }
 ]
 \path [draw=crimson2282628, semithick]
-(axis cs:5,85.6016801511867)
---(axis cs:5,137.464417159242);
+(axis cs:5,84.9433949490896)
+--(axis cs:5,101.779721589219);
 
 \path [draw=crimson2282628, semithick]
-(axis cs:6,87.6265442237596)
---(axis cs:6,112.167616978122);
+(axis cs:6,53.4223595913234)
+--(axis cs:6,126.402040491209);
 
 \path [draw=crimson2282628, semithick]
-(axis cs:7,80.3676316729058)
---(axis cs:7,104.107424393571);
+(axis cs:7,71.706248415861)
+--(axis cs:7,89.3997843508803);
 
 \path [draw=crimson2282628, semithick]
-(axis cs:8,71.9658492748598)
---(axis cs:8,97.6707058061393);
+(axis cs:8,78.2914395649099)
+--(axis cs:8,84.5661429190694);
 
 \path [draw=crimson2282628, semithick]
-(axis cs:9,73.7407291989522)
---(axis cs:9,113.020550595406);
+(axis cs:9,73.4247416380258)
+--(axis cs:9,105.175308183453);
 
 \path [draw=crimson2282628, semithick]
-(axis cs:10,75.6974941726905)
---(axis cs:10,105.076095664977);
+(axis cs:10,80.196423805106)
+--(axis cs:10,88.6037137293609);
 
 \addplot [semithick, crimson2282628, mark=-, mark size=4, mark options={solid}, only marks]
 table {%
-5 85.6016801511867
-6 87.6265442237596
-7 80.3676316729058
-8 71.9658492748598
-9 73.7407291989522
-10 75.6974941726905
+5 84.9433949490896
+6 53.4223595913234
+7 71.706248415861
+8 78.2914395649099
+9 73.4247416380258
+10 80.196423805106
 };
 \addlegendentry{Boundary (1 std toward opposing cluster)}
 \addplot [semithick, crimson2282628, mark=-, mark size=4, mark options={solid}, only marks]
 table {%
-5 137.464417159242
-6 112.167616978122
-7 104.107424393571
-8 97.6707058061393
-9 113.020550595406
-10 105.076095664977
+5 101.779721589219
+6 126.402040491209
+7 89.3997843508803
+8 84.5661429190694
+9 105.175308183453
+10 88.6037137293609
 };
 \addlegendentry{Boundary (1 std toward opposing cluster)}
 \path [draw=steelblue55126184, semithick]
-(axis cs:5,73.2209380443777)
---(axis cs:5,99.7538679757539);
+(axis cs:5,64.6791848656616)
+--(axis cs:5,111.223371206089);
 
 \path [draw=steelblue55126184, semithick]
-(axis cs:6,86.8447636467226)
---(axis cs:6,103.061651194525);
+(axis cs:6,65.5941683614519)
+--(axis cs:6,79.8459439854158);
 
 \path [draw=steelblue55126184, semithick]
-(axis cs:7,84.4608058783463)
---(axis cs:7,95.4214393352918);
+(axis cs:7,63.9659831994196)
+--(axis cs:7,72.7479990869863);
 
 \path [draw=steelblue55126184, semithick]
-(axis cs:8,79.2275050921897)
---(axis cs:8,92.8541302822281);
+(axis cs:8,64.7141738944109)
+--(axis cs:8,98.0515965558833);
 
 \path [draw=steelblue55126184, semithick]
-(axis cs:9,76.9878214710331)
---(axis cs:9,95.6047205495013);
+(axis cs:9,75.2952786315859)
+--(axis cs:9,97.1648985433021);
 
 \path [draw=steelblue55126184, semithick]
-(axis cs:10,84.0251293580814)
---(axis cs:10,95.7964000620663);
+(axis cs:10,79.0186773604667)
+--(axis cs:10,99.3132749770663);
 
 \addplot [semithick, steelblue55126184, mark=-, mark size=4, mark options={solid}, only marks]
 table {%
-5 73.2209380443777
-6 86.8447636467226
-7 84.4608058783463
-8 79.2275050921897
-9 76.9878214710331
-10 84.0251293580814
+5 64.6791848656616
+6 65.5941683614519
+7 63.9659831994196
+8 64.7141738944109
+9 75.2952786315859
+10 79.0186773604667
 };
 \addlegendentry{Boundary (1 std toward opposing cluster)}
 \addplot [semithick, steelblue55126184, mark=-, mark size=4, mark options={solid}, only marks]
 table {%
-5 99.7538679757539
-6 103.061651194525
-7 95.4214393352918
-8 92.8541302822281
-9 95.6047205495013
-10 95.7964000620663
+5 111.223371206089
+6 79.8459439854158
+7 72.7479990869863
+8 98.0515965558833
+9 97.1648985433021
+10 99.3132749770663
 };
 \addlegendentry{Boundary (1 std toward opposing cluster)}
 \addplot [semithick, crimson2282628, mark=*, mark size=3, mark options={solid}]
 table {%
-5 111.533048655214
-6 99.8970806009408
-7 92.2375280332386
-8 84.8182775404995
-9 93.380639897179
-10 90.3867949188338
+5 93.3615582691541
+6 89.912200041266
+7 80.5530163833706
+8 81.4287912419897
+9 89.3000249107395
+10 84.4000687672334
 };
 \addlegendentry{Boundary (1 std toward opposing cluster)}
 \addplot [semithick, steelblue55126184, mark=square*, mark size=3, mark options={solid}]
 table {%
-5 86.4874030100658
-6 94.9532074206236
-7 89.941122606819
-8 86.0408176872089
-9 86.2962710102672
-10 89.9107647100738
+5 87.9512780358755
+6 72.7200561734339
+7 68.3569911432029
+8 81.3828852251471
+9 86.230088587444
+10 89.1659761687665
 };
 \addlegendentry{Boundary (1 std toward opposing cluster)}
 \end{axis}

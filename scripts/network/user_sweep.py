@@ -131,6 +131,8 @@ def main():
         rng   = np.random.default_rng(args.seed)
         seeds = rng.integers(0, 100_000, size=args.seeds).tolist()
 
+    area_label = f"{args.real}" if args.real else f"{_area_km}×{_area_km} km"
+
     bb84_per_seed        = {N: [] for N in N_values}
     mdi_per_seed         = {N: [] for N in N_values}
     tbb84_per_seed       = {N: [] for N in N_values}
@@ -179,15 +181,19 @@ def main():
             topo_mdi  = Topology(user_pos, relay_pos)
 
             if args.output_dir and not args.no_figure:
-                _topo_dir = os.path.join(args.output_dir, "topologies")
+                _topo_dir = os.path.join(args.output_dir, "user_sweep", f"seed{seed}", "topologies")
                 os.makedirs(_topo_dir, exist_ok=True)
-                fig_t, (axA, axB) = plt.subplots(1, 2, figsize=(12, 5))
-                draw_mdi(axA, topo_mdi, tortuosity_mean=args.tortuosity)
-                draw_bb84(axB, topo_mdi, tortuosity_mean=args.tortuosity)
-                plt.suptitle(f"Network Topology (seed={seed}, N={N})", fontsize=11)
+                fig_m, ax_m = plt.subplots(figsize=(6, 5))
+                draw_mdi(ax_m, topo_mdi, tortuosity_mean=args.tortuosity)
                 plt.tight_layout()
-                fig_t.savefig(os.path.join(_topo_dir, f"seed{seed}_N{N}.png"), dpi=150, bbox_inches="tight")
-                plt.close(fig_t)
+                fig_m.savefig(os.path.join(_topo_dir, f"N{N}_mdi.png"), dpi=150, bbox_inches="tight")
+                plt.close(fig_m)
+
+                fig_b, ax_b = plt.subplots(figsize=(6, 5))
+                draw_bb84(ax_b, topo_mdi, tortuosity_mean=args.tortuosity)
+                plt.tight_layout()
+                fig_b.savefig(os.path.join(_topo_dir, f"N{N}_bb84.png"), dpi=150, bbox_inches="tight")
+                plt.close(fig_b)
 
             bb84_res = run_bb84_network(topo_bb84, cfg, runtimes=args.runtimes, workers=args.workers,
                               p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
@@ -228,6 +234,42 @@ def main():
         prog.stop()
         m, s = divmod(int(time.time() - seed_start), 60)
         print(f"✓ Seed {s_idx+1}/{args.seeds} complete  {m}m {s:02d}s")
+
+        if args.output_dir and not args.no_figure:
+            _seed_N = [N for N in N_values if bb84_per_seed[N]]
+            seed_bb84 = [bb84_per_seed[N][s_idx] for N in _seed_N]
+            seed_mdi  = [mdi_per_seed[N][s_idx]  for N in _seed_N]
+            fig_s, ax_s = plt.subplots(figsize=(8, 5))
+            ax_s.plot(_seed_N, np.array(seed_bb84) / 1000, '--', color="#377eb8", lw=1.5, label="BB84")
+            ax_s.plot(_seed_N, np.array(seed_mdi)  / 1000, color="#e41a1c", marker="o", lw=1.5, label="MDI")
+            _seed_assumptions = {
+                "Seed": seed,
+                "Relay count (fixed)": _K,
+                "User count sweep range": f"{args.n_min}-{args.n_max} (step {args.n_step})",
+                "Area": area_label,
+                "Placement mode": args.placement,
+                "Tortuosity mean": args.tortuosity,
+                "Runtimes per pair": args.runtimes,
+                "BB84 key rate (bps) per N": dict(zip(_seed_N, seed_bb84)),
+                "MDI key rate (bps) per N": dict(zip(_seed_N, seed_mdi)),
+            }
+            if "TBB84" in _protocols:
+                seed_tbb84 = [tbb84_per_seed[N][s_idx] for N in _seed_N]
+                ax_s.plot(_seed_N, np.array(seed_tbb84) / 1000, ':', color="#4daf4a", marker="s", lw=1.5, label="TBB84")
+                _seed_assumptions["TBB84 key rate (bps) per N"] = dict(zip(_seed_N, seed_tbb84))
+            ax_s.set_yscale("log")
+            ax_s.set_xlabel("User count N")
+            ax_s.set_ylabel("Avg key rate (kbps)")
+            ax_s.set_xticks(_seed_N)
+            ax_s.legend()
+            ax_s.grid(True, alpha=0.3)
+            ax_s.set_title(f"Key Rate vs User Count (seed={seed})", fontsize=10)
+            plt.tight_layout()
+            save_bundle(
+                fig_s, os.path.join(args.output_dir, "user_sweep"), f"seed{seed}",
+                title=f"Key Rate vs User Count (seed={seed})",
+                assumptions=_seed_assumptions,
+            )
 
     m, s = divmod(int(time.time() - total_start), 60)
     print(f"✓ complete  total {m}m {s:02d}s")
@@ -327,7 +369,6 @@ def main():
     ax2.set_yscale("log")
 
     seed_label = f"seed={args.seed}" if args.seeds == 1 else f"{args.seeds} seeds (base={args.seed}): {seeds}"
-    area_label = f"{args.real}" if args.real else f"{_area_km}×{_area_km} km"
     plt.title("Key Rate vs User Count", fontsize=10)
     plt.tight_layout()
 
@@ -349,6 +390,12 @@ def main():
                     "Real topology": args.real if args.real else "none (synthetic)",
                     "Final user positions (N=n_max, km, per seed)": _user_pos_by_seed,
                     "Final relay positions (km, per seed)": _relay_pos_by_seed,
+                    "BB84 key rate (bps) per N per seed": {
+                        N: dict(zip(seeds, bb84_per_seed[N])) for N in N_arr_final
+                    },
+                    "MDI key rate (bps) per N per seed": {
+                        N: dict(zip(seeds, mdi_per_seed[N])) for N in N_arr_final
+                    },
                 },
             )
             print(f"Saved to {os.path.join(args.output_dir, 'user_sweep')}")
@@ -356,7 +403,7 @@ def main():
             plt.show()
 
     if args.output_dir and not args.no_figure:
-        print(f"Topologies saved to {os.path.join(args.output_dir, 'topologies')}")
+        print(f"Per-seed plots + topologies saved under {os.path.join(args.output_dir, 'user_sweep')}/seed<seed>/")
 
 
 if __name__ == "__main__":

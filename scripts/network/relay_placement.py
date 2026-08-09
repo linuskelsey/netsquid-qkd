@@ -130,16 +130,20 @@ def plot_exp1(results_by_n, area, output_dir, grid_res, runtimes, seed):
         _peak_by_n[n]     = [round(float(peak_pos[0]), 3), round(float(peak_pos[1]), 3)]
 
         if output_dir:
-            _topo_dir = os.path.join(output_dir, "topologies")
+            _topo_dir = os.path.join(output_dir, "relay_placement_exp1", "topologies")
             os.makedirs(_topo_dir, exist_ok=True)
             topo_peak = Topology(user_pos, np.array([peak_pos]))
-            fig_t, (axA, axB) = plt.subplots(1, 2, figsize=(12, 5))
-            draw_mdi(axA, topo_peak)
-            draw_bb84(axB, topo_peak)
-            plt.suptitle(f"Network Topology (N={n}, peak relay position)", fontsize=11)
+            fig_m, ax_m = plt.subplots(figsize=(6, 5))
+            draw_mdi(ax_m, topo_peak)
             plt.tight_layout()
-            fig_t.savefig(os.path.join(_topo_dir, f"N{n}_peak.png"), dpi=150, bbox_inches="tight")
-            plt.close(fig_t)
+            fig_m.savefig(os.path.join(_topo_dir, f"N{n}_peak_mdi.png"), dpi=150, bbox_inches="tight")
+            plt.close(fig_m)
+
+            fig_b, ax_b = plt.subplots(figsize=(6, 5))
+            draw_bb84(ax_b, topo_peak)
+            plt.tight_layout()
+            fig_b.savefig(os.path.join(_topo_dir, f"N{n}_peak_bb84.png"), dpi=150, bbox_inches="tight")
+            plt.close(fig_b)
 
     title = "MDI-QKD: Relay Position Sweep"
     plt.suptitle(title, fontsize=12)
@@ -224,15 +228,19 @@ def exp2(n_values, area, spread, cfg, runtimes, seed, n_seeds, workers, output_d
                 topo      = Topology(user_pos, relay_pos)
 
                 if output_dir:
-                    _topo_dir = os.path.join(output_dir, "topologies")
+                    _topo_dir = os.path.join(output_dir, "relay_placement_exp2", f"seed{s}", "topologies")
                     os.makedirs(_topo_dir, exist_ok=True)
-                    fig_t, (axA, axB) = plt.subplots(1, 2, figsize=(12, 5))
-                    draw_mdi(axA, topo)
-                    draw_bb84(axB, topo)
-                    plt.suptitle(f"Network Topology (seed={s}, N={n}, {strat})", fontsize=11)
+                    fig_m, ax_m = plt.subplots(figsize=(6, 5))
+                    draw_mdi(ax_m, topo)
                     plt.tight_layout()
-                    fig_t.savefig(os.path.join(_topo_dir, f"seed{s}_N{n}_{strat}.png"), dpi=150, bbox_inches="tight")
-                    plt.close(fig_t)
+                    fig_m.savefig(os.path.join(_topo_dir, f"N{n}_{strat}_mdi.png"), dpi=150, bbox_inches="tight")
+                    plt.close(fig_m)
+
+                    fig_b, ax_b = plt.subplots(figsize=(6, 5))
+                    draw_bb84(ax_b, topo)
+                    plt.tight_layout()
+                    fig_b.savefig(os.path.join(_topo_dir, f"N{n}_{strat}_bb84.png"), dpi=150, bbox_inches="tight")
+                    plt.close(fig_b)
 
                 mdi_res = run_mdi_network(topo, cfg, runtimes=runtimes, workers=workers,
                                           p2p_db_path=None, net_db_path=None)
@@ -250,6 +258,32 @@ def exp2(n_values, area, spread, cfg, runtimes, seed, n_seeds, workers, output_d
             print(f"  N={n:3d}  "
                   f"MDI  cent={np.mean(data['centroid']['mdi'][ni])/1000:.2f}k  "
                   f"bnd={np.mean(data['boundary']['mdi'][ni])/1000:.2f}k bps")
+
+        if output_dir:
+            seed_cent = [data["centroid"]["mdi"][ni][s_idx] for ni in range(len(n_values))]
+            seed_bnd  = [data["boundary"]["mdi"][ni][s_idx]  for ni in range(len(n_values))]
+            fig_s, ax_s = plt.subplots(figsize=(7, 5))
+            ax_s.plot(n_values, np.array(seed_cent) / 1000, marker="o", color="#e41a1c", label="Centroid")
+            ax_s.plot(n_values, np.array(seed_bnd)  / 1000, marker="s", color="#377eb8", label="Boundary")
+            ax_s.set_xlabel("Total users N")
+            ax_s.set_ylabel("Avg key rate (kbps)")
+            ax_s.set_title(f"MDI-QKD (seed={s})")
+            ax_s.legend()
+            ax_s.grid(True, alpha=0.3)
+            plt.tight_layout()
+            save_bundle(
+                fig_s, os.path.join(output_dir, "relay_placement_exp2"), f"seed{s}",
+                title=f"Relay Placement: Centroid vs Boundary (seed={s})",
+                assumptions={
+                    "Seed": s,
+                    "User count sweep range": f"{n_values[0]}-{n_values[-1]}",
+                    "Area": f"{area} x {area} km",
+                    "Cluster spread (std)": f"{spread:.2f} km",
+                    "Runtimes per pair": runtimes,
+                    "MDI key rate (bps) — centroid": dict(zip(n_values, seed_cent)),
+                    "MDI key rate (bps) — boundary": dict(zip(n_values, seed_bnd)),
+                },
+            )
 
     return data, seeds, graph_data
 
@@ -291,6 +325,11 @@ def plot_exp2(data, n_values, output_dir, area, spread, runtimes, n_seeds, seed,
                 "Seed (base)": seed,
                 "Seeds used": seeds,
                 "Final graph per seed (N=n_max, km)": graph_data,
+                "MDI key rate (bps) per strategy, N, seed": {
+                    strat: {n_values[ni]: dict(zip(seeds, data[strat]["mdi"][ni]))
+                            for ni in range(len(n_values))}
+                    for strat in ("centroid", "boundary")
+                },
             },
             notes=["Boundary strategy displaces each relay 1 std toward the opposing cluster."],
         )
