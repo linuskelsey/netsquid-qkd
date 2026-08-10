@@ -18,12 +18,15 @@ def _reflect_into_box(pos, area_km):
 def catchment_anchors(K, area_km):
     """K fixed geometric catchment centres used to seed provider-growth topologies.
 
-    K=2 uses the left/right split established by relay_placement.py's exp2; K!=2
-    places anchors evenly around a circle so the layout stays sensible for any K.
+    K=1 anchors at the service area centre. K=2 uses the left/right split
+    established by relay_placement.py's exp2. K>2 places anchors evenly around
+    a circle so the layout stays sensible for any K.
     """
+    centre = np.array([area_km / 2, area_km / 2])
+    if K == 1:
+        return np.array([centre])
     if K == 2:
         return np.array([[area_km / 4, area_km / 2], [3 * area_km / 4, area_km / 2]])
-    centre = np.array([area_km / 2, area_km / 2])
     radius = area_km / 3
     angles = np.linspace(0, 2 * np.pi, K, endpoint=False)
     return centre + radius * np.column_stack([np.cos(angles), np.sin(angles)])

@@ -94,7 +94,7 @@
 | Charlie placement sweep (asymmetric Alice-Charlie / Charlie-Bob links) |
 | Script to compare effect of each layer of modelling parameter per-protocol |
 | Isolated parameter script (`scripts/P2P/isolate.py`): each curve = all-ideal config except one realistic parameter; overlay all isolated curves on one figure per protocol to compare each parameter's independent impact on key rate |
-| Relay placement grid search (K=1), provider-growth model: users drawn incrementally from a single RNG stream; grid-searches relay position per N to confirm centroid/peak coincide, and separately freezes the N-min peak to show how far it drifts from the true optimum as N grows (`scripts/network/relay_placement.py --exp 1`) |
+| Relay placement strategy comparison (K=1), provider-growth model: relay placed once per strategy (centroid/weiszfeld — plain geometric median, no boundary or backbone term at K=1) at N-min then frozen; network grows one user at a time via uniform-random catchment to N-max; same output/machinery as exp 2, just K=1 (`scripts/network/relay_placement.py --exp 1`) |
 | Relay placement strategy comparison (K=2), provider-growth model: relay placed once per strategy (centroid/boundary/weiszfeld) at N-min then frozen; network grows one user at a time via uniform-random catchment to N-max — no single strategy consistently wins, ranking varies by seed (`scripts/network/relay_placement.py --exp 2`) |
 | K-general relay placement strategies (centroid/boundary/weiszfeld) and incremental catchment-growth model (`grow_catchments`, `RELAY_STRATEGIES` in `network/topology.py`), shared by `relay_placement.py` and `user_sweep.py`; `--catchment-radius` (hard disc) generalised as a CLI flag alongside `--spread` (Gaussian) on both scripts |
 | PLOB repeaterless bound overlay (`lib/analytical.py`, `--plob` flag on `length.py` and `loss.py`): `R ≤ -log₂(1 - η)` where η = fibre × init × node passive loss; channel-only upper bound both protocols must sit below |
@@ -150,7 +150,7 @@ note: in the simple model (no traffic, key rate = f(fibre length only)), K=1 is 
 
 | Item |
 |------|
-| ILP-optimal relay placement benchmark: formally compare k-means centroid against ILP-optimal placement to confirm or replace as canonical topology strategy (grid search and centroid-vs-boundary comparison already complete; ILP comparison outstanding) |
+| ILP-optimal relay placement benchmark: formally compare k-means centroid against ILP-optimal placement to confirm or replace as canonical topology strategy (centroid/boundary/Weiszfeld growth-model comparison already complete at K=1 and K=2; ILP comparison outstanding) |
 | Monte Carlo sample count scaling: for key rates of order 10^-x, use 10^(x+1) samples; smallest observed rates ~10^-2 → target 1000 runs per point where feasible; audit all scripts and increase run counts accordingly |
 | Finite-key corrections: block-size-dependent key rate using composable security bound; `photons` per run sets block size `n`; quantifies departure from asymptotic regime at low photon counts and short distances |
 | QBER decomposition by error source: track separate contributions from dark counts, dephasing, source errors, and basis bias per simulation point; identify dominant noise mechanism per parameter regime |
