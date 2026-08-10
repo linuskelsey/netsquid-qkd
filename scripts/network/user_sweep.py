@@ -193,13 +193,14 @@ def main():
                 os.makedirs(_topo_dir, exist_ok=True)
                 fig_m, ax_m = plt.subplots(figsize=(6, 5))
                 draw_mdi(ax_m, topo_mdi, tortuosity_mean=args.tortuosity,
-                         strategy=None if _fixed_relay_pos is not None else args.strategy.capitalize())
+                         strategy=None if _fixed_relay_pos is not None else args.strategy.capitalize(),
+                         seed=seed)
                 plt.tight_layout()
                 fig_m.savefig(os.path.join(_topo_dir, f"N{N}_mdi.png"), dpi=150, bbox_inches="tight")
                 plt.close(fig_m)
 
                 fig_b, ax_b = plt.subplots(figsize=(6, 5))
-                draw_bb84(ax_b, topo_mdi, tortuosity_mean=args.tortuosity)
+                draw_bb84(ax_b, topo_mdi, tortuosity_mean=args.tortuosity, seed=seed)
                 plt.tight_layout()
                 fig_b.savefig(os.path.join(_topo_dir, f"N{N}_bb84.png"), dpi=150, bbox_inches="tight")
                 plt.close(fig_b)

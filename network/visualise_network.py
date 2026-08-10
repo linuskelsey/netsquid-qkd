@@ -37,7 +37,7 @@ def _plot_wavy(ax, p1, p2, tortuosity, **kw):
     ax.plot(pts[:, 0], pts[:, 1], **kw)
 
 
-def draw_mdi(ax, topo, tortuosity_mean=1.0, strategy=None):
+def draw_mdi(ax, topo, tortuosity_mean=1.0, strategy=None, seed=None):
     G = nx.Graph()
 
     for i in range(topo.N):
@@ -72,7 +72,10 @@ def draw_mdi(ax, topo, tortuosity_mean=1.0, strategy=None):
             _plot_wavy(ax, topo.relay_pos[k1], topo.relay_pos[k2], tortuosity_mean,
                        color="k", lw=0.8, alpha=0.4, linestyle="--")
 
-    title = f"MDI-QKD  (N={topo.N}, K={topo.K})"
+    title = f"MDI-QKD  (N={topo.N}, K={topo.K}"
+    if seed is not None:
+        title += f", seed={seed}"
+    title += ")"
     if strategy:
         title += f"  [{strategy}]"
     ax.set_title(title)
@@ -82,14 +85,17 @@ def draw_mdi(ax, topo, tortuosity_mean=1.0, strategy=None):
     ax.set_aspect("equal")
 
 
-def draw_bb84(ax, topo, tortuosity_mean=1.0, strategy=None):
+def draw_bb84(ax, topo, tortuosity_mean=1.0, strategy=None, seed=None):
     ax.scatter(*topo.user_pos.T, color="#377eb8", s=60, zorder=3, label="User")
 
     for i, j in topo.all_pairs():
         _plot_wavy(ax, topo.user_pos[i], topo.user_pos[j], tortuosity_mean,
                    color="#377eb8", lw=0.4, alpha=0.25)
 
-    title = f"BB84  (N={topo.N}, {topo.N*(topo.N-1)//2} direct links)"
+    title = f"BB84  (N={topo.N}, {topo.N*(topo.N-1)//2} direct links"
+    if seed is not None:
+        title += f", seed={seed}"
+    title += ")"
     if strategy:
         title += f"  [{strategy}]"
     ax.set_title(title)
@@ -116,8 +122,8 @@ def main():
     topo = build_topology(args.n, args.k, area_km=args.area, seed=args.seed)
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-    draw_mdi(ax1, topo, tortuosity_mean=args.tortuosity)
-    draw_bb84(ax2, topo, tortuosity_mean=args.tortuosity)
+    draw_mdi(ax1, topo, tortuosity_mean=args.tortuosity, seed=args.seed)
+    draw_bb84(ax2, topo, tortuosity_mean=args.tortuosity, seed=args.seed)
     plt.suptitle(f"Network topology  (area={args.area}×{args.area} km, seed={args.seed})",
                  fontsize=11)
     plt.tight_layout()
