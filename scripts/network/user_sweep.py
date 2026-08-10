@@ -1,8 +1,13 @@
 """
 Experiment 2 — user count sweep.
 
-Fixed K relays (positions optimised at ref-N), vary user count N. Plots average key rate vs N
-for BB84 and MDI-QKD. Relay positions are re-optimised per seed when --seeds > 1.
+Provider-growth model: relay positions are optimised once at n-min per the
+chosen strategy (centroid/boundary/weiszfeld), then frozen; the network grows
+one user at a time (uniform-random catchment, catchment membership fixed
+once assigned) up to n-max. Plots average key rate vs N for BB84 and
+MDI-QKD, showing how key rate degrades as organic growth outpaces relay
+infrastructure sized for the initial deployment. Relay positions are
+re-optimised per seed when --seeds > 1.
 Error bars show std across Monte Carlo runs (--seeds 1) or across random topologies
 (--seeds N). Topology visualisation only produced when --seeds 1.
 
@@ -12,12 +17,13 @@ Usage:
     python scripts/network/user_sweep.py [options]
 
 Options:
-    --k INT          Number of relays fixed for sweep (default: 3)
-    --ref-n INT      N used to optimise relay positions (default: n-max)
-    --n-min INT      Min user count (default: 4)
+    --k INT          Number of relays fixed for sweep (default: 2)
+    --strategy STR   Relay placement strategy: centroid, boundary, or weiszfeld (default: weiszfeld)
+    --n-min INT      Min user count; also N at which relays are placed (default: 4)
     --n-max INT      Max user count (default: 20)
     --n-step INT     User count step size (default: 2)
     --area FLOAT     Area side length in km (default: 10.0)
+    --spread FLOAT   Catchment Gaussian std in km (default: area/5)
     --seed INT       Base random seed; random if omitted
     --seeds INT      Random topologies to average over (default: 1)
     --runtimes INT   Monte Carlo runs per pair (default: 20)
@@ -26,16 +32,14 @@ Options:
     --error          Error style: bars (default), shade (±1σ fill), or iqr (Q1/Q3 fill)
     --workers INT    Worker processes (default: 80% of CPU cores; use nproc in command line to see maximum)
     --output-dir DIR Save figure bundle {plot.png, plot.tex, assumptions.md} to directory instead of displaying
-    --placement STR  User placement mode: random (default) or clustered
-                     (clustered: each user drawn uniformly within the
-                      Voronoi-aware catchment circle of a randomly chosen relay)
     --real NAME      Load fixed relay positions from data/real_topologies/NAME.json;
-                     K is determined by the file, not --k (no files currently checked in)
+                     K is determined by the file, not --k (no files currently checked in).
+                     Growth is still incremental, anchored on the real relay positions.
 
 Examples:
-    python scripts/network/user_sweep.py --k 3 --n-max 20 --runtimes 20
+    python scripts/network/user_sweep.py --k 2 --n-max 20 --runtimes 20
     python scripts/network/user_sweep.py --seeds 5 --seed 42 --output-dir results/
-    python scripts/network/user_sweep.py --placement clustered --k 3 --n-max 20
+    python scripts/network/user_sweep.py --strategy centroid --k 3 --n-max 20
 """
 import argparse
 import os
@@ -53,7 +57,7 @@ from lib.plotting import apply_thesis_style, save_bundle
 from lib.functions import load_config
 from lib.db import DEFAULT_DB_PATH
 from lib.progress import Progress
-from topology import place_users, place_users_clustered, optimise_relays, Topology
+from topology import grow_catchments, RELAY_STRATEGIES, Topology
 from bb84_network import run_bb84_network
 from mdi_network import run_mdi_network
 from trusted_bb84_network import run_trusted_bb84_network
@@ -74,12 +78,17 @@ def _pair_avgs(pair_rates):
 
 def main():
     parser = argparse.ArgumentParser(description="User count sweep (Experiment 2)")
-    parser.add_argument("--k",        type=int,   default=3,    help="Number of relays (fixed)")
-    parser.add_argument("--ref-n",    type=int,   default=None, help="N used to optimise relay positions (default: n-max)")
-    parser.add_argument("--n-min",    type=int,   default=4,    help="Min user count")
+    parser.add_argument("--k",        type=int,   default=2,    help="Number of relays (fixed)")
+    parser.add_argument("--strategy", type=str,   default="weiszfeld", choices=list(RELAY_STRATEGIES),
+                        help="Relay placement strategy, applied once at n-min then frozen")
+    parser.add_argument("--n-min",    type=int,   default=4,    help="Min user count; also N at which relays are placed")
     parser.add_argument("--n-max",    type=int,   default=20,   help="Max user count")
     parser.add_argument("--n-step",   type=int,   default=2,    help="User count step size")
     parser.add_argument("--area",     type=float, default=10.0, help="Area side length (km)")
+    parser.add_argument("--spread",   type=float, default=None, help="Catchment Gaussian std in km (default: area/5); ignored if --catchment-radius given")
+    parser.add_argument("--catchment-radius", type=float, default=None,
+                        help="Hard catchment radius in km, uniform disc instead of Gaussian spread "
+                             "(default: 15 km when --real is given, else Gaussian)")
     parser.add_argument("--seed",     type=int,   default=None, help="Base random seed (random if omitted)")
     parser.add_argument("--seeds",    type=int,   default=1,    help="Number of random topologies to average over")
     parser.add_argument("--runtimes", type=int,   default=20,   help="Monte Carlo runs per pair")
@@ -88,8 +97,6 @@ def main():
                         help="Mean fibre tortuosity (cable/Euclidean ratio). 1.0 = Euclidean; ~1.2 typical urban.")
     parser.add_argument("--error",     type=str,   default="bars", choices=["bars", "shade", "iqr"])
     parser.add_argument("--output-dir", type=str,   default=None, help="Directory to save figures into (skips interactive display)")
-    parser.add_argument("--placement",  type=str,   default="random", choices=["random", "clustered"],
-                        help="User placement mode: random (uniform grid) or clustered (Voronoi catchment areas)")
     parser.add_argument("--real",       type=str,   default=None, metavar="NAME",
                         help="Load fixed relay positions from data/real_topologies/NAME.json; K is determined by file")
     parser.add_argument("--no-figure", action="store_true", help="Skip all figure output (no show, no save)")
@@ -104,7 +111,6 @@ def main():
     cfg      = load_config(args.config)
     cfg["tortuosity_mean"] = args.tortuosity
     N_values = list(range(args.n_min, args.n_max + 1, args.n_step))
-    ref_n    = args.ref_n if args.ref_n is not None else args.n_max
 
     # resolve real-topology fixed relays (if requested)
     if args.real:
@@ -113,7 +119,8 @@ def main():
         _fixed_relay_pos = _rt_topo.relay_pos
         _w, _h = _rt_meta["bbox_km"]
         _area_km    = max(_w, _h) + 60.0   # 30 km buffer on each side
-        _max_radius = 30.0
+        _spread     = args.spread if args.spread is not None else 15.0
+        _catchment_radius = args.catchment_radius if args.catchment_radius is not None else 30.0
         _K          = _rt_topo.K
         _protocols  = _rt_meta["protocols"]
         print(f"Real topology '{args.real}': {_K} relays, bbox {_w:.1f}×{_h:.1f} km → area={_area_km:.1f} km")
@@ -121,7 +128,8 @@ def main():
     else:
         _fixed_relay_pos = None
         _area_km    = args.area
-        _max_radius = None
+        _spread     = args.spread if args.spread is not None else args.area / 5
+        _catchment_radius = args.catchment_radius
         _K          = args.k
         _protocols  = ["BB84", "MDI"]
 
@@ -154,18 +162,17 @@ def main():
         seed_start = time.time()
         prog = Progress(seed_total)
         step = 0
+        # provider-growth model: draw n_max users incrementally (uniform-random
+        # catchment, membership fixed once assigned), place relays once at
+        # n_min per the chosen strategy, then freeze for the rest of the sweep
+        all_user_pos, all_labels, _ = grow_catchments(
+            args.n_min, args.n_max, _K, _area_km, _spread, seed,
+            anchors=_fixed_relay_pos, catchment_radius_km=_catchment_radius)
         if _fixed_relay_pos is not None:
             relay_pos = _fixed_relay_pos
         else:
-            ref_pos   = place_users(ref_n, area_km=_area_km, seed=seed)
-            relay_pos = optimise_relays(ref_pos, _K, seed=seed)
-
-        # generate all users up front; slice [:N] per data point for incremental placement
-        if args.placement == "clustered":
-            all_user_pos = place_users_clustered(args.n_max, relay_pos, area_km=_area_km,
-                                                 seed=seed, max_radius_km=_max_radius)
-        else:
-            all_user_pos = place_users(args.n_max, area_km=_area_km, seed=seed)
+            relay_pos = RELAY_STRATEGIES[args.strategy](
+                all_user_pos[:args.n_min], all_labels[:args.n_min], _K)
 
         _user_pos_by_seed[seed]  = np.round(all_user_pos, 3).tolist()
         _relay_pos_by_seed[seed] = np.round(np.array(relay_pos), 3).tolist()
@@ -177,14 +184,16 @@ def main():
 
             prog.update(step, f"User count: {N}/{N_values[-1]}  Both protocols running...")
             user_pos = all_user_pos[:N]
+            labels   = all_labels[:N]
             topo_bb84 = Topology(user_pos)
-            topo_mdi  = Topology(user_pos, relay_pos)
+            topo_mdi  = Topology(user_pos, relay_pos, user_relay=labels)
 
             if args.output_dir and not args.no_figure:
                 _topo_dir = os.path.join(args.output_dir, "user_sweep", f"seed{seed}", "topologies")
                 os.makedirs(_topo_dir, exist_ok=True)
                 fig_m, ax_m = plt.subplots(figsize=(6, 5))
-                draw_mdi(ax_m, topo_mdi, tortuosity_mean=args.tortuosity)
+                draw_mdi(ax_m, topo_mdi, tortuosity_mean=args.tortuosity,
+                         strategy=None if _fixed_relay_pos is not None else args.strategy.capitalize())
                 plt.tight_layout()
                 fig_m.savefig(os.path.join(_topo_dir, f"N{N}_mdi.png"), dpi=150, bbox_inches="tight")
                 plt.close(fig_m)
@@ -247,7 +256,10 @@ def main():
                 "Relay count (fixed)": _K,
                 "User count sweep range": f"{args.n_min}-{args.n_max} (step {args.n_step})",
                 "Area": area_label,
-                "Placement mode": args.placement,
+                "Relay strategy": "real (fixed)" if args.real else args.strategy,
+                "Catchment shape": (f"hard disc, radius {_catchment_radius:.1f} km"
+                                     if _catchment_radius is not None
+                                     else f"Gaussian, std {_spread:.2f} km"),
                 "Tortuosity mean": args.tortuosity,
                 "Runtimes per pair": args.runtimes,
                 "BB84 key rate (bps) per N": dict(zip(_seed_N, seed_bb84)),
@@ -380,9 +392,14 @@ def main():
                 assumptions={
                     "Relay count (fixed)": _K,
                     "User count sweep range": f"{args.n_min}-{args.n_max} (step {args.n_step})",
-                    "Reference N for relay placement": ref_n,
+                    "Relay placement": f"computed once at N={args.n_min} via "
+                                        f"{'real (fixed)' if args.real else args.strategy}, then frozen",
+                    "Growth model": "one user at a time, uniform-random catchment, "
+                                    "catchment membership fixed once assigned",
+                    "Catchment shape": (f"hard disc, radius {_catchment_radius:.1f} km"
+                                     if _catchment_radius is not None
+                                     else f"Gaussian, std {_spread:.2f} km"),
                     "Area": area_label,
-                    "Placement mode": args.placement,
                     "Seed": seed_label,
                     "Tortuosity mean": args.tortuosity,
                     "Runtimes per pair": args.runtimes,

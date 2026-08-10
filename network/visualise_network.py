@@ -37,7 +37,7 @@ def _plot_wavy(ax, p1, p2, tortuosity, **kw):
     ax.plot(pts[:, 0], pts[:, 1], **kw)
 
 
-def draw_mdi(ax, topo, tortuosity_mean=1.0):
+def draw_mdi(ax, topo, tortuosity_mean=1.0, strategy=None):
     G = nx.Graph()
 
     for i in range(topo.N):
@@ -72,21 +72,27 @@ def draw_mdi(ax, topo, tortuosity_mean=1.0):
             _plot_wavy(ax, topo.relay_pos[k1], topo.relay_pos[k2], tortuosity_mean,
                        color="k", lw=0.8, alpha=0.4, linestyle="--")
 
-    ax.set_title(f"MDI-QKD  (N={topo.N}, K={topo.K})")
+    title = f"MDI-QKD  (N={topo.N}, K={topo.K})"
+    if strategy:
+        title += f"  [{strategy}]"
+    ax.set_title(title)
     ax.set_xlabel("x (km)")
     ax.set_ylabel("y (km)")
     ax.legend(loc="upper right", fontsize=8)
     ax.set_aspect("equal")
 
 
-def draw_bb84(ax, topo, tortuosity_mean=1.0):
+def draw_bb84(ax, topo, tortuosity_mean=1.0, strategy=None):
     ax.scatter(*topo.user_pos.T, color="#377eb8", s=60, zorder=3, label="User")
 
     for i, j in topo.all_pairs():
         _plot_wavy(ax, topo.user_pos[i], topo.user_pos[j], tortuosity_mean,
                    color="#377eb8", lw=0.4, alpha=0.25)
 
-    ax.set_title(f"BB84  (N={topo.N}, {topo.N*(topo.N-1)//2} direct links)")
+    title = f"BB84  (N={topo.N}, {topo.N*(topo.N-1)//2} direct links)"
+    if strategy:
+        title += f"  [{strategy}]"
+    ax.set_title(title)
     ax.set_xlabel("x (km)")
     ax.set_ylabel("y (km)")
     ax.legend(loc="upper right", fontsize=8)

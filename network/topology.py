@@ -7,41 +7,141 @@ def place_users(N, area_km=10.0, seed=None):
     return rng.uniform(0, area_km, size=(N, 2))
 
 
-def place_users_clustered(N, relay_pos, area_km=10.0, seed=None, max_radius_km=None):
-    """Place N users in Voronoi-aware catchment areas around relays.
+def _reflect_into_box(pos, area_km):
+    """Fold coordinates outside [0, area_km] back in by reflection (triangle wave),
+    instead of clipping, so Gaussian tail mass isn't pinned exactly on the boundary."""
+    period = 2 * area_km
+    pos = np.mod(pos, period)
+    return np.where(pos > area_km, period - pos, pos)
 
-    Each user is assigned a relay uniformly at random, then placed uniformly
-    within a circle of radius min(0.25*area_km, half_dist_to_nearest_relay).
-    If max_radius_km is set, the catchment radius is additionally capped at
-    that value (use for real-topology deployments with known service radius).
+
+def catchment_anchors(K, area_km):
+    """K fixed geometric catchment centres used to seed provider-growth topologies.
+
+    K=2 uses the left/right split established by relay_placement.py's exp2; K!=2
+    places anchors evenly around a circle so the layout stays sensible for any K.
     """
+    if K == 2:
+        return np.array([[area_km / 4, area_km / 2], [3 * area_km / 4, area_km / 2]])
+    centre = np.array([area_km / 2, area_km / 2])
+    radius = area_km / 3
+    angles = np.linspace(0, 2 * np.pi, K, endpoint=False)
+    return centre + radius * np.column_stack([np.cos(angles), np.sin(angles)])
+
+
+def grow_catchments(n_min, n_max, K, area_km, spread_km, seed, anchors=None, catchment_radius_km=None):
+    """Provider-perspective incremental user growth.
+
+    Draws n_max users one at a time from a single RNG stream: each user joins a
+    uniformly-random catchment (out of K fixed anchors). Catchment membership,
+    once assigned, never changes — sweeping N just takes a prefix of this
+    sequence, so growing the network means adding users rather than re-rolling
+    an unrelated sample.
+
+    Two placement modes around the chosen anchor:
+      catchment_radius_km is None (default): isotropic Gaussian, std spread_km,
+        unbounded but reflected into the service area (soft catchment).
+      catchment_radius_km given: uniform-density disc of that radius (hard
+        catchment, e.g. a relay's known real-world service radius).
+
+    Returns (user_pos [n_max,2], labels [n_max] int in [0,K), anchors [K,2]).
+    """
+    if n_min < K:
+        raise ValueError(f"n_min ({n_min}) must be >= K ({K}): every catchment needs "
+                          f"at least one user before its relay can be placed")
+
     rng = np.random.default_rng(seed)
-    relay_pos = np.array(relay_pos)
-    K = len(relay_pos)
-
-    if max_radius_km is not None:
-        # fixed radius for each relay; overlapping catchments allowed — Topology assigns by proximity
-        catchment = np.full(K, max_radius_km)
+    if anchors is None:
+        anchors = catchment_anchors(K, area_km)
     else:
-        # Voronoi-aware: cap at half-distance to nearest relay to avoid cross-catchment placement
-        catchment = np.full(K, 0.25 * area_km)
-        if K > 1:
-            for r in range(K):
-                dists = np.linalg.norm(relay_pos[r] - relay_pos, axis=1)
-                dists[r] = np.inf
-                catchment[r] = min(catchment[r], np.min(dists) / 2.0)
+        anchors = np.array(anchors)
 
-    relay_indices = rng.integers(0, K, size=N)
-    positions = np.empty((N, 2))
-    for i, r_idx in enumerate(relay_indices):
-        cx, cy = relay_pos[r_idx]
-        rad = catchment[r_idx]
-        angle = rng.uniform(0, 2 * np.pi)
-        r_sample = rad * np.sqrt(rng.uniform(0, 1))
-        positions[i, 0] = np.clip(cx + r_sample * np.cos(angle), 0, area_km)
-        positions[i, 1] = np.clip(cy + r_sample * np.sin(angle), 0, area_km)
+    # first K users cover each catchment exactly once, so every catchment is
+    # guaranteed non-empty by n_min; the rest join uniformly at random
+    labels = np.empty(n_max, dtype=int)
+    labels[:K] = rng.permutation(K)
+    if n_max > K:
+        labels[K:] = rng.integers(0, K, size=n_max - K)
+    if catchment_radius_km is not None:
+        angles = rng.uniform(0, 2 * np.pi, size=n_max)
+        radii  = catchment_radius_km * np.sqrt(rng.uniform(0, 1, size=n_max))
+        offset = np.column_stack([radii * np.cos(angles), radii * np.sin(angles)])
+        raw_pos = anchors[labels] + offset
+    else:
+        raw_pos = rng.normal(anchors[labels], spread_km, size=(n_max, 2))
+    user_pos = _reflect_into_box(raw_pos, area_km)
+    return user_pos, labels, anchors
 
-    return positions
+
+def relay_centroid(user_pos, labels, K):
+    """Relay k placed at the mean of its (fixed) catchment. No reassignment."""
+    return np.array([user_pos[labels == k].mean(axis=0) for k in range(K)])
+
+
+def relay_boundary(user_pos, labels, K):
+    """Each relay displaced 1 std from its catchment centroid toward the
+    population-weighted mean of all other catchments' centroids."""
+    centroids = relay_centroid(user_pos, labels, K)
+    counts    = np.array([np.count_nonzero(labels == k) for k in range(K)])
+    relay_pos = np.empty_like(centroids)
+    for k in range(K):
+        others = [l for l in range(K) if l != k]
+        w      = counts[others] / counts[others].sum()
+        other_mean = (w[:, None] * centroids[others]).sum(axis=0)
+        direction  = other_mean - centroids[k]
+        norm       = np.linalg.norm(direction)
+        if norm < 1e-12:
+            relay_pos[k] = centroids[k]
+            continue
+        direction /= norm
+        s = float(np.std(user_pos[labels == k]))
+        relay_pos[k] = centroids[k] + s * direction
+    return relay_pos
+
+
+def relay_weiszfeld(user_pos, labels, K, max_iter=500, tol=1e-9):
+    """Backbone-coupled Weiszfeld relay position for K fixed catchments (no reassignment)."""
+    clusters  = [user_pos[labels == k] for k in range(K)]
+    relay_pos = np.array([c.mean(axis=0) for c in clusters])
+    eps = 1e-9
+
+    def _total_fibre(rp):
+        spoke    = sum(np.linalg.norm(rp[k] - p) for k in range(K) for p in clusters[k])
+        backbone = sum(np.linalg.norm(rp[k] - rp[l]) for k in range(K) for l in range(k + 1, K))
+        return spoke + backbone
+
+    prev_L = _total_fibre(relay_pos)
+    for _ in range(max_iter):
+        new_rp = np.empty_like(relay_pos)
+        for k in range(K):
+            num = np.zeros(2)
+            den = 0.0
+            for p in clusters[k]:
+                d = max(np.linalg.norm(relay_pos[k] - p), eps)
+                num += p / d
+                den += 1.0 / d
+            for l in range(K):
+                if l == k:
+                    continue
+                d = max(np.linalg.norm(relay_pos[k] - relay_pos[l]), eps)
+                num += relay_pos[l] / d
+                den += 1.0 / d
+            new_rp[k] = num / den if den > 0 else relay_pos[k]
+
+        relay_pos = new_rp
+        L = _total_fibre(relay_pos)
+        if abs(prev_L - L) < tol:
+            break
+        prev_L = L
+
+    return relay_pos
+
+
+RELAY_STRATEGIES = {
+    "centroid":  relay_centroid,
+    "boundary":  relay_boundary,
+    "weiszfeld": relay_weiszfeld,
+}
 
 
 def optimise_relays(user_pos, K, n_init=10, seed=None, max_iter=500, tol=1e-9):
@@ -104,13 +204,21 @@ def _dist(a, b):
 
 
 class Topology:
-    def __init__(self, user_pos, relay_pos=None):
+    def __init__(self, user_pos, relay_pos=None, user_relay=None):
+        """
+        user_relay: optional fixed user->relay assignment (e.g. catchment labels
+        from grow_catchments). When given, it is used as-is instead of the
+        nearest-relay default — needed whenever relay position was computed for
+        a fixed membership that should not be silently reassigned by distance.
+        """
         self.user_pos  = np.array(user_pos)
         self.relay_pos = np.array(relay_pos) if relay_pos is not None else None
         self.N = len(self.user_pos)
         self.K = len(self.relay_pos) if self.relay_pos is not None else 0
 
-        if self.K > 0:
+        if user_relay is not None:
+            self.user_relay = np.array(user_relay)
+        elif self.K > 0:
             # user_relay[i] = index of nearest relay to user i
             dists = np.linalg.norm(
                 self.user_pos[:, None, :] - self.relay_pos[None, :, :], axis=2
