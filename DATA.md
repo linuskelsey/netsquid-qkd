@@ -47,7 +47,9 @@ For trusted-node BB84 network runs, rows represent individual user-relay links (
 ### `network_results`
 
 One row per network simulation call — one protocol × one seed × one sweep point (K or N value).
-Populated by `relay_sweep.py` and `user_sweep.py`.
+Populated by `relay_sweep.py` and `user_sweep.py`. `relay_placement.py` (exp 1 + exp 2) never writes
+to the DB — it always passes `p2p_db_path=None, net_db_path=None`, since it's a methodology/comparison
+tool rather than a data-collection sweep.
 Physical parameters for each pair are recoverable via JOIN on `net_run_id` to `p2p_results`.
 
 | Column | Type | Description |

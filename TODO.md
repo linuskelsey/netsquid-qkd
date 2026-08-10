@@ -2,9 +2,9 @@
 
 ## Next Up
 
-### 1. Realistic Hardware Regions on Plots
-- [ ] Finalise hardware parameter values from literature (Lo 2012, Tang 2016, Berrevoets 2022) — web search pending
-- [ ] Update PARAMS.md + configs with verified values (remove ⁺ markers) and ensure consistency
+### 1. Realistic Hardware Regions on Plots — done 2026-08-06
+- [x] Finalise hardware parameter values from literature (all 10 layer params sourced/cited; see PARAMS.md)
+- [x] Update PARAMS.md + configs with verified values and ensure consistency
 
 ### 2. Literature Validation on layers.py
 - [ ] Identify 2–3 published experimental key rate vs distance curves for BB84 (e.g. Lo 2012, Tang 2016)
