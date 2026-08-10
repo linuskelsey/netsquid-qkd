@@ -33,6 +33,7 @@ Experiment 2 options:
     --n-step INT       Step size (default: 2)
     --seeds INT        Random topologies to average over (default: 5)
     --spread FLOAT     Cluster Gaussian std in km (default: area/5)
+    --error STR        Error style: bars (default), shade (±1σ fill), or iqr (Q1/Q3 fill)
 
 Examples:
     python scripts/network/relay_placement.py --exp 1 --n-values 5,10,20 --grid 10
@@ -172,15 +173,33 @@ def plot_exp1(results_by_n, area, output_dir, grid_res, runtimes, seed):
 
 # ─── Experiment 2 ──────────────────────────────────────────────────────────────
 
-def _place_two_clusters(n_total, area, spread, seed):
-    """Two equal Gaussian clusters at area/4 and 3*area/4 along x-axis."""
-    rng    = np.random.default_rng(seed)
-    n_each = n_total // 2
-    c0     = np.array([area / 4, area / 2])
-    c1     = np.array([3 * area / 4, area / 2])
-    pos0   = rng.normal(c0, spread, size=(n_each, 2)).clip(0, area)
-    pos1   = rng.normal(c1, spread, size=(n_total - n_each, 2)).clip(0, area)
-    labels = np.array([0] * n_each + [1] * (n_total - n_each))
+def _reflect_into_box(pos, area):
+    """Fold coordinates outside [0, area] back in by reflection (triangle wave),
+    instead of clipping, so Gaussian tail mass isn't pinned exactly on the boundary."""
+    period = 2 * area
+    pos = np.mod(pos, period)
+    return np.where(pos > area, period - pos, pos)
+
+
+def _place_two_clusters_pool(n_max, area, spread, seed):
+    """Draw a fixed pool of n_max users per cluster, once per seed.
+    Sweeping N then slices a prefix of this pool, so the topology grows by
+    adding users rather than re-rolling an unrelated sample at every N."""
+    rng        = np.random.default_rng(seed)
+    n_each_max = n_max // 2
+    c0         = np.array([area / 4, area / 2])
+    c1         = np.array([3 * area / 4, area / 2])
+    pos0 = _reflect_into_box(rng.normal(c0, spread, size=(n_each_max, 2)), area)
+    pos1 = _reflect_into_box(rng.normal(c1, spread, size=(n_max - n_each_max, 2)), area)
+    return pos0, pos1
+
+
+def _slice_clusters(pos0_full, pos1_full, n):
+    """Take the first n users from the pool, preserving the pool's cluster split."""
+    n_each = n // 2
+    pos0   = pos0_full[:n_each]
+    pos1   = pos1_full[:n - n_each]
+    labels = np.array([0] * n_each + [1] * (n - n_each))
     return np.vstack([pos0, pos1]), labels
 
 
@@ -268,8 +287,9 @@ def exp2(n_values, area, spread, cfg, runtimes, seed, n_seeds, workers, output_d
 
     for s_idx, s in enumerate(seeds):
         print(f"\n--- Seed {s_idx+1}/{n_seeds} (seed={s}) ---")
+        pos0_full, pos1_full = _place_two_clusters_pool(n_max, area, spread, s)
         for ni, n in enumerate(n_values):
-            user_pos, labels = _place_two_clusters(n, area, spread, s)
+            user_pos, labels = _slice_clusters(pos0_full, pos1_full, n)
             relay_by_strat = {}
 
             for strat, relay_fn in _STRATEGIES:
@@ -346,17 +366,30 @@ def exp2(n_values, area, spread, cfg, runtimes, seed, n_seeds, workers, output_d
     return data, seeds, graph_data
 
 
-def plot_exp2(data, n_values, output_dir, area, spread, runtimes, n_seeds, seed, seeds, graph_data):
+def plot_exp2(data, n_values, output_dir, area, spread, runtimes, n_seeds, seed, seeds, graph_data,
+              error="bars"):
     N = np.array(n_values)
 
     fig, ax = plt.subplots(figsize=(7, 5))
 
     for strat, _ in _STRATEGIES:
         means = np.array([np.mean(data[strat]["mdi"][i]) for i in range(len(N))]) / 1000
-        stds  = np.array([np.std( data[strat]["mdi"][i]) for i in range(len(N))]) / 1000
-        ax.errorbar(N, means, yerr=stds, label=_STRAT_LABEL[strat],
-                    color=_STRAT_COLOR[strat], marker=_STRAT_MARKER[strat],
-                    capsize=4, lw=1.5)
+        if error == "bars":
+            stds = np.array([np.std(data[strat]["mdi"][i]) for i in range(len(N))]) / 1000
+            ax.errorbar(N, means, yerr=stds, label=_STRAT_LABEL[strat],
+                        color=_STRAT_COLOR[strat], marker=_STRAT_MARKER[strat],
+                        capsize=4, lw=1.5)
+        elif error == "shade":
+            stds = np.array([np.std(data[strat]["mdi"][i]) for i in range(len(N))]) / 1000
+            ax.plot(N, means, color=_STRAT_COLOR[strat], marker=_STRAT_MARKER[strat],
+                    lw=1.5, label=_STRAT_LABEL[strat])
+            ax.fill_between(N, means - stds, means + stds, alpha=0.2, color=_STRAT_COLOR[strat])
+        else:  # iqr
+            q1 = np.array([np.percentile(data[strat]["mdi"][i], 25) for i in range(len(N))]) / 1000
+            q3 = np.array([np.percentile(data[strat]["mdi"][i], 75) for i in range(len(N))]) / 1000
+            ax.plot(N, means, color=_STRAT_COLOR[strat], marker=_STRAT_MARKER[strat],
+                    lw=1.5, label=_STRAT_LABEL[strat])
+            ax.fill_between(N, q1, q3, alpha=0.2, color=_STRAT_COLOR[strat])
     ax.set_xlabel("Total users N")
     ax.set_ylabel("Avg key rate (kbps)")
     ax.set_title("MDI-QKD")
@@ -378,6 +411,7 @@ def plot_exp2(data, n_values, output_dir, area, spread, runtimes, n_seeds, seed,
                 "Cluster spread (std)": f"{spread:.2f} km",
                 "Runtimes per pair": runtimes,
                 "Random topologies averaged": n_seeds,
+                "Error display": error,
                 "Seed (base)": seed,
                 "Seeds used": seeds,
                 "Final graph per seed (N=n_max, km)": graph_data,
@@ -420,6 +454,8 @@ def main():
     parser.add_argument("--n-step",  type=int,   default=2,    help="User count step (exp 2)")
     parser.add_argument("--seeds",   type=int,   default=5,    help="Topologies to average (exp 2)")
     parser.add_argument("--spread",  type=float, default=None, help="Cluster std in km (exp 2)")
+    parser.add_argument("--error",   type=str,   default="bars", choices=["bars", "shade", "iqr"],
+                        help="Error style: bars (default), shade (+-1 std fill), or iqr (Q1/Q3 fill) (exp 2)")
 
     args = parser.parse_args()
 
@@ -445,7 +481,7 @@ def main():
         data, seeds, graph_data = exp2(n_values, args.area, spread, cfg, args.runtimes,
                     args.seed, args.seeds, args.workers, output_dir=args.output_dir)
         plot_exp2(data, n_values, args.output_dir, args.area, spread, args.runtimes, args.seeds,
-                  args.seed, seeds, graph_data)
+                  args.seed, seeds, graph_data, error=args.error)
 
 
 if __name__ == "__main__":
