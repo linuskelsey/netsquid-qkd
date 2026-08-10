@@ -7,6 +7,7 @@ Note: detector_efficiency in --config is ignored; η_d is the sweep axis.
 Usage:
     python scripts/P2P/compare/efficiency.py [--config PATH] [--runtimes N] [--fibre F]
                                               [--loss F] [--dark-count N] [--init-loss F]
+                                              [--node-loss F] [--source-err F]
                                               [--workers N] [--error MODE] [--output-dir DIR]
                                               [--compare-configs PATH [PATH ...]] [--no-db]
 
