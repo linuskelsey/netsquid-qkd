@@ -3,7 +3,7 @@ Experiment 1 — relay count sweep.
 
 Fixed N users, vary relay count K. Plots average key rate vs K for BB84 and MDI-QKD.
 Error bars show std across Monte Carlo runs (--seeds 1) or across random topologies
-(--seeds N). Topology visualisation only produced when --seeds 1.
+(--seeds N). Topology visualisation is produced for every seed x K combination.
 
 BB84 is relay-independent (direct mesh) and is run once per seed.
 MDI uses the relay topology and is re-run per K.

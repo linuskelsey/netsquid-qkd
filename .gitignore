@@ -15,6 +15,16 @@ docs/netsquid
 # docs/dissertation
 # docs/lit-rev
 
+# latex build artifacts (keep .pdf and .bbl tracked)
+*.aux
+*.log
+*.toc
+*.fls
+*.fdb_latexmk
+*.blg
+*.out
+*.synctex.gz
+
 # merge script
 merge-all.sh
 
