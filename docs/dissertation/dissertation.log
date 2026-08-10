@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026/Arch Linux) (preloaded format=pdflatex 2026.7.6)  10 AUG 2026 16:13
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026/Arch Linux) (preloaded format=pdflatex 2026.8.1)  10 AUG 2026 17:49
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1121,7 +1121,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[16{/usr/share/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc}]
+[16]
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 13.59999pt, for example:
@@ -1129,10 +1129,10 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[17]
+[17{/usr/share/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc}]
 Overfull \hbox (2.54778pt too wide) in paragraph at lines 318--320
-\T1/cmr/m/n/12 junctions for-mu-la-tion [[]39[]] and spe-cialised to hub-and-sp
-oke in-ter-con-nec-tion by O'Kelly [[]40[]];
+\T1/cmr/m/n/12 junctions for-mu-la-tion [[]41[]] and spe-cialised to hub-and-sp
+oke in-ter-con-nec-tion by O'Kelly [[]42[]];
  []
 
 
@@ -1213,9 +1213,9 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 [24
 
 ] (./figures/p2p_sweeps/efficiency.tex
-Package pgfplots info on input line 55: Using 'lua backend=false' for axis: ymo
+Package pgfplots info on input line 57: Using 'lua backend=false' for axis: ymo
 de=log unsupported (yet).
-Package pgfplots info on input line 240: Using 'lua backend=false' for axis: ym
+Package pgfplots info on input line 245: Using 'lua backend=false' for axis: ym
 ode=log unsupported (yet).
 ) (./figures/p2p_sweeps/node_loss.tex
 Package pgfplots info on input line 49: Using 'lua backend=false' for axis: ymo
@@ -1488,8 +1488,10 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[37]
-Overfull \hbox (10.73753pt too wide) in paragraph at lines 616--617
+[37
+
+]
+Overfull \hbox (10.73753pt too wide) in paragraph at lines 601--602
 []\T1/cmr/m/n/12 The sym-bolic cost model pre-dicts that MDI be-comes cost-comp
 etitive above a crossover
  []
@@ -1501,9 +1503,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[38
-
-]
+[38]
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 13.59999pt, for example:
@@ -1512,15 +1512,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [39]
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 13.59999pt, for example:
-(fancyhdr)                \setlength{\headheight}{13.59999pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
-
-[40]
-Overfull \hbox (4.10768pt too wide) in paragraph at lines 643--643
+Overfull \hbox (4.10768pt too wide) in paragraph at lines 631--631
 |[]\T1/cmr/bx/n/20.74 Additional Point-to-Point Pa-ram-e-ter Sweeps| 
  []
 
@@ -1574,7 +1566,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[41
+[40
 
 ]
 
@@ -1584,7 +1576,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[42]
+[41]
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 13.59999pt, for example:
@@ -1592,14 +1584,14 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[43
+[42
 
 ]
-<figures/relay_placement/worked_example.png, id=672, 576.35326pt x 326.6604pt>
+<figures/relay_placement/worked_example.png, id=695, 576.35326pt x 326.6604pt>
 File: figures/relay_placement/worked_example.png Graphic file (type png)
 <use figures/relay_placement/worked_example.png>
 Package pdftex.def Info: figures/relay_placement/worked_example.png  used on in
-put line 734.
+put line 722.
 (pdftex.def)             Requested size: 421.17963pt x 238.71431pt.
 
 
@@ -1609,7 +1601,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[44]
+[43]
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 13.59999pt, for example:
@@ -1617,7 +1609,15 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[45 <./figures/relay_placement/worked_example.png>]
+[44 <./figures/relay_placement/worked_example.png>]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[45]
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 13.59999pt, for example:
@@ -1641,7 +1641,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[48] (./dissertation.bbl
+[48]
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 13.59999pt, for example:
@@ -1649,15 +1649,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[49]
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 13.59999pt, for example:
-(fancyhdr)                \setlength{\headheight}{13.59999pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
-
-[50
+[49
 
 ]
 
@@ -1667,8 +1659,44 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[51]
-Underfull \hbox (badness 1325) in paragraph at lines 161--163
+[50]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[51] (./dissertation.bbl
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[52
+
+]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[53
+
+]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[54]
+Underfull \hbox (badness 1325) in paragraph at lines 171--173
 []\T1/cmr/m/n/12 Quandela, ``Prometheus Single-Photon Source -- Prod-uct Datash
 eet.'' Prod-uct
  []
@@ -1680,7 +1708,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[52])
+[55])
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 13.59999pt, for example:
@@ -1688,22 +1716,22 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[53] (./dissertation.aux)
+[56] (./dissertation.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
 Package rerunfilecheck Info: File `dissertation.out' has not changed.
-(rerunfilecheck)             Checksum: F7AC23EB6773B97616FAD470A7BEA07A;6391.
+(rerunfilecheck)             Checksum: 7539F31D682A752C9FFB80719446D7B0;6839.
  ) 
 Here is how much of TeX's memory you used:
- 38935 strings out of 469515
- 892317 string characters out of 5470808
- 1679082 words of memory out of 5000000
- 66749 multiletter control sequences out of 15000+600000
+ 38949 strings out of 469515
+ 892527 string characters out of 5470808
+ 1679316 words of memory out of 5000000
+ 66756 multiletter control sequences out of 15000+600000
  648568 words of font info for 95 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 84i,23n,131p,2301b,2720s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 84i,23n,131p,2419b,2720s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/share/
 texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/share/texmf-dist/fon
 ts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texmf-dist/fonts/type1/publi
@@ -1724,10 +1752,10 @@ cm-super/sfrm1440.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfrm20
 74.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfti1095.pfb></usr/sh
 are/texmf-dist/fonts/type1/public/cm-super/sfti1200.pfb></usr/share/texmf-dist/
 fonts/type1/public/cm-super/sftt1200.pfb>
-Output written on dissertation.pdf (53 pages, 698232 bytes).
+Output written on dissertation.pdf (56 pages, 713750 bytes).
 PDF statistics:
- 882 PDF objects out of 1000 (max. 8388607)
- 763 compressed objects within 8 object streams
- 162 named destinations out of 1000 (max. 500000)
- 314 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 938 PDF objects out of 1000 (max. 8388607)
+ 815 compressed objects within 9 object streams
+ 169 named destinations out of 1000 (max. 500000)
+ 330 words of extra memory for PDF output out of 10000 (max. 10000000)
 

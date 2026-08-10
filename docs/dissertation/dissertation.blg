@@ -6,45 +6,47 @@ Database file #1: IEEEabrv.bib
 Database file #2: bibliography.bib
 Warning--string name "july" is undefined
 --line 1168 of file bibliography.bib
-You've used 43 entries,
+Warning--can't use both volume and number fields in henderson2008network
+Warning--can't use both volume and number fields in varga2001omnet++
+You've used 45 entries,
             1876 wiz_defined-function locations,
-            1275 strings with 21070 characters,
-and the built_in function-call counts, 10307 in all, are:
-= -- 991
-> -- 460
+            1289 strings with 21406 characters,
+and the built_in function-call counts, 10822 in all, are:
+= -- 1033
+> -- 481
 < -- 0
-+ -- 173
-- -- 130
-* -- 672
-:= -- 1454
-add.period$ -- 43
-call.type$ -- 43
-change.case$ -- 43
++ -- 181
+- -- 136
+* -- 711
+:= -- 1523
+add.period$ -- 45
+call.type$ -- 45
+change.case$ -- 45
 chr.to.int$ -- 0
-cite$ -- 43
-duplicate$ -- 552
-empty$ -- 932
-format.name$ -- 130
-if$ -- 2540
+cite$ -- 47
+duplicate$ -- 586
+empty$ -- 987
+format.name$ -- 136
+if$ -- 2668
 int.to.chr$ -- 0
-int.to.str$ -- 43
-missing$ -- 30
-newline$ -- 132
-num.names$ -- 45
-pop$ -- 154
+int.to.str$ -- 45
+missing$ -- 32
+newline$ -- 138
+num.names$ -- 47
+pop$ -- 166
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 0
-skip$ -- 479
+skip$ -- 500
 stack$ -- 0
-substring$ -- 429
-swap$ -- 268
+substring$ -- 439
+swap$ -- 282
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
 type$ -- 0
-warning$ -- 0
-while$ -- 80
-width$ -- 45
-write$ -- 395
-(There was 1 warning)
+warning$ -- 2
+while$ -- 84
+width$ -- 47
+write$ -- 415
+(There were 3 warnings)

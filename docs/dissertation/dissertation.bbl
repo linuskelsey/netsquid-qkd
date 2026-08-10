@@ -111,6 +111,16 @@ T.~Coopmans, R.~Knegjens, A.~Dahlberg, D.~Maier, L.~Nijsten,
   S.~Wehner, ``{NetSquid, a NETwork Simulator for QUantum Information using
   Discrete events},'' {\em Communications Physics}, vol.~4, no.~1, 2021.
 
+\bibitem{henderson2008network}
+T.~R. Henderson, M.~Lacage, G.~F. Riley, C.~Dowell, and J.~Kopena, ``Network
+  simulations with the ns-3 simulator,'' in {\em SIGCOMM demonstration},
+  vol.~14, p.~527, 2008.
+
+\bibitem{varga2001omnet++}
+A.~Varga, ``The {OMNeT++} discrete event simulation system,'' in {\em
+  Proceedings of the European Simulation Multiconference (ESM'2001)}, vol.~9,
+  p.~65, 2001.
+
 \bibitem{Shor_2000}
 P.~W. Shor and J.~Preskill, ``{Simple Proof of Security of the BB84 Quantum Key
   Distribution Protocol},'' {\em Physical Review Letters}, vol.~85,
