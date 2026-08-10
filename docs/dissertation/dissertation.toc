@@ -15,23 +15,24 @@
 \contentsline {subsubsection}{\numberline {3.2.1}Component Counts}{20}{subsubsection.3.2.1}%
 \contentsline {subsubsection}{\numberline {3.2.2}Symbolic Cost Formulae}{21}{subsubsection.3.2.2}%
 \contentsline {subsection}{\numberline {3.3}Scalability Analysis}{22}{subsection.3.3}%
-\contentsline {section}{\numberline {4}Results}{23}{section.4}%
-\contentsline {subsection}{\numberline {4.1}Point-to-Point Performance}{23}{subsection.4.1}%
-\contentsline {subsection}{\numberline {4.2}Network Performance}{30}{subsection.4.2}%
-\contentsline {subsection}{\numberline {4.3}Cost}{30}{subsection.4.3}%
-\contentsline {subsection}{\numberline {4.4}Deployment Recommendations}{30}{subsection.4.4}%
-\contentsline {section}{\numberline {5}Discussion}{31}{section.5}%
-\contentsline {subsection}{\numberline {5.1}The Security--Rate Trade-off}{31}{subsection.5.1}%
-\contentsline {subsection}{\numberline {5.2}Cost Model Limitations}{32}{subsection.5.2}%
-\contentsline {subsection}{\numberline {5.3}Simulation Model Limitations}{33}{subsection.5.3}%
-\contentsline {subsection}{\numberline {5.4}Implications for Protocol Selection}{36}{subsection.5.4}%
-\contentsline {section}{\numberline {6}Conclusion}{37}{section.6}%
-\contentsline {subsection}{\numberline {6.1}Summary of Contributions}{37}{subsection.6.1}%
-\contentsline {subsection}{\numberline {6.2}Findings}{37}{subsection.6.2}%
-\contentsline {subsection}{\numberline {6.3}Future Work}{38}{subsection.6.3}%
-\contentsline {section}{\numberline {A}Additional Point-to-Point Parameter Sweeps}{40}{appendix.A}%
-\contentsline {section}{\numberline {B}Relay Placement Optimisation}{42}{appendix.B}%
-\contentsline {subsection}{\numberline {B.1}Derivation of the Coupled Update}{42}{subsection.B.1}%
-\contentsline {subsection}{\numberline {B.2}Worked Example: Centroid vs.\ Geometric Median}{43}{subsection.B.2}%
-\contentsline {subsection}{\numberline {B.3}Geometric Comparison Across Network Topologies}{44}{subsection.B.3}%
-\contentsline {subsection}{\numberline {B.4}Open Questions}{46}{subsection.B.4}%
+\contentsline {section}{\numberline {4}Results}{24}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Point-to-Point Performance}{24}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Network Performance}{31}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Cost}{31}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Deployment Recommendations}{31}{subsection.4.4}%
+\contentsline {section}{\numberline {5}Discussion}{32}{section.5}%
+\contentsline {subsection}{\numberline {5.1}The Security--Rate Trade-off}{32}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Cost Model Limitations}{33}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Simulation Model Limitations}{34}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Implications for Protocol Selection}{37}{subsection.5.4}%
+\contentsline {section}{\numberline {6}Conclusion}{38}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Summary of Contributions}{38}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Findings}{38}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Future Work}{39}{subsection.6.3}%
+\contentsline {section}{\numberline {A}Additional Point-to-Point Parameter Sweeps}{41}{appendix.A}%
+\contentsline {section}{\numberline {B}Relay Placement Optimisation}{43}{appendix.B}%
+\contentsline {subsection}{\numberline {B.1}Derivation of the Coupled Update}{43}{subsection.B.1}%
+\contentsline {subsection}{\numberline {B.2}Worked Example: Centroid vs.\ Geometric Median}{44}{subsection.B.2}%
+\contentsline {subsection}{\numberline {B.3}Geometric Comparison Across Network Topologies}{45}{subsection.B.3}%
+\contentsline {subsection}{\numberline {B.4}Network-Level Comparison Under Organic Growth}{47}{subsection.B.4}%
+\contentsline {subsection}{\numberline {B.5}Open Questions}{47}{subsection.B.5}%

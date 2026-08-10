@@ -2,9 +2,9 @@
 
 Fixed parameters for this plot:
 
-- **Fibre length**: 20 km
+- **Fibre length**: 20.0 km
 - **Fibre loss**: 0.18 dB/km
-- **Dark count rate**: 50 cps
+- **Dark count rate**: 50.0 cps
 - **Init loss**: 0.1
 - **Node loss**: 2.0 dB
 - **Source error rate**: 0.015
@@ -17,3 +17,4 @@ Fixed parameters for this plot:
 Other assumptions:
 
 - Detector efficiency is the swept axis; config value for it is ignored.
+- Reconstructed from data/results.db (run committed 2026-08-10 16:14-16:41) after the live run exited without --output-dir; figure and stats reproduce the original efficiency.py plotting/aggregation code exactly.
