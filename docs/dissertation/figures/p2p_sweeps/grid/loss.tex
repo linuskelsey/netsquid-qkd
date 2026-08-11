@@ -6,7 +6,11 @@
 \definecolor{lightgray204}{RGB}{204,204,204}
 \definecolor{steelblue31119180}{RGB}{31,119,180}
 \begin{axis}[
-title={Key Rate vs Fibre Loss},
+width=170pt,
+height=140pt,
+scale only axis,
+tick label style={font=\fontsize{8}{10}\selectfont},
+title={(a) Key Rate vs Fibre Loss},
 legend cell align={left},
 legend style={
   fill opacity=0.8,
@@ -14,7 +18,8 @@ legend style={
   text opacity=1,
   at={(0.03,0.03)},
   anchor=south west,
-  draw=lightgray204
+  draw=lightgray204,
+  font=\fontsize{6}{8}\selectfont
 },
 log basis y={10},
 tick align=outside,
@@ -115,7 +120,7 @@ yticklabels={
 --(axis cs:0.01,161.286048224802)
 --(axis cs:0,166.417508986879)
 --cycle;
-\addplot [semithick, steelblue31119180, mark=*, mark size=3, mark options={solid}]
+\addplot [semithick, steelblue31119180, mark=*, mark size=1.5, mark options={solid}]
 table {%
 0 738.895139319656
 0.01 700.760094629078
@@ -131,7 +136,7 @@ table {%
 0.3 184.621415998597
 };
 \addlegendentry{BB84}
-\addplot [semithick, darkorange25512714, mark=square*, mark size=3, mark options={solid}]
+\addplot [semithick, darkorange25512714, mark=square*, mark size=1.5, mark options={solid}]
 table {%
 0 139.947651760159
 0.01 134.086134883089
@@ -157,7 +162,7 @@ table {%
 0.25 17.3005432522986
 0.25 16535.2938160824
 };
-\addplot [line width=0.48pt, black, dashed]
+\addplot [line width=0.48pt, black, dashed, forget plot]
 table {%
 0 12104.3469326774
 0.01 11275.3723696512
@@ -172,12 +177,17 @@ table {%
 0.25 2855.54193398454
 0.3 2220.27636632398
 };
-\addlegendentry{PLOB bound}
-\draw (axis cs:0.2,13458.6454) node[
-  scale=0.35,
+\draw (axis cs:0.02,10200) node[
+  font=\fontsize{6}{8}\selectfont,
+  anchor=north,
+  text=black,
+  rotate=0.0
+]{\itshape PLOB};
+\draw (axis cs:0.2,11500) node[
+  font=\fontsize{6}{8}\selectfont,
   anchor=north,
   text=darkred,
   rotate=0.0
-]{\itshape Realistic hardware regime (Corning SMF-28)};
+]{\itshape \shortstack{Corning\\SMF-28}};
 \end{axis}
 \end{tikzpicture}

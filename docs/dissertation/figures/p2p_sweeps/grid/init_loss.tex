@@ -7,7 +7,11 @@
 \definecolor{lightgray204}{RGB}{204,204,204}
 \definecolor{steelblue31119180}{RGB}{31,119,180}
 \begin{axis}[
-title={Key Rate vs TX Loss},
+width=170pt,
+height=140pt,
+scale only axis,
+tick label style={font=\fontsize{8}{10}\selectfont},
+title={(c) Key Rate vs TX Loss},
 legend cell align={left},
 legend style={
   fill opacity=0.8,
@@ -15,7 +19,8 @@ legend style={
   text opacity=1,
   at={(0.03,0.03)},
   anchor=south west,
-  draw=lightgray204
+  draw=lightgray204,
+  font=\fontsize{6}{8}\selectfont
 },
 log basis y={10},
 tick align=outside,
@@ -103,7 +108,7 @@ yticklabels={
 --(axis cs:0.05,90.8545829867735)
 --(axis cs:0,95.3464917202433)
 --cycle;
-\addplot [semithick, steelblue31119180, mark=*, mark size=3, mark options={solid}]
+\addplot [semithick, steelblue31119180, mark=*, mark size=1.5, mark options={solid}]
 table {%
 0 357.325853995512
 0.05 339.228453364678
@@ -116,7 +121,7 @@ table {%
 0.5 178.853928374107
 };
 \addlegendentry{BB84}
-\addplot [semithick, darkorange25512714, mark=square*, mark size=3, mark options={solid}]
+\addplot [semithick, darkorange25512714, mark=square*, mark size=1.5, mark options={solid}]
 table {%
 0 74.6092699192428
 0.05 68.3326043887928
@@ -139,7 +144,7 @@ table {%
 0.2 7.82184023253514
 0.2 6300.1135874535
 };
-\addplot [line width=0.48pt, black, dashed]
+\addplot [line width=0.48pt, black, dashed, forget plot]
 table {%
 0 4647.88825168334
 0.05 4376.26609937997
@@ -151,18 +156,23 @@ table {%
 0.4 2605.90339676985
 0.5 2137.57346934165
 };
-\addlegendentry{PLOB bound}
+\draw (axis cs:0.02,4700) node[
+  font=\fontsize{6}{8}\selectfont,
+  anchor=north,
+  text=black,
+  rotate=0.0
+]{\itshape PLOB};
 \draw (axis cs:0.0434,0.01) node[
   scale=0.35,
   anchor=south east,
   text=dimgray,
   rotate=0.0
 ]{0.05};
-\draw (axis cs:0.125,5154.2704) node[
-  scale=0.35,
+\draw (axis cs:0.125,1800) node[
+  font=\fontsize{6}{8}\selectfont,
   anchor=north,
   text=darkred,
   rotate=0.0
-]{\itshape Realistic hardware regime (OZ Optics DTS0092)};
+]{\itshape \shortstack{OZ Optics\\Coupler}};
 \end{axis}
 \end{tikzpicture}

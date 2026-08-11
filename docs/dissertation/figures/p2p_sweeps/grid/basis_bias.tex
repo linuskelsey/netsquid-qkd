@@ -7,10 +7,14 @@
 \definecolor{lightgray204}{RGB}{204,204,204}
 \definecolor{steelblue31119180}{RGB}{31,119,180}
 \begin{axis}[
-title={Key Rate vs Basis Bias},
+width=170pt,
+height=140pt,
+scale only axis,
+tick label style={font=\fontsize{8}{10}\selectfont},
+title={(d) Key Rate vs Basis Bias},
 legend cell align={left},
 legend pos=south west,
-legend style={fill opacity=0.8, draw opacity=1, text opacity=1, draw=lightgray204},
+legend style={fill opacity=0.8, draw opacity=1, text opacity=1, draw=lightgray204, font=\fontsize{6}{8}\selectfont},
 log basis y={10},
 tick align=outside,
 tick pos=left,
@@ -32,18 +36,17 @@ xticklabels={
   \(\displaystyle {1.1}\)
 },
 y grid style={darkgray176},
-ylabel={Absolute secure key rate (kbps)},
 ymajorgrids,
 ymin=25.5957294486317, ymax=421.359660424859,
 ymode=log,
 ytick style={color=black},
-ytick={1,10,100,1000,10000},
+ytick={30,50,100,200,300},
 yticklabels={
-  \(\displaystyle {10^{0}}\),
-  \(\displaystyle {10^{1}}\),
-  \(\displaystyle {10^{2}}\),
-  \(\displaystyle {10^{3}}\),
-  \(\displaystyle {10^{4}}\)
+  \(\displaystyle {30}\),
+  \(\displaystyle {50}\),
+  \(\displaystyle {100}\),
+  \(\displaystyle {200}\),
+  \(\displaystyle {300}\)
 }
 ]
 \path [draw=red, fill=red, opacity=0.08]
@@ -96,7 +99,7 @@ yticklabels={
 --(axis cs:0.99,89.3702736573373)
 --(axis cs:1,89.1159992916538)
 --cycle;
-\addplot [semithick, steelblue31119180, mark=*, mark size=3, mark options={solid}]
+\addplot [semithick, steelblue31119180, mark=*, mark size=1.5, mark options={solid}]
 table {%
 1 340.338172879274
 0.99 338.445668432245
@@ -109,7 +112,7 @@ table {%
 0.5 250.542302566953
 };
 \addlegendentry{BB84}
-\addplot [semithick, darkorange25512714, mark=square*, mark size=3, mark options={solid}]
+\addplot [semithick, darkorange25512714, mark=square*, mark size=1.5, mark options={solid}]
 table {%
 1 68.3775751372687
 0.99 68.518729117349
@@ -138,11 +141,11 @@ table {%
   text=dimgray,
   rotate=0.0
 ]{0.65};
-\draw (axis cs:0.775,387.3989) node[
-  scale=0.35,
+\draw (axis cs:0.775,410) node[
+  font=\fontsize{6}{8}\selectfont,
   anchor=north,
   text=darkred,
   rotate=0.0
-]{\itshape Realistic hardware regime};
+]{\itshape Realistic regime};
 \end{axis}
 \end{tikzpicture}

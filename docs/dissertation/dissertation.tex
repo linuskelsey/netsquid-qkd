@@ -178,9 +178,10 @@ MDI-QKD's security advantage comes at a cost. Key generation requires a successf
 \subsection{Theoretical Performance Bounds}
 
 The maximum achievable secure key rate in any point-to-point (no quantum repeater) QKD scheme is bounded by the Pirandola--Laurenza--Ottaviani--Banchi (PLOB) bound \cite{Pirandola_2017}. This fundamental result establishes that, against all attacks permitted by quantum physics, the key rate of a repeater-less link scales at most linearly with channel transmittance $\eta$:
-\[
+\begin{equation}
     R \leq -\log_2(1 - \eta) \approx \eta \log_2 e \quad \text{for } \eta \ll 1.
-\]
+    \label{eq:plob}
+\end{equation}
 Since transmittance decays exponentially with fibre length $L$ as $\eta = 10^{-\alpha L / 10}$ (with $\alpha$ the fibre attenuation coefficient in dB/km), the PLOB bound implies that key rates must fall exponentially with distance. Both BB84 and standard MDI-QKD are subject to this bound.
 
 Twin-Field QKD (TF-QKD), proposed in 2018 by Lucamarini et al.\ \cite{Lucamarini_2018}, exploits the same untrusted-relay tenet as MDI but replaces the two-photon BSM with single-photon interference. The result is that key rates scale as $\mathcal{O}(\sqrt{\eta})$ rather than $\mathcal{O}(\eta)$, exceeding the PLOB bound and extending the distance at which secure communication is achievable. TF-QKD thus represents the most practically significant near-term stepping stone beyond the repeater-less limit, and motivates the question central to this work, of precisely where and under what conditions MDI-QKD's security advantage over BB84 justifies its rate penalty, before that regime is superseded by TF-QKD or, eventually, quantum repeaters.
@@ -427,7 +428,7 @@ Eleven independent parameter sweeps characterise bipartite BB84 and MDI-QKD key 
     \label{fig:p2p_length}
 \end{figure}
 
-The BB84/MDI ratio stays close to a factor of five throughout: 4.3--5.5$\times$ over the full 1--100~km range, varying by no more than $\pm15\%$ even as the underlying key rate itself falls by close to three orders of magnitude --- Figure~\ref{fig:p2p_charlie_pos} below explains why this ratio is so stable. Both protocols also fall well below the PLOB bound, and increasingly so with distance: at 1~km, BB84 and MDI sit a factor of 5.2$\times$ and 22.5$\times$ below PLOB respectively; by 100~km this has widened to 43$\times$ and 204$\times$. This growing shortfall is the practical motivation for the range-extending architectures discussed in Section~\ref{sec:security_rate} (\textit{Metropolitan network scope}) and revisited as future work in Section~\ref{sec:conclusion}.
+The BB84/MDI ratio stays close to a factor of five throughout: 4.3--5.5$\times$ over the full 1--100~km range, varying by no more than $\pm15\%$ even as the underlying key rate itself falls by close to three orders of magnitude --- Figure~\ref{fig:p2p_charlie_pos} below explains why this ratio is so stable. Both protocols also fall well below the PLOB bound, and increasingly so with distance: at 1~km, BB84 and MDI sit a factor of 5.2$\times$ and 22.5$\times$ below PLOB respectively; by 100~km this has widened to 43$\times$ and 204$\times$. This growing shortfall is the practical motivation for the range-extending architectures discussed in Section~\ref{sec:security_rate} (\textit{Metropolitan network scope}) and revisited as future work in Section~\ref{sec:conclusion}. The widening gap is an offset rather than a divergence in decay rate: BB84's key rate is single-photon-limited and so scales linearly in the channel transmittance $\eta_\text{link}$ (Section~\ref{sec:security_rate}), the same regime the PLOB bound itself approaches at high loss, $R_\text{PLOB} \approx \eta \log_2 e$ for $\eta \ll 1$ (Equation~\ref{eq:plob}) --- so on the logarithmic axis of Figure~\ref{fig:p2p_length} the simulated BB84 curve and the PLOB bound become near-parallel at longer distances rather than diverging, which is the behaviour expected of a correctly implemented single-photon channel model and offers a useful internal check on the simulation independent of any analytical derivation. MDI's visibly steeper roll-off is consistent with this picture rather than a contradiction of it: its coincidence probability scales as $\eta_\text{arm}^2$ (Section~\ref{sec:security_rate}), so its curve is expected to run parallel to a hypothetical squared-transmittance bound, not to PLOB itself.
 
 \textbf{Detector- and receiver-side parameters.} Figure~\ref{fig:p2p_efficiency} sweeps detector efficiency $\eta_d$ from 1.0 down to 0.15, shaded to mark the efficiency bands typical of SNSPD (0.80--0.95, IDQ ID281) and SPAD (0.10--0.25, IDQ ID230) technology, and Figure~\ref{fig:p2p_node_loss} sweeps receiver node/connector loss from 0--6~dB.
 
@@ -617,6 +618,8 @@ Several extensions are of immediate interest.
 
 \textit{Brownfield relay expansion.} The growth-model experiments of Section~\ref{sec:scalability} and Appendix~\ref{sec:appendix_relay} hold the relay count $K$ fixed while users grow, modelling a provider serving unplanned demand on existing infrastructure. The relay count sweep of Section~\ref{sec:scalability}, by contrast, still re-clusters and repositions all $K$ relays from scratch at each $K$, which models greenfield network design rather than expanding a live network: a real operator adding capacity has already sunk the cost of its existing $K$ relays and cannot costlessly relocate them. Extending $K \to K+1$ realistically would instead fix the existing relay positions and solve for where a single new relay should go --- and which existing users it should take over --- to minimise the resulting total fibre length. This is a harder problem than the placement methods used elsewhere in this work: the new relay's optimal position depends on which users it serves, and that assignment depends on its position, so it needs its own alternating position/assignment loop (as in \texttt{optimise\_relays}) restricted to a single new facility with the other $K$ held fixed, rather than the one-shot strategies used in Appendix~\ref{sec:appendix_relay}. Not attempted here for want of time.
 
+\textit{Relay count sweep at further user counts.} The relay count sweep of Section~\ref{sec:scalability} showed MDI key rate peaking at $K=4$ for $N=15$, a non-monotonic optimum not observed at the other user counts tested. Confirming whether this is a genuine feature of the backbone/spoke trade-off (Section~\ref{sec:results_cost}) or an artefact of this particular topology requires repeating the sweep at further $N$: a repeat at $N=10$ is feasible overnight and left running; $N=20$ is a further extension, at an estimated $\sim$20~hours for $K=1$--$5$ (Table~\ref{tab:timing}) too long to guarantee completion within the project timeline, but worth attempting if time allows.
+
 \textit{Real network topologies.} Extending the simulator to accept fixed network graphs from real city infrastructure would enable direct comparison with published deployed networks~\cite{Dynes_2019, Berrevoets_2022, Tang_2016} and provide a practical planning tool for network operators.
 
 \textit{Twin-Field QKD.} TF-QKD and its variants~\cite{Lucamarini_2018} achieve key rates scaling as $\mathcal{O}(\sqrt{\eta})$, surpassing the PLOB bound and extending the distance at which MDI-level security is achievable without quantum repeaters. Extending this framework to TF-QKD would complete the repeater-less QKD comparison.
@@ -633,54 +636,36 @@ Several extensions are of immediate interest.
 \section{Additional Point-to-Point Parameter Sweeps}
 \label{sec:appendix_p2p}
 
-Section~\ref{sec:results_p2p} discussed four of the eleven point-to-point parameter sweeps produced for this work: distance, detector efficiency, receiver loss, and Charlie's relay position. Figure~\ref{fig:appx_grid} reproduces the remaining seven; the discussion below repeatedly compares these against detector efficiency (Figure~\ref{fig:p2p_efficiency}) and receiver loss (Figure~\ref{fig:p2p_node_loss}) from Section~\ref{sec:results_p2p}. In every panel, only the swept parameter deviates from its layer-9 default in Table~\ref{tab:layers}; all other parameters are held at that default operating point (20~km Alice--Bob separation, 0.18~dB/km fibre attenuation, $\eta_d = 0.9$ detector efficiency, 50~cps dark count rate, $L_i = 0.1$ TX insertion loss, 2.0~dB node loss, $\varepsilon_s = 0.015$ source error rate, $\beta = 3.2\times10^{-7}$/km fibre dephasing, $\eta_{bs} = 0.97$ beam-splitter efficiency, Charlie at the arm midpoint), with 1000 Monte Carlo runs per point and shaded bands showing the sample spread.
+Section~\ref{sec:results_p2p} discussed four of the eleven point-to-point parameter sweeps produced for this work: distance, detector efficiency, receiver loss, and Charlie's relay position. Of the remaining seven, three --- dark count rate, fibre dephasing rate, and source error rate --- are omitted from Figure~\ref{fig:appx_grid} below and quantified directly in the \textit{Noise-like parameters} discussion instead, since each varies key rate by well under 3\% across its realistic hardware range. Figure~\ref{fig:appx_grid} reproduces the remaining four; the discussion below repeatedly compares these against detector efficiency (Figure~\ref{fig:p2p_efficiency}) and receiver loss (Figure~\ref{fig:p2p_node_loss}) from Section~\ref{sec:results_p2p}. In every panel, only the swept parameter deviates from its layer-9 default in Table~\ref{tab:layers}; all other parameters are held at that default operating point (20~km Alice--Bob separation, 0.18~dB/km fibre attenuation, $\eta_d = 0.9$ detector efficiency, 50~cps dark count rate, $L_i = 0.1$ TX insertion loss, 2.0~dB node loss, $\varepsilon_s = 0.015$ source error rate, $\beta = 3.2\times10^{-7}$/km fibre dephasing, $\eta_{bs} = 0.97$ beam-splitter efficiency, Charlie at the arm midpoint), with 1000 Monte Carlo runs per point and shaded bands showing the sample spread.
 
-\begin{figure}[H]
+\begin{figure}[b]
     \centering
-    \begin{subfigure}[b]{0.24\textwidth}
+    \begin{subfigure}[t]{0.48\textwidth}
         \centering
-        \resizebox{\textwidth}{!}{\input{figures/p2p_sweeps/grid/loss.tex}}
-        \caption{Fibre loss}
+        \input{figures/p2p_sweeps/grid/loss.tex}
+        \phantomcaption
         \label{fig:appx_loss}
     \end{subfigure}%
-    \begin{subfigure}[b]{0.24\textwidth}
+    \begin{subfigure}[t]{0.48\textwidth}
         \centering
-        \resizebox{\textwidth}{!}{\input{figures/p2p_sweeps/grid/bs_eff.tex}}
-        \caption{BS efficiency}
+        \raisebox{1.44pt}{\input{figures/p2p_sweeps/grid/bs_eff.tex}}
+        \phantomcaption
         \label{fig:appx_bs_eff}
-    \end{subfigure}%
-    \begin{subfigure}[b]{0.24\textwidth}
-        \centering
-        \resizebox{\textwidth}{!}{\input{figures/p2p_sweeps/grid/init_loss.tex}}
-        \caption{TX insertion loss}
-        \label{fig:appx_init_loss}
-    \end{subfigure}%
-    \begin{subfigure}[b]{0.24\textwidth}
-        \centering
-        \resizebox{\textwidth}{!}{\input{figures/p2p_sweeps/grid/basis_bias.tex}}
-        \caption{Basis bias}
-        \label{fig:appx_basis_bias}
     \end{subfigure}
 
-    \begin{subfigure}[b]{0.24\textwidth}
+    \begin{subfigure}[t]{0.48\textwidth}
         \centering
-        \resizebox{\textwidth}{!}{\input{figures/p2p_sweeps/grid/dark_count.tex}}
-        \caption{Dark count rate}
-        \label{fig:appx_dark_count}
+        \input{figures/p2p_sweeps/grid/init_loss.tex}
+        \phantomcaption
+        \label{fig:appx_init_loss}
     \end{subfigure}%
-    \begin{subfigure}[b]{0.24\textwidth}
+    \begin{subfigure}[t]{0.48\textwidth}
         \centering
-        \resizebox{\textwidth}{!}{\input{figures/p2p_sweeps/grid/dephasing.tex}}
-        \caption{Fibre dephasing}
-        \label{fig:appx_dephasing}
-    \end{subfigure}%
-    \begin{subfigure}[b]{0.24\textwidth}
-        \centering
-        \resizebox{\textwidth}{!}{\input{figures/p2p_sweeps/grid/source_err.tex}}
-        \caption{Source error rate}
-        \label{fig:appx_source_err}
+        \raisebox{1.44pt}{\input{figures/p2p_sweeps/grid/basis_bias.tex}}
+        \phantomcaption
+        \label{fig:appx_basis_bias}
     \end{subfigure}
-    \caption{Remaining point-to-point parameter sweeps. BB84 in blue (circles), MDI in orange (squares); shaded bands show Monte Carlo sample spread. Except for the parameter swept in each panel, all hardware parameters take their layer-9 default values from Table~\ref{tab:layers}.}
+    \caption{Four of the remaining point-to-point parameter sweeps (see \textit{Noise-like parameters} below for the other three). BB84 in blue (circles), MDI in orange (squares); shaded bands show Monte Carlo sample spread. Except for the parameter swept in each panel, all hardware parameters take their layer-9 default values from Table~\ref{tab:layers}.}
     \label{fig:appx_grid}
 \end{figure}
 
@@ -690,7 +675,7 @@ Three groupings emerge from these seven sweeps, extending the channel-versus-per
 
 \textbf{Per-arm hardware loss.} Beam-splitter efficiency (Figure~\ref{fig:appx_bs_eff}) and TX insertion loss (Figure~\ref{fig:appx_init_loss}) both act after the split, and both widen the ratio, consistent with detector efficiency and receiver loss in Section~\ref{sec:results_p2p}. Beam-splitter efficiency is unique among all eleven sweeps in that BB84 is structurally unaffected by it (the dashed reference line in Figure~\ref{fig:appx_bs_eff} is exactly flat, since $\eta_{bs}$ only enters MDI's Bell-state measurement); MDI key rate alone declines from 66.1~kbps at $\eta_{bs}=1.0$ to 42.3~kbps at $\eta_{bs}=0.8$, a 36\% reduction from a single power of $\eta_{bs}$ in the coincidence probability. TX insertion loss widens the BB84/MDI ratio from 4.8$\times$ at $L_i=0$ to 9.7$\times$ at $L_i=0.5$, the same per-arm doubling pattern seen under detector efficiency (Figure~\ref{fig:p2p_efficiency}) and receiver loss (Section~\ref{sec:results_p2p}). X-basis detector efficiency, or basis bias (Figure~\ref{fig:appx_basis_bias}), belongs to this group too but widens the ratio only modestly, from 5.0$\times$ at $\eta_X=1.0$ to 6.1$\times$ at $\eta_X=0.5$, far less than the full detector-efficiency sweep of Figure~\ref{fig:p2p_efficiency}, because here only one of the two measurement bases is degraded rather than both.
 
-\textbf{Noise-like parameters.} Dark count rate, fibre dephasing rate, and source error rate (Figures~\ref{fig:appx_dark_count}--\ref{fig:appx_source_err}) leave both protocols essentially flat across their full swept ranges at this metropolitan operating point, with the BB84/MDI ratio staying within a few percent of 5.2$\times$ throughout each. None of the three introduces a directional loss term on either arm, so none is expected to shift the ratio; as noted in Section~\ref{sec:simulation_limitations}, this flatness is specific to the signal rates achieved at 20~km and should not be extrapolated to longer, detection-starved links.
+\textbf{Noise-like parameters.} Dark count rate, fibre dephasing rate, and source error rate leave both protocols essentially flat across their full swept ranges at this metropolitan operating point, with the BB84/MDI ratio staying within a few percent of 5.2$\times$ throughout each --- flat enough that the three are omitted from Figure~\ref{fig:appx_grid} and reported numerically here instead. Across each parameter's realistic hardware range, key rate varies from best to worst point by: dark count rate, 0.8\% (BB84) and 1.9\% (MDI); fibre dephasing rate, 0.6\% (BB84) and 2.0\% (MDI); source error rate, 0.7\% (BB84) and 3.0\% (MDI). None of the three introduces a directional loss term on either arm, so none is expected to shift the ratio; as noted in Section~\ref{sec:simulation_limitations}, this flatness is specific to the signal rates achieved at 20~km and should not be extrapolated to longer, detection-starved links.
 
 \section{Relay Placement Optimisation}
 \label{sec:appendix_relay}
