@@ -1,0 +1,137 @@
+% This file was created with tikzplotlib v0.10.1.
+\begin{tikzpicture}
+
+\definecolor{crimson2282628}{RGB}{228,26,28}
+\definecolor{darkgray176}{RGB}{176,176,176}
+\definecolor{darkorange25512714}{RGB}{255,127,14}
+\definecolor{lightgray204}{RGB}{204,204,204}
+\definecolor{steelblue31119180}{RGB}{31,119,180}
+\definecolor{steelblue55126184}{RGB}{55,126,184}
+
+\begin{axis}[
+legend cell align={left},
+legend style={
+  fill opacity=0.8,
+  draw opacity=1,
+  text opacity=1,
+  at={(0.03,0.03)},
+  anchor=south west,
+  draw=lightgray204
+},
+log basis y={10},
+tick align=outside,
+tick pos=left,
+x grid style={darkgray176},
+xlabel={Relay count K},
+xmajorgrids,
+xmin=0.85, xmax=4.15,
+xtick style={color=black},
+xtick={1,2,3,4},
+xticklabels={
+  \(\displaystyle {1}\),
+  \(\displaystyle {2}\),
+  \(\displaystyle {3}\),
+  \(\displaystyle {4}\)
+},
+y grid style={darkgray176},
+ylabel={Avg key rate (kbps)},
+ymajorgrids,
+ymin=39.595289123758, ymax=762.733905595166,
+ymode=log,
+ytick style={color=black},
+ytick={1,10,100,1000,10000},
+yticklabels={
+  \(\displaystyle {10^{0}}\),
+  \(\displaystyle {10^{1}}\),
+  \(\displaystyle {10^{2}}\),
+  \(\displaystyle {10^{3}}\),
+  \(\displaystyle {10^{4}}\)
+}
+]
+\path [draw=steelblue55126184, fill=steelblue55126184, opacity=0.2]
+(axis cs:1,666.770313232944)
+--(axis cs:1,557.487224385593)
+--(axis cs:2,557.487224385593)
+--(axis cs:3,557.487224385593)
+--(axis cs:4,557.487224385593)
+--(axis cs:4,666.770313232944)
+--(axis cs:4,666.770313232944)
+--(axis cs:3,666.770313232944)
+--(axis cs:2,666.770313232944)
+--(axis cs:1,666.770313232944)
+--cycle;
+
+\path [draw=crimson2282628, fill=crimson2282628, opacity=0.2]
+(axis cs:1,71.1504771627581)
+--(axis cs:1,45.2939624292823)
+--(axis cs:2,53.2151435258236)
+--(axis cs:3,59.3545428817087)
+--(axis cs:4,60.244770887293)
+--(axis cs:4,79.8048802695139)
+--(axis cs:4,79.8048802695139)
+--(axis cs:3,78.0136795524725)
+--(axis cs:2,73.4140636140658)
+--(axis cs:1,71.1504771627581)
+--cycle;
+
+\addplot [semithick, steelblue55126184, dashed]
+table {%
+1 612.128768809269
+2 612.128768809269
+3 612.128768809269
+4 612.128768809269
+};
+\addlegendentry{BB84}
+\addplot [semithick, crimson2282628, mark=*, mark size=3, mark options={solid}]
+table {%
+1 58.2222197960202
+2 63.3146035699447
+3 68.6841112170906
+4 70.0248255784035
+};
+\addlegendentry{MDI}
+\end{axis}
+
+\begin{axis}[
+axis y line=right,
+log basis y={10},
+tick align=outside,
+title={Key Rate vs Relay Count},
+x grid style={darkgray176},
+xmin=0.85, xmax=4.15,
+xtick pos=left,
+xtick style={color=black},
+y grid style={darkgray176},
+ylabel={Relative key rate},
+ymin=0.084558694041905, ymax=1.12483210000788,
+ymode=log,
+ytick pos=right,
+ytick style={color=black},
+ytick={0.001,0.01,0.1,1,10,100},
+yticklabel style={anchor=west},
+yticklabels={
+  \(\displaystyle {10^{-3}}\),
+  \(\displaystyle {10^{-2}}\),
+  \(\displaystyle {10^{-1}}\),
+  \(\displaystyle {10^{0}}\),
+  \(\displaystyle {10^{1}}\),
+  \(\displaystyle {10^{2}}\)
+}
+]
+\addplot [semithick, steelblue31119180, opacity=0]
+table {%
+1 1
+2 1
+3 1
+4 1
+};
+\addplot [semithick, darkorange25512714, opacity=0]
+table {%
+1 0.0951143333930797
+2 0.103433471511405
+3 0.112205331160463
+4 0.114395580058454
+};
+\end{axis}
+
+\end{tikzpicture}

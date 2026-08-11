@@ -140,7 +140,7 @@ def main():
             topo       = Topology(user_pos, relay_pos)
 
             if args.output_dir and not args.no_figure:
-                _topo_dir = os.path.join(args.output_dir, "relay_sweep", f"seed{seed}", "topologies")
+                _topo_dir = os.path.join(args.output_dir, f"relay_sweep_N{args.n}", f"seed{seed}", "topologies")
                 os.makedirs(_topo_dir, exist_ok=True)
                 fig_m, ax_m = plt.subplots(figsize=(6, 5))
                 draw_mdi(ax_m, topo, tortuosity_mean=args.tortuosity, seed=seed)
@@ -187,7 +187,7 @@ def main():
             ax_s.set_title(f"Key Rate vs Relay Count (seed={seed})", fontsize=10)
             plt.tight_layout()
             save_bundle(
-                fig_s, os.path.join(args.output_dir, "relay_sweep"), f"seed{seed}",
+                fig_s, os.path.join(args.output_dir, f"relay_sweep_N{args.n}"), f"seed{seed}",
                 title=f"Key Rate vs Relay Count (seed={seed})",
                 assumptions={
                     "Seed": seed,
@@ -277,7 +277,7 @@ def main():
     if not args.no_figure:
         if args.output_dir:
             save_bundle(
-                fig, args.output_dir, "relay_sweep",
+                fig, args.output_dir, f"relay_sweep_N{args.n}",
                 title="Key Rate vs Relay Count",
                 assumptions={
                     "User count (fixed)": args.n,
@@ -296,12 +296,12 @@ def main():
                     },
                 },
             )
-            print(f"Saved to {os.path.join(args.output_dir, 'relay_sweep')}")
+            print(f"Saved to {os.path.join(args.output_dir, f'relay_sweep_N{args.n}')}")
         else:
             plt.show()
 
     if args.output_dir and not args.no_figure:
-        print(f"Per-seed plots + topologies saved under {os.path.join(args.output_dir, 'relay_sweep')}/seed<seed>/")
+        print(f"Per-seed plots + topologies saved under {os.path.join(args.output_dir, f'relay_sweep_N{args.n}')}/seed<seed>/")
 
 
 if __name__ == "__main__":
