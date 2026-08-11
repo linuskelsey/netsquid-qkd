@@ -13,6 +13,9 @@
 \definecolor{steelblue31119180}{RGB}{31,119,180}
 
 \begin{axis}[
+width=180pt,
+height=200pt,
+scale only axis,
 legend cell align={left},
 legend style={
   fill opacity=0.8,
@@ -20,11 +23,17 @@ legend style={
   text opacity=1,
   at={(0.03,0.03)},
   anchor=south west,
-  draw=lightgray204
+  draw=lightgray204,
+  font=\fontsize{7}{9}\selectfont
 },
 log basis y={10},
 tick align=outside,
-tick pos=left,
+xtick pos=left,
+ytick pos=right,
+yticklabel pos=right,
+tick label style={font=\fontsize{10}{12}\selectfont},
+label style={font=\fontsize{10}{12}\selectfont},
+title style={font=\fontsize{12}{14}\selectfont},
 title={BB84: Isolated Parameter Impact},
 x grid style={darkgray176},
 xlabel={Separation between Alice and Bob (km)},
@@ -43,7 +52,6 @@ xticklabels={
   \(\displaystyle {120}\)
 },
 y grid style={darkgray176},
-ylabel={Secure key rate (kbps)},
 ymajorgrids,
 ymin=0.443301364171667, ymax=7669.68788693672,
 ymode=log,
@@ -60,391 +68,7 @@ yticklabels={
   \(\displaystyle {10^{5}}\)
 }
 ]
-\path [draw=steelblue31119180, very thin]
-(axis cs:1,3763.1731285767)
---(axis cs:1,4681.35454078617);
-
-\path [draw=steelblue31119180, very thin]
-(axis cs:5,2190.4882943845)
---(axis cs:5,2821.53317109066);
-
-\path [draw=steelblue31119180, very thin]
-(axis cs:10,1273.26226374931)
---(axis cs:10,1688.25815297886);
-
-\path [draw=steelblue31119180, very thin]
-(axis cs:20,479.614305351409)
---(axis cs:20,752.542621819483);
-
-\path [draw=steelblue31119180, very thin]
-(axis cs:30,231.342637877267)
---(axis cs:30,379.693683720686);
-
-\path [draw=steelblue31119180, very thin]
-(axis cs:40,105.540940059702)
---(axis cs:40,208.654676854935);
-
-\path [draw=steelblue31119180, very thin]
-(axis cs:50,63.4060164456625)
---(axis cs:50,119.791535170828);
-
-\path [draw=steelblue31119180, very thin]
-(axis cs:60,29.1392693636461)
---(axis cs:60,76.1056037740677);
-
-\path [draw=steelblue31119180, very thin]
-(axis cs:70,11.2727616742274)
---(axis cs:70,47.075879209481);
-
-\path [draw=steelblue31119180, very thin]
-(axis cs:80,5.2976273135137)
---(axis cs:80,28.4330542526391);
-
-\path [draw=steelblue31119180, very thin]
-(axis cs:90,1.59810435879218)
---(axis cs:90,18.1893396227201);
-
-\path [draw=steelblue31119180, very thin]
-(axis cs:100,0.690778807271933)
---(axis cs:100,12.382525951645);
-
-\path [draw=darkorange25512714, very thin]
-(axis cs:1,3801.19987334276)
---(axis cs:1,4713.53281505663);
-
-\path [draw=darkorange25512714, very thin]
-(axis cs:5,2619.46487086095)
---(axis cs:5,3315.15021657648);
-
-\path [draw=darkorange25512714, very thin]
-(axis cs:10,1849.59991522712)
---(axis cs:10,2367.39308138414);
-
-\path [draw=darkorange25512714, very thin]
-(axis cs:20,1222.40613285213)
---(axis cs:20,1516.92194409324);
-
-\path [draw=darkorange25512714, very thin]
-(axis cs:30,884.170025595831)
---(axis cs:30,1142.43875205594);
-
-\path [draw=darkorange25512714, very thin]
-(axis cs:40,708.471184558252)
---(axis cs:40,904.904642494761);
-
-\path [draw=darkorange25512714, very thin]
-(axis cs:50,572.802559795666)
---(axis cs:50,752.172093485328);
-
-\path [draw=darkorange25512714, very thin]
-(axis cs:60,495.224856207284)
---(axis cs:60,633.784411915202);
-
-\path [draw=darkorange25512714, very thin]
-(axis cs:70,429.992218936718)
---(axis cs:70,564.167830244145);
-
-\path [draw=darkorange25512714, very thin]
-(axis cs:80,385.216602531453)
---(axis cs:80,492.46757494835);
-
-\path [draw=darkorange25512714, very thin]
-(axis cs:90,340.306527827357)
---(axis cs:90,453.072981509474);
-
-\path [draw=darkorange25512714, very thin]
-(axis cs:100,290.464563623867)
---(axis cs:100,410.719563040715);
-
-\path [draw=forestgreen4416044, very thin]
-(axis cs:1,3930.08206189022)
---(axis cs:1,4808.51819170899);
-
-\path [draw=forestgreen4416044, very thin]
-(axis cs:5,2772.94755656904)
---(axis cs:5,3380.69620792575);
-
-\path [draw=forestgreen4416044, very thin]
-(axis cs:10,1987.64906177074)
---(axis cs:10,2527.91517844008);
-
-\path [draw=forestgreen4416044, very thin]
-(axis cs:20,1252.47778534212)
---(axis cs:20,1625.94600579693);
-
-\path [draw=forestgreen4416044, very thin]
-(axis cs:30,950.110316033197)
---(axis cs:30,1186.99103097701);
-
-\path [draw=forestgreen4416044, very thin]
-(axis cs:40,732.690563605757)
---(axis cs:40,941.979363524937);
-
-\path [draw=forestgreen4416044, very thin]
-(axis cs:50,615.339451505296)
---(axis cs:50,771.791044138115);
-
-\path [draw=forestgreen4416044, very thin]
-(axis cs:60,514.538918281124)
---(axis cs:60,664.224803635408);
-
-\path [draw=forestgreen4416044, very thin]
-(axis cs:70,455.103657486504)
---(axis cs:70,582.47136942625);
-
-\path [draw=forestgreen4416044, very thin]
-(axis cs:80,405.053395026743)
---(axis cs:80,513.379373973608);
-
-\path [draw=forestgreen4416044, very thin]
-(axis cs:90,351.014707009353)
---(axis cs:90,466.741226493871);
-
-\path [draw=forestgreen4416044, very thin]
-(axis cs:100,317.596625634011)
---(axis cs:100,431.382020567142);
-
-\path [draw=crimson2143940, very thin]
-(axis cs:1,3510.67212121467)
---(axis cs:1,4493.37046150906);
-
-\path [draw=crimson2143940, very thin]
-(axis cs:5,2476.86448388763)
---(axis cs:5,3149.13503110591);
-
-\path [draw=crimson2143940, very thin]
-(axis cs:10,1758.72645499253)
---(axis cs:10,2238.48710338086);
-
-\path [draw=crimson2143940, very thin]
-(axis cs:20,1126.66908480246)
---(axis cs:20,1460.01188167475);
-
-\path [draw=crimson2143940, very thin]
-(axis cs:30,813.800035216987)
---(axis cs:30,1069.27362166615);
-
-\path [draw=crimson2143940, very thin]
-(axis cs:40,672.406869418362)
---(axis cs:40,859.963358588091);
-
-\path [draw=crimson2143940, very thin]
-(axis cs:50,542.334833038278)
---(axis cs:50,717.82854222387);
-
-\path [draw=crimson2143940, very thin]
-(axis cs:60,463.535767834812)
---(axis cs:60,600.845838684769);
-
-\path [draw=crimson2143940, very thin]
-(axis cs:70,390.576869815674)
---(axis cs:70,534.92239728345);
-
-\path [draw=crimson2143940, very thin]
-(axis cs:80,360.997362296131)
---(axis cs:80,470.358033719384);
-
-\path [draw=crimson2143940, very thin]
-(axis cs:90,317.984777204865)
---(axis cs:90,434.859531548064);
-
-\path [draw=crimson2143940, very thin]
-(axis cs:100,294.47033090296)
---(axis cs:100,380.59449531101);
-
-\path [draw=sienna1408675, very thin]
-(axis cs:1,2338.26512626389)
---(axis cs:1,3224.39613166464);
-
-\path [draw=sienna1408675, very thin]
-(axis cs:5,1682.35437434306)
---(axis cs:5,2227.60403851709);
-
-\path [draw=sienna1408675, very thin]
-(axis cs:10,1107.70652063482)
---(axis cs:10,1639.54575479377);
-
-\path [draw=sienna1408675, very thin]
-(axis cs:20,774.053008865103)
---(axis cs:20,1095.85846288304);
-
-\path [draw=sienna1408675, very thin]
-(axis cs:30,563.274697452737)
---(axis cs:30,773.355718090071);
-
-\path [draw=sienna1408675, very thin]
-(axis cs:40,433.717545796729)
---(axis cs:40,609.693292265135);
-
-\path [draw=sienna1408675, very thin]
-(axis cs:50,368.82833051264)
---(axis cs:50,505.399319139816);
-
-\path [draw=sienna1408675, very thin]
-(axis cs:60,312.620027115957)
---(axis cs:60,441.231755343695);
-
-\path [draw=sienna1408675, very thin]
-(axis cs:70,275.740725400612)
---(axis cs:70,382.41244118478);
-
-\path [draw=sienna1408675, very thin]
-(axis cs:80,246.750733173766)
---(axis cs:80,338.651909854592);
-
-\path [draw=sienna1408675, very thin]
-(axis cs:90,219.43626353859)
---(axis cs:90,307.030133828358);
-
-\path [draw=sienna1408675, very thin]
-(axis cs:100,197.818064144247)
---(axis cs:100,274.975959941317);
-
-\path [draw=orchid227119194, very thin]
-(axis cs:1,4021.4548729391)
---(axis cs:1,4852.87739041826);
-
-\path [draw=orchid227119194, very thin]
-(axis cs:5,2766.10526399665)
---(axis cs:5,3473.4715426258);
-
-\path [draw=orchid227119194, very thin]
-(axis cs:10,1928.78891700221)
---(axis cs:10,2456.93305526529);
-
-\path [draw=orchid227119194, very thin]
-(axis cs:20,1227.14181102669)
---(axis cs:20,1633.30071448417);
-
-\path [draw=orchid227119194, very thin]
-(axis cs:30,930.979081968851)
---(axis cs:30,1217.17329656172);
-
-\path [draw=orchid227119194, very thin]
-(axis cs:40,736.467528257478)
---(axis cs:40,943.944515736631);
-
-\path [draw=orchid227119194, very thin]
-(axis cs:50,621.804030431547)
---(axis cs:50,774.120738203184);
-
-\path [draw=orchid227119194, very thin]
-(axis cs:60,521.980466874984)
---(axis cs:60,676.941637082924);
-
-\path [draw=orchid227119194, very thin]
-(axis cs:70,455.367340419776)
---(axis cs:70,579.688727889777);
-
-\path [draw=orchid227119194, very thin]
-(axis cs:80,408.929464614776)
---(axis cs:80,518.433557441278);
-
-\path [draw=orchid227119194, very thin]
-(axis cs:90,362.508357046277)
---(axis cs:90,469.650720826866);
-
-\path [draw=orchid227119194, very thin]
-(axis cs:100,327.15096128904)
---(axis cs:100,423.472513374033);
-
-\path [draw=gray127, very thin]
-(axis cs:1,3961.05637010247)
---(axis cs:1,4880.63721991557);
-
-\path [draw=gray127, very thin]
-(axis cs:5,2768.40339664731)
---(axis cs:5,3403.80822910183);
-
-\path [draw=gray127, very thin]
-(axis cs:10,2000.46215379535)
---(axis cs:10,2466.91005254055);
-
-\path [draw=gray127, very thin]
-(axis cs:20,1260.21411978061)
---(axis cs:20,1622.79576870604);
-
-\path [draw=gray127, very thin]
-(axis cs:30,949.78451466385)
---(axis cs:30,1179.3455517307);
-
-\path [draw=gray127, very thin]
-(axis cs:40,760.098482277191)
---(axis cs:40,978.001313138935);
-
-\path [draw=gray127, very thin]
-(axis cs:50,618.050732939117)
---(axis cs:50,785.407143859366);
-
-\path [draw=gray127, very thin]
-(axis cs:60,522.166631991975)
---(axis cs:60,676.36386320109);
-
-\path [draw=gray127, very thin]
-(axis cs:70,452.706579166284)
---(axis cs:70,593.976829751721);
-
-\path [draw=gray127, very thin]
-(axis cs:80,402.812919706058)
---(axis cs:80,519.252656526446);
-
-\path [draw=gray127, very thin]
-(axis cs:90,357.036952262602)
---(axis cs:90,475.549537050644);
-
-\path [draw=gray127, very thin]
-(axis cs:100,322.571239261699)
---(axis cs:100,434.406979166896);
-
-\path [draw=darkturquoise23190207, very thin]
-(axis cs:1,3351.3901840464)
---(axis cs:1,4266.11815938618);
-
-\path [draw=darkturquoise23190207, very thin]
-(axis cs:5,2303.11564089513)
---(axis cs:5,2983.53161780683);
-
-\path [draw=darkturquoise23190207, very thin]
-(axis cs:10,1665.16338749932)
---(axis cs:10,2168.51527763669);
-
-\path [draw=darkturquoise23190207, very thin]
-(axis cs:20,1083.26964935555)
---(axis cs:20,1395.43341693716);
-
-\path [draw=darkturquoise23190207, very thin]
-(axis cs:30,795.409341541215)
---(axis cs:30,1048.70020154423);
-
-\path [draw=darkturquoise23190207, very thin]
-(axis cs:40,629.923099749977)
---(axis cs:40,817.930150362068);
-
-\path [draw=darkturquoise23190207, very thin]
-(axis cs:50,500.904175409066)
---(axis cs:50,704.953241803215);
-
-\path [draw=darkturquoise23190207, very thin]
-(axis cs:60,435.298118053069)
---(axis cs:60,593.516531374445);
-
-\path [draw=darkturquoise23190207, very thin]
-(axis cs:70,393.317253274949)
---(axis cs:70,503.664383322073);
-
-\path [draw=darkturquoise23190207, very thin]
-(axis cs:80,339.210908961922)
---(axis cs:80,457.073605437368);
-
-\path [draw=darkturquoise23190207, very thin]
-(axis cs:90,307.519577883925)
---(axis cs:90,404.043462289503);
-
-\path [draw=darkturquoise23190207, very thin]
-(axis cs:100,278.778606046342)
---(axis cs:100,377.120629676331);
-
-\addplot [line width=0.36pt, steelblue31119180]
+\addplot [semithick, steelblue31119180, mark=*, mark size=1.5, mark options={solid}]
 table {%
 1 4266.99571014964
 5 2511.66927885868
@@ -459,8 +83,8 @@ table {%
 90 10.0321492846874
 100 5.97592258694378
 };
-\addlegendentry{Fibre loss $\alpha$=0.18 dB/km}
-\addplot [line width=0.36pt, darkorange25512714]
+\addlegendentry{$\alpha$}
+\addplot [semithick, darkorange25512714, mark=*, mark size=1.5, mark options={solid}]
 table {%
 1 4230.47200517161
 5 2939.92417123343
@@ -475,8 +99,8 @@ table {%
 90 392.426562506118
 100 355.366457620532
 };
-\addlegendentry{Detector eff $\eta_d$=0.90}
-\addplot [line width=0.36pt, forestgreen4416044]
+\addlegendentry{$\eta_d$}
+\addplot [semithick, forestgreen4416044, mark=*, mark size=1.5, mark options={solid}]
 table {%
 1 4451.51322372002
 5 3092.47851326823
@@ -491,8 +115,8 @@ table {%
 90 412.802896580504
 100 374.787620385064
 };
-\addlegendentry{Dark count $d_c$=50 cps}
-\addplot [line width=0.36pt, crimson2143940]
+\addlegendentry{$d_c$}
+\addplot [semithick, crimson2143940, mark=*, mark size=1.5, mark options={solid}]
 table {%
 1 4017.20522661576
 5 2782.09660146099
@@ -507,8 +131,8 @@ table {%
 90 370.734382465293
 100 336.703536797807
 };
-\addlegendentry{Init loss $L_i$=0.10}
-\addplot [line width=0.36pt, sienna1408675]
+\addlegendentry{$L_i$}
+\addplot [semithick, sienna1408675, mark=*, mark size=1.5, mark options={solid}]
 table {%
 1 2811.67818552378
 5 1952.85370629832
@@ -523,8 +147,8 @@ table {%
 90 260.865095741708
 100 236.454044222183
 };
-\addlegendentry{Node loss $L_n$=2.0 dB}
-\addplot [line width=0.36pt, orchid227119194]
+\addlegendentry{$\Delta_n$}
+\addplot [semithick, orchid227119194, mark=*, mark size=1.5, mark options={solid}]
 table {%
 1 4450.60545165836
 5 3094.91065338412
@@ -539,8 +163,8 @@ table {%
 90 413.033623075156
 100 374.518229318916
 };
-\addlegendentry{Source error $\varepsilon_s$=0.015}
-\addplot [line width=0.36pt, gray127]
+\addlegendentry{$\varepsilon_s$}
+\addplot [semithick, gray127, mark=*, mark size=1.5, mark options={solid}]
 table {%
 1 4453.13036284821
 5 3088.59282515464
@@ -555,8 +179,8 @@ table {%
 90 412.169642903558
 100 375.721438820098
 };
-\addlegendentry{Dephasing $\beta$=3.2$\times10^{-7}$/km}
-\addplot [line width=0.36pt, darkturquoise23190207]
+\addlegendentry{$\beta$}
+\addplot [semithick, darkturquoise23190207, mark=*, mark size=1.5, mark options={solid}]
 table {%
 1 3827.49930685585
 5 2647.94387887145
@@ -571,56 +195,8 @@ table {%
 90 353.851559719215
 100 321.046689111433
 };
-\addlegendentry{Basis bias $\eta_X$=0.715}
-\path [draw=black, line width=0.24pt]
-(axis cs:1,3971.37414510962)
---(axis cs:1,4921.95630100088);
-
-\path [draw=black, line width=0.24pt]
-(axis cs:5,2668.87218456505)
---(axis cs:5,3428.44238625075);
-
-\path [draw=black, line width=0.24pt]
-(axis cs:10,1922.94103196636)
---(axis cs:10,2517.28335485702);
-
-\path [draw=black, line width=0.24pt]
-(axis cs:20,1279.99273056659)
---(axis cs:20,1630.83062960217);
-
-\path [draw=black, line width=0.24pt]
-(axis cs:30,928.040247019446)
---(axis cs:30,1194.53174570728);
-
-\path [draw=black, line width=0.24pt]
-(axis cs:40,742.158411004454)
---(axis cs:40,957.037213726343);
-
-\path [draw=black, line width=0.24pt]
-(axis cs:50,616.861181396895)
---(axis cs:50,788.271683816687);
-
-\path [draw=black, line width=0.24pt]
-(axis cs:60,518.138499616477)
---(axis cs:60,686.953545637698);
-
-\path [draw=black, line width=0.24pt]
-(axis cs:70,458.147167441032)
---(axis cs:70,582.876997360167);
-
-\path [draw=black, line width=0.24pt]
-(axis cs:80,406.455887874756)
---(axis cs:80,517.933096634293);
-
-\path [draw=black, line width=0.24pt]
-(axis cs:90,353.290818595639)
---(axis cs:90,470.778742159254);
-
-\path [draw=black, line width=0.24pt]
-(axis cs:100,326.36704792014)
---(axis cs:100,420.104698086307);
-
-\addplot [line width=0.48pt, black]
+\addlegendentry{$\eta_X$}
+\addplot [semithick, black, mark=*, mark size=1.5, mark options={solid}]
 table {%
 1 4459.56504885016
 5 3095.76002476549
@@ -635,7 +211,7 @@ table {%
 90 412.76957137867
 100 374.013990604724
 };
-\addlegendentry{Ideal (baseline)}
+\addlegendentry{Ideal}
 \end{axis}
 
 \end{tikzpicture}

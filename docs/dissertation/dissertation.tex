@@ -13,6 +13,7 @@
 \pgfplotsset{compat=1.18}
 \usepackage{quantikz}
 \usepackage{booktabs}
+\usepackage{multirow}
 \usepackage{float}
 \usepackage{wrapfig}
 \usepackage{subcaption}
@@ -498,19 +499,19 @@ Fibre attenuation dominates both protocols almost identically at this fixed dist
 
 \begin{figure}[H]
     \centering
-    \begin{subfigure}[b]{0.48\textwidth}
+    \begin{subfigure}[t]{219pt}
         \centering
-        \resizebox{\textwidth}{!}{\input{figures/layers/isolate_bb84.tex}}
+        \input{figures/layers/isolate_bb84.tex}
         \caption{BB84}
         \label{fig:isolate_bb84}
     \end{subfigure}%
-    \begin{subfigure}[b]{0.48\textwidth}
+    \begin{subfigure}[t]{244pt}
         \centering
-        \resizebox{\textwidth}{!}{\input{figures/layers/isolate_mdi.tex}}
+        \input{figures/layers/isolate_mdi.tex}
         \caption{MDI}
         \label{fig:isolate_mdi}
     \end{subfigure}
-    \caption{Secure key rate versus Alice--Bob separation with exactly one hardware parameter set to its layer-9 realistic value (Table~\ref{tab:layers}) and all others held ideal, against an ideal (baseline) reference. Error bars show the Monte Carlo sample spread.}
+    \caption{Secure key rate versus Alice--Bob separation with exactly one hardware parameter set to its layer-9 realistic value (Table~\ref{tab:layers}) and all others held ideal, against an ideal (baseline) reference. Curves show the Monte Carlo mean.}
     \label{fig:isolate}
 \end{figure}
 
@@ -520,6 +521,51 @@ The two parameters singled out above behave in structurally different ways acros
 \label{sec:results_network}
 
 The user-count and relay-count sweeps of Section~\ref{sec:scalability} are reported together here, since both characterise network-level key rate as a function of the same underlying variables ($N$ and $K$) rather than testing independent hypotheses.
+
+\begin{figure}[t]
+    \centering
+    \input{figures/network/relay_sweep_n15.tex}
+    \caption{Mean key rate versus relay count $K$ for $N=15$ users in a $25\times25$~km service area, averaged over 5 independent seeds; shaded bands show the spread across seeds. BB84 is relay-independent (dashed baseline, 614.3~kbps). The right axis shows MDI's rate relative to the BB84 baseline at each $K$.}
+    \label{fig:relay_sweep_n15}
+\end{figure}
+
+Figure~\ref{fig:relay_sweep_n15} shows the relay-count sweep at $N=15$ users. MDI's mean key rate rises from 57.7~kbps at $K=1$ to a maximum of 69.5~kbps at $K=4$ (a 20.5\% improvement, recovering 11.3\% of the BB84 baseline versus 9.4\% at $K=1$), before falling back to 65.1~kbps at $K=5$. This is a non-monotonic optimum: relay count trades off two effects with opposite sign on key rate (Section~\ref{sec:security_rate}) --- more relays shorten the mean user-to-relay spoke distance, which improves the two-photon coincidence probability, but also fragment the network into more catchments, increasing the chance that a given user pair is split across relays and must route via an additional inter-relay backbone hop. At $N=15$ these effects balance close to $K=4$; beyond that point, adding a fifth relay evidently fragments catchments faster than it shortens them.
+
+Table~\ref{tab:relay_sweep_n15_seeds} breaks the same sweep down by seed to check that the aggregate key-rate peak is not an artefact of averaging. Four of the five seeds peak at $K=4$ outright; the fifth (seed 44358) peaks at $K=5$, but by a margin of 0.03\%, within Monte Carlo noise, and its $K{=}3\to K{=}4$ step (51.7 to 55.8~kbps) has the same shape as every other seed. Only seed 29252 peaks distinctly earlier, at $K=3$, though its $K=4$ value (78.9~kbps) is still just 2.2\% below that peak and well clear of $K=1$ and $K=2$. Every individual seed therefore rises sharply from $K=1$ through $K=3$ and plateaus or turns over by $K=4$--$K=5$, the same qualitative shape as the mean curve in Figure~\ref{fig:relay_sweep_n15} --- so whether or not $K=4$ turns out to be the exact optimum at other user counts, the peak visible in the mean is a real, seed-consistent feature of this $N=15$ topology rather than an average smoothing over qualitatively different per-seed behaviour.
+
+The table's fibre-length rows tell a separate story: total fibre length is minimised around $K=2$--$3$ for every seed, not $K=4$ --- the mean bottoms out at 101.3~km at $K=3$, rises to 115.5~km at $K=4$, and rises further to 126.5~km at $K=5$. This divergence is expected from Equation~\ref{eq:hub_objective}: the backbone term grows quadratically ($K(K-1)/2$ pairwise links) while the spoke term can only fall so far as $K$ grows, so past some point adding a relay costs more backbone fibre than it saves in spoke fibre, even though the extra relay continues to help key rate by shortening the worst-case (not merely average) user-to-relay distances that limit the weakest link's loss. The practical implication is that the fibre-cost-optimal and key-rate-optimal relay counts are not the same operating point at $N=15$: a provider minimising deployment cost alone would stop at $K=2$--$3$, leaving achievable key rate on the table, while a provider maximising key rate would push to $K=4$ at a further 13--14\% fibre cost over the $K=3$ minimum (115.5 vs.\ 101.3~km, mean). Whether $K=4$ is a genuine key-rate optimum for this user count and area more generally, or an artefact of the five topologies sampled here, and how both optimal points shift with $N$, cannot be established from a single user count; repeat sweeps at $N=10$ and $N=20$ are planned to test this (Section~\ref{sec:future_work}).
+
+\begin{table}[H]
+\centering
+\fontsize{10}{12}\selectfont
+\setlength{\tabcolsep}{14pt}
+\newcommand{\rc}[1]{{\fontsize{9}{11}\selectfont #1}}
+\begin{tabular}{clccccc}
+\toprule
+Seed & Metric & $K=1$ & $K=2$ & $K=3$ & $K=4$ & $K=5$ \\
+\midrule
+\multirow{2}{*}{87100} & \rc{Key rate (kbps)} & \rc{48.5} & \rc{47.2} & \rc{54.4} & \rc{\textbf{62.9}} & \rc{56.3} \\
+ & \rc{Fibre length (km)} & \rc{145.8} & \rc{123.8} & \rc{\textbf{115.8}} & \rc{129.0} & \rc{143.3} \\
+\addlinespace
+\multirow{2}{*}{29252} & \rc{Key rate (kbps)} & \rc{64.8} & \rc{74.5} & \rc{\textbf{80.7}} & \rc{78.9} & \rc{76.3} \\
+ & \rc{Fibre length (km)} & \rc{121.0} & \rc{\textbf{87.0}} & \rc{88.1} & \rc{105.7} & \rc{115.8} \\
+\addlinespace
+\multirow{2}{*}{44358} & \rc{Key rate (kbps)} & \rc{51.2} & \rc{50.5} & \rc{51.7} & \rc{55.8$^\dagger$} & \rc{\textbf{55.8}$^\dagger$} \\
+ & \rc{Fibre length (km)} & \rc{137.9} & \rc{111.3} & \rc{\textbf{112.0}} & \rc{126.0} & \rc{135.2} \\
+\addlinespace
+\multirow{2}{*}{91457} & \rc{Key rate (kbps)} & \rc{51.2} & \rc{56.9} & \rc{61.4} & \rc{\textbf{66.4}} & \rc{57.1} \\
+ & \rc{Fibre length (km)} & \rc{134.5} & \rc{104.7} & \rc{\textbf{101.9}} & \rc{118.6} & \rc{131.0} \\
+\addlinespace
+\multirow{2}{*}{39964} & \rc{Key rate (kbps)} & \rc{72.7} & \rc{77.6} & \rc{79.2} & \rc{\textbf{83.6}} & \rc{79.9} \\
+ & \rc{Fibre length (km)} & \rc{112.3} & \rc{\textbf{84.6}} & \rc{89.0} & \rc{98.2} & \rc{107.3} \\
+\midrule
+\multirow{2}{*}{Mean} & \rc{Key rate (kbps)} & \rc{57.7} & \rc{61.3} & \rc{65.5} & \rc{\textbf{69.5}} & \rc{65.1} \\
+ & \rc{Fibre length (km)} & \rc{130.3} & \rc{102.3} & \rc{\textbf{101.3}} & \rc{115.5} & \rc{126.5} \\
+\bottomrule
+\end{tabular}
+\caption{MDI mean key rate and total fibre length (spoke + backbone, Equation~\ref{eq:hub_objective}, straight-line Euclidean distance without the stochastic tortuosity factor) versus relay count $K$, broken down by seed, for the $N=15$ sweep of Figure~\ref{fig:relay_sweep_n15}. Bold marks each row's optimum. $^\dagger$Seed 44358's key rate peaks at $K=5$ by 0.03\% (55.775 vs.\ 55.757~kbps), within Monte Carlo noise of $K=4$.}
+\label{tab:relay_sweep_n15_seeds}
+\end{table}
 
 \subsection{Cost}
 \label{sec:results_cost}
@@ -544,7 +590,7 @@ The results presented in Section~\ref{sec:results} support a consistent picture 
 
 MDI-QKD's elimination of detector side-channel attacks comes at a key rate penalty rooted in its physical architecture. Whereas BB84 requires one photon to traverse the full link and be detected, MDI requires two photons --- one from each party --- to arrive at Charlie's relay simultaneously and produce a coincidence event. Loss on each arm compounds multiplicatively: if the single-arm transmittance is $\eta_\text{arm}$, the BSM detection probability scales as $\eta_\text{arm}^2\,\eta_\text{BS}\,\eta_d^2$, compared to $\eta_\text{link}\,\eta_d$ for BB84. At metropolitan distances and typical detector efficiencies, this effectively squares the channel transmittance, consistent with the order-of-magnitude rate gap between the two protocols in the bipartite setting. This is borne out empirically by the point-to-point sweeps in Section~\ref{sec:results_p2p}: the BB84/MDI ratio stays close to a constant $\sim$5$\times$ under channel-side sweeps (distance, attenuation) but widens to over 25$\times$ under a detector efficiency sweep (Figure~\ref{fig:p2p_efficiency}), the signature of a parameter that acts quadratically on MDI's coincidence probability but only linearly on BB84's single-photon detection probability. The sensitivity ranking in Figure~\ref{fig:sensitivity} quantifies this split directly at a fixed 25~km operating point: fibre attenuation degrades both protocols by almost the same fraction (64.4\% BB84, 64.7\% MDI), while every per-arm parameter --- node loss, basis bias, TX insertion loss, detector efficiency, and (MDI-only) beam-splitter efficiency --- degrades MDI by roughly 1.6--2$\times$ more than BB84 in relative terms. The cumulative-layer and isolated-parameter sweeps of Figure~\ref{fig:layers} and Figure~\ref{fig:isolate} show why the two channel-side and per-arm categories behave so differently with distance: fibre attenuation's fractional impact grows from a few percent at 1~km to over 98\% at 100~km for both protocols, since loss probability scales with path length directly, whereas node loss removes an essentially constant fraction of key rate --- around 37\% for BB84 and 60\% for MDI --- at every distance from 1--100~km, since it is a fixed per-arm insertion loss applied once regardless of link length.
 
-At the network level, the rate gap between MDI and BB84 widens relative to the bipartite case. MDI users route photons to a relay rather than directly to their communication partner, incurring a geometric detour for cross-cluster pairs. This routing overhead is absent in BB84's direct mesh. The relay distance advantage is a function of relay count $K$ and user distribution; the relay sweep quantifies the extent to which increasing $K$ can recover the MDI rate penalty.
+At the network level, the rate gap between MDI and BB84 widens relative to the bipartite case. MDI users route photons to a relay rather than directly to their communication partner, incurring a geometric detour for cross-cluster pairs. This routing overhead is absent in BB84's direct mesh. The relay distance advantage is a function of relay count $K$ and user distribution; the relay sweep quantifies the extent to which increasing $K$ can recover the MDI rate penalty. At $N=15$ (Figure~\ref{fig:relay_sweep_n15}), increasing $K$ from 1 to 4 recovers only a small fraction of the bipartite MDI/BB84 gap --- from 9.4\% to 11.3\% of the BB84 rate --- and the recovery is non-monotonic, reversing by $K=5$: shortening the mean spoke distance helps only up to the point where the resulting catchment fragmentation starts forcing more user pairs through an additional backbone hop.
 
 A third trust model is available in the simulation infrastructure: trusted-node BB84 (TBB84), implemented in \texttt{trusted\_bb84\_network.py} and described in Section~\ref{sec:network_analysis}. TBB84 routes a key between non-adjacent users via one or more relay hops, with each hop running standard BB84 and the resulting per-hop keys classically XOR-combined along the path to produce an end-to-end key. This trust model is fundamentally different from MDI's. MDI's Bell-state relay discloses only the joint correlation between Alice's and Bob's photons; even a fully adversarial Charlie learns nothing about either party's individual bit values, so no trust in the relay is required. A TBB84 relay, by contrast, handles plaintext-equivalent key material at every hop it forwards: if a relay node is physically compromised, the attacker recovers the full end-to-end key for any pair routed through it. TBB84's security therefore rests on the physical security of relay hardware, whereas MDI's rests on detector integrity --- the two protocols defend against different adversaries rather than offering directly comparable guarantees.
 
@@ -618,7 +664,7 @@ Several extensions are of immediate interest.
 
 \textit{Brownfield relay expansion.} The growth-model experiments of Section~\ref{sec:scalability} and Appendix~\ref{sec:appendix_relay} hold the relay count $K$ fixed while users grow, modelling a provider serving unplanned demand on existing infrastructure. The relay count sweep of Section~\ref{sec:scalability}, by contrast, still re-clusters and repositions all $K$ relays from scratch at each $K$, which models greenfield network design rather than expanding a live network: a real operator adding capacity has already sunk the cost of its existing $K$ relays and cannot costlessly relocate them. Extending $K \to K+1$ realistically would instead fix the existing relay positions and solve for where a single new relay should go --- and which existing users it should take over --- to minimise the resulting total fibre length. This is a harder problem than the placement methods used elsewhere in this work: the new relay's optimal position depends on which users it serves, and that assignment depends on its position, so it needs its own alternating position/assignment loop (as in \texttt{optimise\_relays}) restricted to a single new facility with the other $K$ held fixed, rather than the one-shot strategies used in Appendix~\ref{sec:appendix_relay}. Not attempted here for want of time.
 
-\textit{Relay count sweep at further user counts.} The relay count sweep of Section~\ref{sec:scalability} showed MDI key rate peaking at $K=4$ for $N=15$, a non-monotonic optimum not observed at the other user counts tested. Confirming whether this is a genuine feature of the backbone/spoke trade-off (Section~\ref{sec:results_cost}) or an artefact of this particular topology requires repeating the sweep at further $N$: a repeat at $N=10$ is feasible overnight and left running; $N=20$ is a further extension, at an estimated $\sim$20~hours for $K=1$--$5$ (Table~\ref{tab:timing}) too long to guarantee completion within the project timeline, but worth attempting if time allows.
+\textit{Relay count sweep at further user counts.} The relay count sweep of Section~\ref{sec:results_network} showed MDI key rate peaking at $K=4$ for $N=15$ (Figure~\ref{fig:relay_sweep_n15}, Table~\ref{tab:relay_sweep_n15_seeds}), a non-monotonic optimum not yet confirmed at any other user count. The repeat sweep at $N=10$, run to test this, is showing an early maximum around $K=3$ rather than $K=4$ --- consistent with the optimal relay count scaling roughly as $\sqrt{N}$ ($\sqrt{15}\approx3.9$, rounding to the observed $K=4$; $\sqrt{10}\approx3.2$, rounding to the observed $K=3$), though this rests on only two data points and the $N=10$ run had not yet been analysed to the same per-seed rigour as Table~\ref{tab:relay_sweep_n15_seeds} at the time of writing. A $\sqrt{N}$ relationship would have a plausible geometric basis: for $N$ users spread over a fixed-area service region, dividing into $K$ roughly equal-area catchments shrinks the mean per-catchment spoke radius as $1/\sqrt{K}$ at fixed user density, while the backbone term grows as $K(K-1)/2$ (Equation~\ref{eq:hub_objective}); balancing a $1/\sqrt{K}$-shrinking term worth $\mathcal{O}(N)$ against a $K^2$-growing term is the kind of trade-off that yields power-law optimal points, though the exact exponent has not been derived analytically here and is offered as a direction rather than a claim. A third data point is needed to say more, and $N=20$ is a weak choice for it: $\sqrt{20}\approx4.5$ rounds to 4 or 5 depending on which side of the boundary the true relationship falls, which does not cleanly separate $\sqrt{N}$ scaling from a simple constant-$K\approx4$ alternative. A smaller $N$ (e.g.\ $N=5$, predicting $K\approx2$) or a larger one (e.g.\ $N=30$, predicting $K\approx5$) would discriminate the two hypotheses far more sharply, but neither was attempted here; $N=20$ remains queued regardless, at an estimated $\sim$20~hours for $K=1$--$5$ (Table~\ref{tab:timing}), too long to guarantee completion within the project timeline.
 
 \textit{Real network topologies.} Extending the simulator to accept fixed network graphs from real city infrastructure would enable direct comparison with published deployed networks~\cite{Dynes_2019, Berrevoets_2022, Tang_2016} and provide a practical planning tool for network operators.
 
@@ -698,14 +744,7 @@ which rearranges directly to the fixed-point update of Equation~\ref{eq:generali
 
 The degenerate case, where an iterate $x_k^{(t)}$ lands exactly on a $p_i$ or $x_l$, produces a division by zero, since the corresponding term is non-differentiable there (the norm has a subgradient of unit magnitude in any direction rather than a unique gradient). In practice, and in the numerical experiments below, this is handled by flooring every pairwise distance at a small $\epsilon$ (we use $\epsilon = 10^{-9}$~km) before taking its reciprocal; this perturbs the objective negligibly at realistic network scales but avoids the singularity entirely. A more principled fix --- checking the subgradient optimality condition explicitly at any iterate landing within $\epsilon$ of a fixed point, as in the standard single-facility Weiszfeld literature --- was not needed at the $N$, $K$ scales explored here, since exact coincidence between a continuous-uniform random draw and another point has probability zero and was never observed in $30 \times 9 = 270$ seeded topology trials.
 
-\textit{Worked example: centroid vs.\ geometric median.} Figure~\ref{fig:relay_worked_example} illustrates the divergence between the two objectives on a small hand-constructed instance: eight users in two well-separated groups of four, one of which (top right) contains a single point noticeably further from the other three than they are from each other. The $k$-means centroid of the top-right cluster is pulled visibly towards this one distant point, since it enters the sum-of-squares objective quadratically; the geometric median instead settles closer to the tight group of three, since the same point enters the sum-of-\emph{unsquared}-distances objective only linearly. This is the standard robustness property of the median relative to the mean, familiar from one-dimensional statistics, applied here to a two-dimensional facility-location setting. The effect on total fibre length is modest but directionally consistent with every trial in the larger comparison below: 15.53~km under the $k$-means centroid versus 14.62~km under the coupled Weiszfeld update, a 5.9\% reduction, obtained without changing which users are assigned to which relay (cluster assignment is identical between the two panels).
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.92\textwidth]{figures/relay_placement/worked_example.png}
-    \caption{A small eight-user, two-relay instance comparing $k$-means centroid placement (left) against the generalised Weiszfeld placement (right). Coloured points are users, coloured lines are spoke links, the dashed grey line is the backbone link, and black stars mark relay positions. Cluster assignment is identical in both panels; only relay position differs.}
-    \label{fig:relay_worked_example}
-\end{figure}
+\textit{Worked example: centroid vs.\ geometric median.} A small hand-constructed instance builds intuition for the divergence between the two objectives: eight users in two well-separated groups of four, one of which contains a single point noticeably further from the other three than they are from each other. The $k$-means centroid of that cluster is pulled towards this one distant point, since it enters the sum-of-squares objective quadratically; the geometric median instead settles closer to the tight group of three, since the same point enters the sum-of-\emph{unsquared}-distances objective only linearly. This is the standard robustness property of the median relative to the mean, familiar from one-dimensional statistics, applied here to a two-dimensional facility-location setting. The effect on total fibre length is modest but directionally consistent with every trial in the larger comparison below: 15.53~km under the $k$-means centroid versus 14.62~km under the coupled Weiszfeld update, a 5.9\% reduction, obtained without changing which users are assigned to which relay (cluster assignment is identical under both placements).
 
 \textit{Geometric comparison across network topologies.} To quantify the fibre-length reduction at realistic network scales, both placement methods were run on synthetic topologies generated identically to those used in Section~\ref{sec:network_analysis}: $N$ users placed uniformly at random within a $10\times10$~km service area, for $N \in \{10, 20, 50\}$ and relay counts $K \in \{2, 3, 5\}$, over 30 independent seeds per $(N,K)$ pair. For each seed, $k$-means clustering ($n_\text{init}=10$) provides both the baseline centroid placement and the initial cluster assignment for the coupled Weiszfeld refinement (Equation~\ref{eq:generalized_weiszfeld}), which then alternates position updates with nearest-relay reassignment until total fibre length changes by less than $10^{-9}$~km between iterations (typically several dozen iterations; up to 146 in the smallest, most relay-dense case). Table~\ref{tab:relay_comparison} reports total fibre length --- spoke plus backbone, Equation~\ref{eq:hub_objective} --- under each method, averaged across seeds.
 
