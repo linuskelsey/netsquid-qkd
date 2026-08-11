@@ -7,7 +7,7 @@
 \definecolor{lightgray204}{RGB}{204,204,204}
 \definecolor{steelblue31119180}{RGB}{31,119,180}
 \begin{axis}[
-title={Key Rate vs Init Loss},
+title={Key Rate vs TX Loss},
 legend cell align={left},
 legend style={
   fill opacity=0.8,
@@ -54,10 +54,10 @@ yticklabels={
 }
 ]
 \path [draw=red, fill=red, opacity=0.08]
-(axis cs:0.05,0)
---(axis cs:0.05,1)
---(axis cs:0.2,1)
---(axis cs:0.2,0)
+(axis cs:0.05,7.82184023253514)
+--(axis cs:0.05,6300.11358745349)
+--(axis cs:0.2,6300.11358745349)
+--(axis cs:0.2,7.82184023253514)
 --cycle;
 \path [draw=steelblue31119180, fill=steelblue31119180, opacity=0.15]
 (axis cs:0,389.271009198248)
@@ -158,7 +158,7 @@ table {%
   text=dimgray,
   rotate=0.0
 ]{0.05};
-\draw (axis cs:0.125,0.97) node[
+\draw (axis cs:0.125,5154.2704) node[
   scale=0.35,
   anchor=north,
   text=darkred,

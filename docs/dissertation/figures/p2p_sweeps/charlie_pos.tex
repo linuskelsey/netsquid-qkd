@@ -6,18 +6,24 @@
 \definecolor{steelblue}{RGB}{70,130,180}
 \definecolor{steelblue31119180}{RGB}{31,119,180}
 \begin{axis}[
+width=0.92\linewidth,
+height=0.62\linewidth,
 legend cell align={left},
 legend style={
   fill opacity=0.8,
   draw opacity=1,
   text opacity=1,
-  at={(0.03,0.03)},
-  anchor=south west,
-  draw=lightgray204
+  at={(0.03,0.5)},
+  anchor=west,
+  draw=lightgray204,
+  font=\fontsize{10}{12}\selectfont
 },
 log basis y={10},
 tick align=outside,
 tick pos=left,
+tick label style={font=\fontsize{10}{12}\selectfont},
+label style={font=\fontsize{10}{12}\selectfont},
+title style={font=\fontsize{12}{14}\selectfont},
 x grid style={darkgray176},
 xlabel={Charlie position (fraction from Alice)},
 xmajorgrids,
@@ -43,20 +49,22 @@ ymajorgrids,
 ymin=26.4049770188945, ymax=400.078803844017,
 ymode=log,
 ytick style={color=black},
-ytick={1,10,100,1000,10000},
+ytick={30,50,70,100,150,200,300},
 yticklabels={
-  \(\displaystyle {10^{0}}\),
-  \(\displaystyle {10^{1}}\),
-  \(\displaystyle {10^{2}}\),
-  \(\displaystyle {10^{3}}\),
-  \(\displaystyle {10^{4}}\)
+  \(\displaystyle {30}\),
+  \(\displaystyle {50}\),
+  \(\displaystyle {70}\),
+  \(\displaystyle {100}\),
+  \(\displaystyle {150}\),
+  \(\displaystyle {200}\),
+  \(\displaystyle {300}\)
 }
 ]
 \path [draw=red, fill=red, opacity=0.08]
-(axis cs:0.4,0)
---(axis cs:0.4,1)
---(axis cs:0.6,1)
---(axis cs:0.6,0)
+(axis cs:0.4,26.4049770188945)
+--(axis cs:0.4,400.078803844017)
+--(axis cs:0.6,400.078803844017)
+--(axis cs:0.6,26.4049770188945)
 --cycle;
 \path [draw=steelblue31119180, fill=steelblue31119180, opacity=0.15]
 (axis cs:0.1,50.8086840414235)
@@ -115,17 +123,22 @@ table {%
 0.6 26.4049770188945
 0.6 400.078803844017
 };
-\draw (axis cs:0.5,0.97) node[
-  scale=0.35,
-  anchor=north,
+\draw (axis cs:0.5,28) node[
+  font=\fontsize{10}{12}\selectfont,
+  anchor=south,
   text=darkred,
   rotate=0.0
-]{\itshape Near-symmetric regime};
+]{\itshape Near-symmetric};
 \end{axis}
 \begin{axis}[
+width=0.92\linewidth,
+height=0.62\linewidth,
 axis y line=right,
 log basis y={10},
 tick align=outside,
+tick label style={font=\fontsize{10}{12}\selectfont},
+label style={font=\fontsize{10}{12}\selectfont},
+title style={font=\fontsize{12}{14}\selectfont},
 title={Key Rate vs Charlie Position},
 x grid style={darkgray176},
 xmin=0.06, xmax=0.94,
@@ -137,14 +150,15 @@ ymin=0.108731309488866, ymax=1.11144474117633,
 ymode=log,
 ytick pos=right,
 ytick style={color=black},
-ytick={0.01,0.1,1,10,100},
+ytick={0.15,0.2,0.3,0.5,0.7,1},
 yticklabel style={anchor=west},
 yticklabels={
-  \(\displaystyle {10^{-2}}\),
-  \(\displaystyle {10^{-1}}\),
-  \(\displaystyle {10^{0}}\),
-  \(\displaystyle {10^{1}}\),
-  \(\displaystyle {10^{2}}\)
+  \(\displaystyle {0.15}\),
+  \(\displaystyle {0.2}\),
+  \(\displaystyle {0.3}\),
+  \(\displaystyle {0.5}\),
+  \(\displaystyle {0.7}\),
+  \(\displaystyle {1.0}\)
 }
 ]
 \addplot [semithick, steelblue31119180, opacity=0, mark=square*, mark size=3, mark options={solid}]

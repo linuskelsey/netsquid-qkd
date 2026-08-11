@@ -185,6 +185,28 @@ Thorlabs, ``{TN1550R5F2 -- Narrowband Fiber Optic Coupler, 1550~nm, 50:50 Ratio
 {ID Quantique}, ``{ID230 Infrared Single-Photon Detector -- Product
   Datasheet}.'' Product datasheet, 2024.
 
+\bibitem{Kuhn_1973}
+H.~W. Kuhn, ``{A note on Fermat's problem},'' {\em Mathematical Programming},
+  vol.~4, no.~1, pp.~98--107, 1973.
+
+\bibitem{Briegel_1998}
+H.-J. Briegel, W.~D\"{u}r, J.~I. Cirac, and P.~Zoller, ``Quantum repeaters: The
+  role of imperfect local operations in quantum communication,'' {\em Physical
+  Review Letters}, vol.~81, pp.~5932--5935, Dec. 1998.
+
+\bibitem{Azuma_2015}
+K.~Azuma, K.~Tamaki, and H.-K. Lo, ``All-photonic quantum repeaters,'' {\em
+  Nature Communications}, vol.~6, Apr. 2015.
+
+\bibitem{Kimble_2008}
+H.~J. Kimble, ``{The quantum internet},'' {\em Nature}, vol.~453,
+  p.~1023–1030, June 2008.
+
+\bibitem{Song-2012}
+T.-T. Song, Q.-Y. Wen, F.-Z. Guo, and X.-Q. Tan, ``{Finite-key analysis for
+  measurement-device-independent quantum key distribution},'' {\em Phys. Rev.
+  A}, vol.~86, p.~022332, Aug 2012.
+
 \bibitem{Miehle_1958}
 W.~Miehle, ``{Link-Length Minimization in Networks},'' {\em Operations
   Research}, vol.~6, no.~2, pp.~232--243, 1958.
@@ -197,14 +219,5 @@ M.~E. O'Kelly, ``{The Location of Interacting Hub Facilities},'' {\em
 S.~Alumur and B.~Y. Kara, ``{Network hub location problems: The state of the
   art},'' {\em European Journal of Operational Research}, vol.~190, no.~1,
   pp.~1--21, 2008.
-
-\bibitem{Kuhn_1973}
-H.~W. Kuhn, ``{A note on Fermat's problem},'' {\em Mathematical Programming},
-  vol.~4, no.~1, pp.~98--107, 1973.
-
-\bibitem{Song-2012}
-T.-T. Song, Q.-Y. Wen, F.-Z. Guo, and X.-Q. Tan, ``{Finite-key analysis for
-  measurement-device-independent quantum key distribution},'' {\em Phys. Rev.
-  A}, vol.~86, p.~022332, Aug 2012.
 
 \end{thebibliography}

@@ -11,6 +11,8 @@
 \definecolor{steelblue31119180}{RGB}{31,119,180}
 
 \begin{axis}[
+width=0.92\linewidth,
+height=0.62\linewidth,
 legend cell align={left},
 legend style={
   fill opacity=0.8,
@@ -18,11 +20,15 @@ legend style={
   text opacity=1,
   at={(0.5,0.09)},
   anchor=south,
-  draw=lightgray204
+  draw=lightgray204,
+  font=\fontsize{10}{12}\selectfont
 },
 log basis y={10},
 tick align=outside,
 tick pos=left,
+tick label style={font=\fontsize{10}{12}\selectfont},
+label style={font=\fontsize{10}{12}\selectfont},
+title style={font=\fontsize{12}{14}\selectfont},
 x dir=reverse,
 x grid style={darkgray176},
 xlabel={Detector efficiency ratio},
@@ -56,16 +62,16 @@ yticklabels={
 }
 ]
 \path [draw=green, fill=green, opacity=0.08]
-(axis cs:0.8,0)
---(axis cs:0.8,1)
---(axis cs:0.95,1)
---(axis cs:0.95,0)
+(axis cs:0.8,1.22985973166259)
+--(axis cs:0.8,511.59628326687)
+--(axis cs:0.95,511.59628326687)
+--(axis cs:0.95,1.22985973166259)
 --cycle;
 \path [draw=red, fill=red, opacity=0.08]
-(axis cs:0.1,0)
---(axis cs:0.1,1)
---(axis cs:0.25,1)
---(axis cs:0.25,0)
+(axis cs:0.1,1.22985973166259)
+--(axis cs:0.1,511.59628326687)
+--(axis cs:0.25,511.59628326687)
+--(axis cs:0.25,1.22985973166259)
 --cycle;
 \path [draw=steelblue31119180, fill=steelblue31119180, opacity=0.15]
 (axis cs:1,388.936464937158)
@@ -184,41 +190,46 @@ table {%
 0.25 511.59628326687
 };
 \draw (axis cs:0.96188,0.01) node[
-  scale=0.35,
+  font=\fontsize{10}{12}\selectfont,
   anchor=south east,
   text=dimgray,
   rotate=0.0
 ]{0.95};
 \draw (axis cs:0.08812,0.01) node[
-  scale=0.35,
+  font=\fontsize{10}{12}\selectfont,
   anchor=south west,
   text=dimgray,
   rotate=0.0
 ]{0.10};
 \draw (axis cs:0.26188,0.01) node[
-  scale=0.35,
+  font=\fontsize{10}{12}\selectfont,
   anchor=south east,
   text=dimgray,
   rotate=0.0
 ]{0.25};
-\draw (axis cs:0.875,0.97) node[
-  scale=0.35,
-  anchor=north,
+\draw (axis cs:0.875,2) node[
+  font=\fontsize{10}{12}\selectfont,
+  anchor=south,
   text=darkgreen,
   rotate=0.0
-]{\itshape IDQ ID281 SNSPD};
-\draw (axis cs:0.175,0.97) node[
-  scale=0.35,
+]{\itshape SNSPD};
+\draw (axis cs:0.175,426.92857788113696) node[
+  font=\fontsize{10}{12}\selectfont,
   anchor=north,
   text=darkred,
   rotate=0.0
-]{\itshape IDQ ID230 SPAD};
+]{\itshape SPAD};
 \end{axis}
 
 \begin{axis}[
+width=0.92\linewidth,
+height=0.62\linewidth,
 axis y line=right,
 log basis y={10},
 tick align=outside,
+tick label style={font=\fontsize{10}{12}\selectfont},
+label style={font=\fontsize{10}{12}\selectfont},
+title style={font=\fontsize{12}{14}\selectfont},
 title={Key Rate vs Detector Efficiency},
 x dir=reverse,
 x grid style={darkgray176},
