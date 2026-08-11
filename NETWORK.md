@@ -10,15 +10,15 @@ Compare BB84 and MDI-QKD on key rate, cost, and scalability across multi-user ne
 
 **Transport layer:** MDI-QKD uses K Charlie nodes (BSM only, untrusted). BB84 uses no relay nodes — instead each user pair is connected by a direct P2P fibre link (fully connected mesh, N(N-1)/2 links total). Relay nodes introduce unnecessary trust assumptions for BB84 and are not deployed in practice when direct links are available.
 
-**Cross-cluster routing (MDI):** When two users are homed to different Charlie nodes (C1, C2), C2 acts as a passive optical router — redirecting the photon toward C1 without measuring it (fibre switch / optical circulator). Quantum state is preserved. Extra cost: C2→C1 fibre loss plus switch insertion loss (default 1.0 dB, configurable via `switch_loss_db`; realistic range 0.5–2 dB). Bob's effective link length includes the relay-relay hop; dephasing accumulates over the full path. Timing compensation is absorbed into the simulation's channel delay model.
+**Cross-cluster routing (MDI):** When two users are homed to different Charlie nodes (C1, C2), C2 acts as a passive optical router — redirecting the photon toward C1 without measuring it (fibre switch / optical circulator). Quantum state is preserved. Extra cost: C2→C1 fibre loss plus switch insertion loss, configurable via `switch_loss_db` (default 0.0 dB — abstracted away rather than modelled/swept; see dissertation Simulation Model Limitations, "Metropolitan network scope"). Bob's effective link length includes the relay-relay hop; dephasing accumulates over the full path. Timing compensation is absorbed into the simulation's channel delay model.
 
 ## Experiments
 
 **Experiment 1 — Relay count sweep (fixed N users, vary K relays)**
-Relay positions are optimised for each K by minimising total user-to-nearest-relay distance (least-squares / k-means). Measures how key rate evolves as relay infrastructure is added. The K at which performance plateaus becomes the fixed relay count for Experiment 2.
+Relay infrastructure is redesigned from scratch at each K (greenfield): cluster assignment is k-means-seeded, then relay position is refined by the generalised (multi-facility) Weiszfeld iteration, which minimises total fibre length — spoke plus backbone, the network's actual linear-cost objective — rather than the sum-of-squared distances a plain k-means centroid minimises (see dissertation §Relay Placement, Appendix Relay Placement Optimisation). Measures how key rate evolves as relay infrastructure is added. The K at which performance plateaus/peaks becomes the fixed relay count for Experiment 2.
 
 **Experiment 2 — User count sweep (fixed K relays, vary N users)**
-Transport layer fixed. User count increased. Measures how each protocol degrades as user load grows and users are statistically further from relays. Primary scalability comparison.
+Provider-growth model: users are drawn incrementally from a single RNG stream (so $N \to N+1$ means genuinely *adding* a user, not redrawing an unrelated sample); relay position is placed once, for the $N_\text{min}$-user network, by the strategy under test (centroid/boundary/Weiszfeld) and then held fixed as $N$ grows — modelling a provider that sizes relay infrastructure once and serves subsequent organic growth without continuously re-optimising it. Measures how each protocol degrades as user load grows under infrastructure sized for an earlier, smaller network. Primary scalability comparison.
 
 Both experiments aggregate statistics across many random user placements of the same network size N to yield results representative of an average randomised N-user metropolitan network.
 
@@ -41,11 +41,11 @@ Extension: compare success rate for same-relay pairs vs cross-relay pairs to qua
 
 ## Cost Model
 
-Each hardware component (user node source, user node detector, relay node, fiber per km, optical switch) is assigned an arbitrary cost unit. Industry-standard component prices are used to lower- and upper-bound the arbitrary units, enabling cost-efficiency comparisons (key rate per unit cost).
+Cost is not tracked in simulation code — no £/cost-unit columns, no `network/cost.py`, no cost sweep scripts. It is modelled purely analytically in the dissertation instead: total CapEx is expressed symbolically as component counts (source/detector/fibre-length terms, determined by topology) times free per-unit-price parameters $c_s$, $c_d$, $c_f$, since manufacturer prices for QD sources and SNSPD detectors are not publicly available. The structural result — BB84 fibre cost scales $\mathcal{O}(N^2)$ (one link per user pair) vs MDI's $\mathcal{O}(N)$ (per-user spoke + $K(K-1)/2$ backbone) — is independent of absolute prices and yields an analytically-derived crossover user count $N^*$ as a function of the ratio $c_d/c_f$, relay count $K$, and network geometry.
 
-Currently implemented: total fibre deployed (`total_fibre_km`) tracked per simulation and stored in `network_results`. Component cost assignment (relay node hardware, source/detector counts) is planned.
+`total_fibre_km` (and, from the relay-count sweep, per-seed spoke/backbone lengths) is tracked per simulation and stored in `network_results` — this is the empirical geometric input the symbolic cost formulae are evaluated against; it is not itself a cost figure.
 
-Relay count comparison (cost vs performance) is a secondary analysis. Primary focus is user scaling.
+Relay count comparison (cost vs performance) is a secondary analysis. Primary focus is user scaling. Note: the relay-count sweep on the current model shows the fibre-cost-optimal $K$ and the key-rate-optimal $K$ are *not* the same operating point (dissertation §Network Performance) — worth keeping in mind before treating "relay count that minimises cost" and "relay count that maximises rate" as interchangeable in any downstream cost-efficiency analysis here.
 
 ## Infrastructure Comparison
 

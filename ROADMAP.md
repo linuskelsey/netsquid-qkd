@@ -42,12 +42,12 @@
 
 | Item |
 |------|
-| Network topology generator: random user placement, per-K relay optimisation (`network/topology.py`) |
+| Network topology generator: random user placement, per-K relay optimisation (`network/topology.py`) — now k-means-seeded, generalised Weiszfeld-refined (minimises total fibre length, not sum-of-squared distance); see "Analysis" section below and dissertation §Relay Placement |
 | Network topology visualiser: MDI cluster / BB84 mesh side-by-side (`network/visualise_network.py`) |
 | BB84 network simulator: all N(N-1)/2 direct pairs (`network/bb84_network.py`) |
 | MDI-QKD network simulator: nearest-relay routing, cross-cluster passive optical routing (`network/mdi_network.py`) |
 | Trusted-node BB84 network simulator: users connect to K relay nodes via BB84; relays XOR-combine keys; cross-relay pairs share backbone key rate proportionally; bottleneck = min link rate (`network/trusted_bb84_network.py`) |
-| Passive optical routing model: cross-cluster photon redirection via optical switch (configurable insertion loss, default 1 dB) |
+| Passive optical routing model: cross-cluster photon redirection via optical switch (configurable insertion loss via `switch_loss_db`, default 0.0 dB — abstracted away rather than modelled/swept) |
 | Key rate vs relay count K — all three protocols (`scripts/network/relay_sweep.py`) |
 | Network success rate (QBER < 11%) vs relay count K |
 | Multi-seed averaging (`--seeds N`): repeat sweep over N random placements, report mean ± std across seeds for statistically robust results |
@@ -60,19 +60,14 @@
 | Key rate vs user count N — all three protocols (`scripts/network/user_sweep.py`) |
 | Three-way comparison (BB84 / MDI / trusted-node BB84) in both sweep scripts: isolates cost of the MDI trust-removal guarantee vs same O(N) infrastructure |
 | Network success rate vs user count N |
-| Cost tracking: total fibre (km), link count, component count per simulation |
+| Fibre tracking: total fibre deployed (km) per simulation, stored in `network_results.total_fibre_km` — the empirical input to the dissertation's analytical cost formulae (see "Cost Modelling" below); no component-count or £ columns are written to the DB |
 | Multi-seed averaging (`--seeds N`): relay positions re-optimised per seed; mean ± std across seeds reported |
 | End-of-sweep summary table: K/N × BB84/MDI/trusted-BB84 × key rate (kbps) × success % × fibre km printed to stdout after each run |
 | `--no-figure` flag on both sweep scripts: suppress all figure output (useful for batch runs or headless servers) |
-| Cost-efficiency metric: key rate per unit cost vs N — all three protocols (`scripts/network/cost_sweep.py`) |
 
 #### Cost Modelling
 
-| Item |
-|------|
-| Hardware cost model (`network/cost.py`): `component_counts()` for BB84/MDI/trusted-BB84; `total_cost()` with fibre + hardware breakdown; `DETECTOR_TECH` presets (SPAD/InGaAs/SNSPD) and `SOURCE_TECH` presets (QD/NV/hSPDC/ideal) with per-preset efficiency and cost |
-| Cost sweep (`scripts/network/cost_sweep.py`): deployment cost vs N and cost-efficiency (kbps/M$) vs N — all three protocols; detector/source tech presets wire simulation η and cost model simultaneously; explicit CLI cost-flag overrides; multi-seed averaging; DB writing; end-of-sweep summary table; marginal cost vs N figure (`_marginal`) |
-| `--cost-only` flag on `cost_sweep.py`: skip QKD simulation entirely; compute cost and marginal cost from topology geometry alone; runs in seconds over wide N range |
+Cost is **not** implemented in simulation code — `network/cost.py` and `scripts/network/cost_sweep.py` were removed entirely (2026-08-03). Cost is instead modelled purely analytically in the dissertation: total CapEx as symbolic component-count formulae (source/detector/fibre terms determined by topology) times free per-unit-price parameters $c_s$, $c_d$, $c_f$, since manufacturer prices aren't publicly available. The structural result — BB84 $\mathcal{O}(N^2)$ fibre vs MDI $\mathcal{O}(N)$ — and the crossover user count $N^*$ (a function of $c_d/c_f$, $K$, and geometry, not a fixed number) are derived from this symbolic model, evaluated against the real `total_fibre_km` geometry the simulations produce. See dissertation §Cost Model, §Results (Cost), §Cost Model Limitations.
 
 ### Analysis
 
@@ -128,7 +123,7 @@ Reconstruct any P2P or network figure from `results.db` without re-running simul
 | Feature |
 |---------|
 | Interactive TUI launcher (`scripts/tui.py`): arrow-key menus for P2P or network path, full parameter setup, assembles and optionally runs the target script; optionally saves config JSON |
-| DB cost reconstruction: query `network_results` for `total_fibre_km` per (N, protocol, experiment), apply `component_counts` + `total_cost` from `network/cost.py` to reconstruct cost/efficiency curves from historical runs not produced by `cost_sweep.py`; expose via `scripts/analyse/network.py` (e.g. `--cost` flag) |
+| DB cost reconstruction: query `network_results` for `total_fibre_km` per (N, protocol, experiment) and evaluate against the dissertation's symbolic cost formulae (Equations cost\_bb84/cost\_mdi) to reconstruct cost/efficiency curves from historical runs, for a chosen $(c_s, c_d, c_f)$; expose via `scripts/analyse/network.py` (e.g. `--cost` flag). *(Note: there is no `network/cost.py` to call into anymore — this would mean porting the dissertation's symbolic formulae into code, not resurrecting the old cost module.)* |
 
 ### Network Scale Modelling
 
@@ -138,7 +133,7 @@ Reconstruct any P2P or network figure from `results.db` without re-running simul
 |------|
 | Checkpoint saving: persist intermediate results per K/N to JSON so long runs can recover from crash |
 
-note: in the simple model (no traffic, key rate = f(fibre length only)), K=1 is theoretically optimal — a single relay minimises total fibre by placing one Steiner point. Increasing K adds relay-relay backbone fibre and BSM hops, reducing average key rate. The relay sweep's observed peak at low K confirms this. Traffic (simultaneous multi-pair demand, relay capacity limits) breaks this optimum: a single relay becomes a bottleneck under high user load, favouring higher K. This is out of scope for the current model but is an important dimension to flag in the dissertation (see Extensions).
+note (superseded 2026-08-11): this originally predicted K=1 as theoretically optimal in the no-traffic model, on the reasoning that a single relay minimises total *fibre* and additional relays only add backbone cost. The actual N=15 relay-count sweep contradicts the "peak at low K" part of that claim for *key rate*: MDI key rate peaks at K=4, not K=1 (dissertation §Network Performance, Table 4), because shortening the mean user-to-relay spoke distance measurably helps key rate even though it isn't the fibre-length-minimising choice — fibre length and key rate are optimised by different K (length bottoms out at K=2–3, rate peaks at K=4). The fibre-only Steiner-point argument above is still correct as a *cost* statement, just not as a *key-rate* prediction; the traffic/bottleneck argument for favouring higher K under load is unaffected and still an open extension (see Extensions).
 
 #### Experiment 3 — Real-world topology case studies
 
@@ -157,14 +152,11 @@ note: in the simple model (no traffic, key rate = f(fibre length only)), K=1 is 
 
 ### Project Report
 
+Done, moved from this list (2026-08-11): methodology justifications (multi-seeding, relay placement — now Weiszfeld not k-means, MC run counts, QBER cutoff, config layer choices) are all written into the dissertation methodology/limitations sections; the MDI network-scale key rate gap is explained in §Security–Rate Trade-off with real numbers (5–25× bipartite, 9.4–11.3% recovery via relay count at N=15); the parameter impact summary is Figure~9 (sensitivity ranking) in the dissertation.
+
 | Item |
 |------|
-| Justify every methodology decision in thesis: multi-seeding rationale (statistical robustness, seed count choice), k-means relay placement, Monte Carlo run counts, QBER cutoff threshold (security proofs), config layer choices (commercially available hardware specs) — each needs a cited or argued justification |
-| MDI vs BB84 deployment recommendations section: use security level taxonomy (L0–L5) to frame when MDI is the right choice despite key rate being always worse; argument centres on trust assumptions, not raw performance |
-| Explain MDI network-scale key rate gap (~10× vs ~3× at P2P) in results/discussion: investigate candidate causes (relay routing overhead, BSM success rate compounding, passive optical insertion loss, increased hop distances at network scale) and present supported explanation |
-| Parameter impact summary table: rather than presenting all 10 P2P compare figures, produce a single table with one row per physical parameter (fibre loss, detector efficiency, dark count rate, node loss, init loss, source error, dephasing, basis bias, BS efficiency, Charlie position) and columns for BB84 and MDI key rate reduction (% or ×) across the realistic operating range of each parameter; conveys all findings compactly without 10 figures |
-
-note ^ the above is largely solved due to a number of causes - i) relays add distance to total fibre link so total loss greater; ii) quadratic efficiency dependency means greater penalty for mdi in network setting on average; iii) twice the effect from insertion loss adds to the gap
+| MDI vs BB84 deployment recommendations section: dissertation's §Implications for Protocol Selection frames this via a security-requirement/scale two-axis argument rather than the originally-envisaged L0–L5 security-level taxonomy; the taxonomy itself is still unbuilt — see "Security level taxonomy" under Extensions below if a more formal framework is wanted later. |
 
 ---
 
@@ -172,7 +164,7 @@ note ^ the above is largely solved due to a number of causes - i) relays add dis
 
 | Question |
 |----------|
-| **MDI network-scale key rate gap:** MDI is ~10× worse than BB84 at network scale but only approx. 3× worse at P2P. Candidate causes: relay routing adds hops (longer effective distances), BSM success rate (approx. 50%) compounds across more links, passive optical switch insertion loss, cross-cluster pairs routed through more nodes. Needs targeted experiment to isolate dominant factor. See also Project Report item. |
+| **MDI network-scale key rate gap — remaining ablation:** the mechanism is now explained (BSM $\eta_\text{arm}^2$ scaling: §Security–Rate Trade-off) and the relay-routing-detour contribution is quantified empirically (dissertation Table~4: only 9.4→11.3% of the BB84 rate recovered by increasing $K$ at $N=15$). Not yet done: a dedicated ablation run that disables the BSM $\eta^2$ dependency and switch insertion loss individually to fully decompose the gap into its component causes, as originally scoped. |
 | **Missing lower error bars at high distance/noise:** at near-cutoff distances, lower IQR/min whiskers are absent on MDI plots. Failed runs are excluded before aggregation, so the surviving runs cluster near the QBER threshold with near-zero spread below the median. Unclear whether this reflects genuine distribution shape or an artefact of the cutoff filtering — worth checking whether including failed runs (as zero key rate) changes the picture. |
 
 ### Extensions
@@ -196,4 +188,4 @@ note ^ the above is largely solved due to a number of causes - i) relays add dis
 | Relay placement sensitivity: random vs optimal placement comparison |
 | Cross-relay vs same-relay pair success rate comparison |
 | Traffic-aware relay count optimisation: current model minimises fibre length, making K=1 optimal (single Steiner-point relay). Under realistic traffic — simultaneous multi-pair sessions, finite relay throughput, time-multiplexed BSM — a single relay saturates under high user load, shifting the optimal K upward. Extension: model relay capacity as a bounded queue (e.g. M/M/1 or token-bucket), sweep K vs offered traffic load, identify optimal K(N, load). This reframes the relay count question from a geometry problem to a queuing/scheduling problem. |
-| Cost–rate optimisation: bi-objective problem over (K, N, topology seed). Two dual problems: (1) fixed budget C_max → find configuration maximising avg key rate; (2) fixed min rate R_min → find configuration minimising cost. Sweep K and seed at fixed N, compute (cost, avg_key_rate) per point, plot cost vs rate for each protocol; identify deployment-optimal configurations. Practically: run cost_sweep over a grid of K values. Useful for deployment planning: given a capex budget, which relay count gives the best key rate for MDI, and in what detector/source configuration for both MDI and BB84? |
+| Cost–rate optimisation: bi-objective problem over (K, N, topology seed). Two dual problems: (1) fixed budget C_max → find configuration maximising avg key rate; (2) fixed min rate R_min → find configuration minimising cost. Sweep K and seed at fixed N, evaluate the dissertation's symbolic cost formulae against each point's `total_fibre_km` and `avg_key_rate` (no `cost_sweep.py` anymore — this is DB query + analytical formula, not a simulation sweep), plot cost vs rate for each protocol; identify deployment-optimal configurations. Useful for deployment planning: given a capex budget, which relay count gives the best key rate for MDI, and in what detector/source configuration for both MDI and BB84? Note the relay-count sweep already shows fibre-cost-optimal and key-rate-optimal $K$ diverge (Table~4) — this extension would let that trade-off be swept explicitly rather than read off two separate optima. |
