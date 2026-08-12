@@ -4,6 +4,7 @@
 \definecolor{crimson2282628}{RGB}{228,26,28}
 \definecolor{darkgray176}{RGB}{176,176,176}
 \definecolor{darkorange25512714}{RGB}{255,127,14}
+\definecolor{forestgreen4416044}{RGB}{44,160,44}
 \definecolor{lightgray204}{RGB}{204,204,204}
 \definecolor{steelblue31119180}{RGB}{31,119,180}
 \definecolor{steelblue55126184}{RGB}{55,126,184}
@@ -71,6 +72,21 @@ yticklabels={
 --(axis cs:1,629.054905453169)
 --cycle;
 
+\path [draw=forestgreen4416044, fill=forestgreen4416044, opacity=0.2]
+(axis cs:1,139.810009985774)
+--(axis cs:1,112.83367432337475)
+--(axis cs:2,112.83367432337475)
+--(axis cs:3,112.83367432337475)
+--(axis cs:4,112.83367432337475)
+--(axis cs:5,112.83367432337475)
+--(axis cs:5,139.810009985774)
+--(axis cs:5,139.810009985774)
+--(axis cs:4,139.810009985774)
+--(axis cs:3,139.810009985774)
+--(axis cs:2,139.810009985774)
+--(axis cs:1,139.810009985774)
+--cycle;
+
 \path [draw=crimson2282628, fill=crimson2282628, opacity=0.2]
 (axis cs:1,65.7261474772101)
 --(axis cs:1,51.5425769884114)
@@ -94,7 +110,16 @@ table {%
 4 568.898356162595
 5 568.898356162595
 };
-\addlegendentry{BB84}
+\addlegendentry{BB84-SNSPD}
+\addplot [semithick, forestgreen4416044, dashed]
+table {%
+1 126.321842154574
+2 126.321842154574
+3 126.321842154574
+4 126.321842154574
+5 126.321842154574
+};
+\addlegendentry{BB84-SPAD}
 \addplot [semithick, crimson2282628, mark=*, mark size=1.5, mark options={solid}]
 table {%
 1 58.6343622328107
