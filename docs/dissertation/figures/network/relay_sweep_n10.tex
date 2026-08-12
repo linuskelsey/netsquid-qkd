@@ -9,7 +9,7 @@
 \definecolor{steelblue55126184}{RGB}{55,126,184}
 
 \begin{axis}[
-width=140pt,
+width=150pt,
 height=220pt,
 scale only axis,
 tick label style={font=\fontsize{8}{10}\selectfont},
@@ -18,14 +18,15 @@ legend style={
   fill opacity=0.8,
   draw opacity=1,
   text opacity=1,
-  at={(0.97,0.5)},
-  anchor=east,
+  at={(0.03,0.5)},
+  anchor=west,
   draw=lightgray204,
   font=\fontsize{6}{8}\selectfont
 },
+axis y line=right,
 log basis y={10},
 tick align=outside,
-tick pos=left,
+xtick pos=left,
 x grid style={darkgray176},
 xlabel={Relay count K},
 xmajorgrids,
@@ -40,12 +41,13 @@ xticklabels={
   \(\displaystyle {5}\)
 },
 y grid style={darkgray176},
-ylabel={Avg key rate (kbps)},
 ymajorgrids,
 ymin=42.213776033326, ymax=788.725804098587,
 ymode=log,
+ytick pos=right,
 ytick style={color=black},
 ytick={1,10,100,1000,10000},
+yticklabel style={anchor=west},
 yticklabels={
   \(\displaystyle {10^{0}}\),
   \(\displaystyle {10^{1}}\),
@@ -55,62 +57,62 @@ yticklabels={
 }
 ]
 \path [draw=steelblue55126184, fill=steelblue55126184, opacity=0.2]
-(axis cs:1,690.449428720482)
---(axis cs:1,538.07315917704)
---(axis cs:2,538.07315917704)
---(axis cs:3,538.07315917704)
---(axis cs:4,538.07315917704)
---(axis cs:5,538.07315917704)
---(axis cs:5,690.449428720482)
---(axis cs:5,690.449428720482)
---(axis cs:4,690.449428720482)
---(axis cs:3,690.449428720482)
---(axis cs:2,690.449428720482)
---(axis cs:1,690.449428720482)
+(axis cs:1,629.054905453169)
+--(axis cs:1,508.741806872021)
+--(axis cs:2,508.741806872021)
+--(axis cs:3,508.741806872021)
+--(axis cs:4,508.741806872021)
+--(axis cs:5,508.741806872021)
+--(axis cs:5,629.054905453169)
+--(axis cs:5,629.054905453169)
+--(axis cs:4,629.054905453169)
+--(axis cs:3,629.054905453169)
+--(axis cs:2,629.054905453169)
+--(axis cs:1,629.054905453169)
 --cycle;
 
 \path [draw=crimson2282628, fill=crimson2282628, opacity=0.2]
-(axis cs:1,67.1050158242511)
---(axis cs:1,48.2223506327235)
---(axis cs:2,48.8846985020699)
---(axis cs:3,53.2285501437557)
---(axis cs:4,59.2179181130866)
---(axis cs:5,54.3758080129703)
---(axis cs:5,75.7943815265278)
---(axis cs:5,75.7943815265278)
---(axis cs:4,79.783221055613)
---(axis cs:3,77.6827748193142)
---(axis cs:2,73.7805572065294)
---(axis cs:1,67.1050158242511)
+(axis cs:1,65.7261474772101)
+--(axis cs:1,51.5425769884114)
+--(axis cs:2,54.6941225650712)
+--(axis cs:3,58.3203331791175)
+--(axis cs:4,54.5544176339571)
+--(axis cs:5,49.1442312347454)
+--(axis cs:5,65.2686892884814)
+--(axis cs:5,65.2686892884814)
+--(axis cs:4,72.7736445964739)
+--(axis cs:3,75.6157843520762)
+--(axis cs:2,73.5995778695195)
+--(axis cs:1,65.7261474772101)
 --cycle;
 
 \addplot [semithick, steelblue55126184, dashed]
 table {%
-1 614.261293948761
-2 614.261293948761
-3 614.261293948761
-4 614.261293948761
-5 614.261293948761
+1 568.898356162595
+2 568.898356162595
+3 568.898356162595
+4 568.898356162595
+5 568.898356162595
 };
 \addlegendentry{BB84}
 \addplot [semithick, crimson2282628, mark=*, mark size=1.5, mark options={solid}]
 table {%
-1 57.6636832284873
-2 61.3326278542996
-3 65.4556624815349
-4 69.5005695843498
-5 65.085094769749
+1 58.6343622328107
+2 64.1468502172953
+3 66.9680587655969
+4 63.6640311152155
+5 57.2064602616134
 };
 \addlegendentry{MDI}
-\node[anchor=north west, fill=white, fill opacity=0.75, text opacity=1, inner sep=2pt, font=\fontsize{9}{11}\selectfont] at (rel axis cs:0.03,0.97) {(b) $N=15$};
+\node[anchor=north west, fill=white, fill opacity=0.75, text opacity=1, inner sep=2pt, font=\fontsize{9}{11}\selectfont] at (rel axis cs:0.03,0.97) {(a) $N=10$};
 \end{axis}
 
 \begin{axis}[
-width=140pt,
+width=150pt,
 height=220pt,
 scale only axis,
 tick label style={font=\fontsize{8}{10}\selectfont},
-axis y line=right,
+axis y line=left,
 log basis y={10},
 tick align=outside,
 x grid style={darkgray176},
@@ -122,10 +124,9 @@ y grid style={darkgray176},
 ylabel={Relative key rate},
 ymin=0.0834020432354434, ymax=1.12557007592045,
 ymode=log,
-ytick pos=right,
+ytick pos=left,
 ytick style={color=black},
 ytick={0.001,0.01,0.1,1,10,100},
-yticklabel style={anchor=west},
 yticklabels={
   \(\displaystyle {10^{-3}}\),
   \(\displaystyle {10^{-2}}\),
@@ -145,11 +146,11 @@ table {%
 };
 \addplot [semithick, darkorange25512714, opacity=0]
 table {%
-1 0.0938748441364391
-2 0.0998477821384847
-3 0.106559965809916
-4 0.113144960082976
-5 0.105956692063977
+1 0.103066499661413
+2 0.112756258692654
+3 0.117715331816598
+4 0.111907567363439
+5 0.100556557497353
 };
 \end{axis}
 
