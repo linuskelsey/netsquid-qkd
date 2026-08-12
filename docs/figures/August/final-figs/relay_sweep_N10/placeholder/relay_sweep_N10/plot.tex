@@ -1,0 +1,172 @@
+% This file was created with tikzplotlib v0.10.1.
+\begin{tikzpicture}
+
+\definecolor{darkgray176}{RGB}{176,176,176}
+\definecolor{darkorange2551270}{RGB}{255,127,0}
+\definecolor{lightgray204}{RGB}{204,204,204}
+\definecolor{steelblue31119180}{RGB}{31,119,180}
+\definecolor{steelblue55126184}{RGB}{55,126,184}
+
+\begin{axis}[
+legend cell align={left},
+legend style={
+  fill opacity=0.8,
+  draw opacity=1,
+  text opacity=1,
+  at={(0.91,0.5)},
+  anchor=east,
+  draw=lightgray204
+},
+log basis y={10},
+minor ytick={20,30,40,50,60,70,80,90,200,300,400,500,600,700,800,900,2000,3000,4000,5000,6000,7000,8000,9000,20000,30000,40000,50000,60000,70000,80000,90000},
+minor yticklabels={
+  \(\displaystyle {2\times10^{1}}\),
+  \(\displaystyle {3\times10^{1}}\),
+  \(\displaystyle {4\times10^{1}}\),
+  ,
+  \(\displaystyle {6\times10^{1}}\),
+  ,
+  ,
+  ,
+  \(\displaystyle {2\times10^{2}}\),
+  \(\displaystyle {3\times10^{2}}\),
+  \(\displaystyle {4\times10^{2}}\),
+  ,
+  \(\displaystyle {6\times10^{2}}\),
+  ,
+  ,
+  ,
+  \(\displaystyle {2\times10^{3}}\),
+  \(\displaystyle {3\times10^{3}}\),
+  \(\displaystyle {4\times10^{3}}\),
+  ,
+  \(\displaystyle {6\times10^{3}}\),
+  ,
+  ,
+  ,
+  \(\displaystyle {2\times10^{4}}\),
+  \(\displaystyle {3\times10^{4}}\),
+  \(\displaystyle {4\times10^{4}}\),
+  ,
+  \(\displaystyle {6\times10^{4}}\),
+  ,
+  ,
+  
+},
+tick align=outside,
+tick pos=left,
+x grid style={darkgray176},
+xlabel={Relay count K},
+xmajorgrids,
+xmin=0.8, xmax=5.2,
+xtick style={color=black},
+xtick={1,2,3,4,5},
+xticklabels={
+  \(\displaystyle {1}\),
+  \(\displaystyle {2}\),
+  \(\displaystyle {3}\),
+  \(\displaystyle {4}\),
+  \(\displaystyle {5}\)
+},
+y grid style={darkgray176},
+ylabel={Avg key rate (kbps)},
+ymajorgrids,
+ymin=103.535225864084, ymax=686.754061379291,
+ymode=log,
+ytick style={color=black},
+ytick={10,100,1000,10000},
+yticklabels={
+  \(\displaystyle {10^{1}}\),
+  \(\displaystyle {10^{2}}\),
+  \(\displaystyle {10^{3}}\),
+  \(\displaystyle {10^{4}}\)
+}
+]
+\path [draw=steelblue55126184, fill=steelblue55126184, opacity=0.2]
+(axis cs:1,630.159722125188)
+--(axis cs:1,508.94567924689)
+--(axis cs:2,508.94567924689)
+--(axis cs:3,508.94567924689)
+--(axis cs:4,508.94567924689)
+--(axis cs:5,508.94567924689)
+--(axis cs:5,630.159722125188)
+--(axis cs:5,630.159722125188)
+--(axis cs:4,630.159722125188)
+--(axis cs:3,630.159722125188)
+--(axis cs:2,630.159722125188)
+--(axis cs:1,630.159722125188)
+--cycle;
+
+\path [draw=darkorange2551270, fill=darkorange2551270, opacity=0.2]
+(axis cs:1,139.810009985774)
+--(axis cs:1,112.833674323375)
+--(axis cs:2,112.833674323375)
+--(axis cs:3,112.833674323375)
+--(axis cs:4,112.833674323375)
+--(axis cs:5,112.833674323375)
+--(axis cs:5,139.810009985774)
+--(axis cs:5,139.810009985774)
+--(axis cs:4,139.810009985774)
+--(axis cs:3,139.810009985774)
+--(axis cs:2,139.810009985774)
+--(axis cs:1,139.810009985774)
+--cycle;
+
+\addplot [semithick, steelblue55126184, dashed]
+table {%
+1 569.552700686039
+2 569.552700686039
+3 569.552700686039
+4 569.552700686039
+5 569.552700686039
+};
+\addlegendentry{BB84-SNSPD}
+\addplot [semithick, darkorange2551270, dashed]
+table {%
+1 126.321842154574
+2 126.321842154574
+3 126.321842154574
+4 126.321842154574
+5 126.321842154574
+};
+\addlegendentry{BB84-SPAD}
+\end{axis}
+
+\begin{axis}[
+axis y line=right,
+log basis y={10},
+tick align=outside,
+title={Key Rate vs Relay Count},
+x grid style={darkgray176},
+xmin=0.8, xmax=5.2,
+xtick pos=left,
+xtick style={color=black},
+y grid style={darkgray176},
+ylabel={Relative key rate},
+ymin=0.0794328234724281, ymax=12.5892541179417,
+ymode=log,
+ytick pos=right,
+ytick style={color=black},
+ytick={0.001,0.01,0.1,1,10,100,1000},
+yticklabel style={anchor=west},
+yticklabels={
+  \(\displaystyle {10^{-3}}\),
+  \(\displaystyle {10^{-2}}\),
+  \(\displaystyle {10^{-1}}\),
+  \(\displaystyle {10^{0}}\),
+  \(\displaystyle {10^{1}}\),
+  \(\displaystyle {10^{2}}\),
+  \(\displaystyle {10^{3}}\)
+}
+]
+\addplot [semithick, steelblue31119180, opacity=0]
+table {%
+1 1
+2 1
+3 1
+4 1
+5 1
+};
+\end{axis}
+
+\end{tikzpicture}
