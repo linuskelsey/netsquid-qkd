@@ -189,6 +189,20 @@ Thorlabs, ``{TN1550R5F2 -- Narrowband Fiber Optic Coupler, 1550~nm, 50:50 Ratio
 H.~W. Kuhn, ``{A note on Fermat's problem},'' {\em Mathematical Programming},
   vol.~4, no.~1, pp.~98--107, 1973.
 
+\bibitem{Lutkenhaus_2000}
+N.~L\"{u}tkenhaus, ``{Security against individual attacks for realistic quantum
+  key distribution},'' {\em Phys. Rev. A}, vol.~61, p.~052304, Apr 2000.
+
+\bibitem{Gottesman_2004}
+D.~Gottesman, H.-K. Lo, N.~L\"{u}tkenhaus, and J.~Preskill, ``{Security of
+  quantum key distribution with imperfect devices},'' {\em Quantum Information
+  \& Computation}, vol.~4, no.~5, pp.~325--360, 2004.
+
+\bibitem{Tan_2021}
+E.~Y.-Z. Tan, R.~Schwonnek, K.~T. Goh, I.~W. Primaatmaja, and C.~C.-W. Lim,
+  ``{Computing secure key rates for quantum cryptography with untrusted
+  devices},'' {\em npj Quantum Information}, vol.~7, p.~158, 2021.
+
 \bibitem{Briegel_1998}
 H.-J. Briegel, W.~D\"{u}r, J.~I. Cirac, and P.~Zoller, ``Quantum repeaters: The
   role of imperfect local operations in quantum communication,'' {\em Physical
