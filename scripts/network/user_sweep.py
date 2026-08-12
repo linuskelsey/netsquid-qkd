@@ -4,10 +4,19 @@ Experiment 2 — user count sweep.
 Provider-growth model: relay positions are optimised once at n-min per the
 chosen strategy (centroid/boundary/weiszfeld), then frozen; the network grows
 one user at a time (uniform-random catchment, catchment membership fixed
-once assigned) up to n-max. Plots average key rate vs N for BB84 and
-MDI-QKD, showing how key rate degrades as organic growth outpaces relay
-infrastructure sized for the initial deployment. Relay positions are
-re-optimised per seed when --seeds > 1.
+once assigned) up to n-max. Plots average key rate vs N for BB84 (SNSPD and
+SPAD detector variants) and MDI-QKD (one curve per --k value), showing how
+key rate degrades as organic growth outpaces relay infrastructure sized for
+the initial deployment. Relay positions are re-optimised per seed when
+--seeds > 1.
+
+--k accepts a comma-separated list (e.g. --k 2,3) to compare multiple relay
+counts on the same graph. Each K value draws its own catchments/relay
+positions (grow_catchments ties catchment anchors to K), so they are not
+directly comparable topologies — only the first K in the list is used as the
+shared reference topology for the BB84 curves (BB84 is a mesh and doesn't
+depend on K).
+
 Error bars show std across Monte Carlo runs (--seeds 1) or across random topologies
 (--seeds N). Topology visualisation only produced when --seeds 1.
 
@@ -17,7 +26,7 @@ Usage:
     python scripts/network/user_sweep.py [options]
 
 Options:
-    --k INT          Number of relays fixed for sweep (default: 2)
+    --k INT[,INT...] Relay count(s), comma-separated for multi-K comparison (default: 2)
     --strategy STR   Relay placement strategy: centroid, boundary, or weiszfeld (default: weiszfeld)
     --n-min INT      Min user count; also N at which relays are placed (default: 4)
     --n-max INT      Max user count (default: 20)
@@ -38,6 +47,7 @@ Options:
 
 Examples:
     python scripts/network/user_sweep.py --k 2 --n-max 20 --runtimes 20
+    python scripts/network/user_sweep.py --k 2,3 --n-max 20 --runtimes 20
     python scripts/network/user_sweep.py --seeds 5 --seed 42 --output-dir results/
     python scripts/network/user_sweep.py --strategy centroid --k 3 --n-max 20
 """
@@ -66,6 +76,12 @@ from visualise_network import draw_mdi, draw_bb84
 
 apply_thesis_style()
 
+# BB84 detector variants swept on every run: (label, detector_efficiency)
+DETECTOR_VARIANTS = [("SNSPD", 0.90), ("SPAD", 0.20)]
+BB84_COLORS = {"SNSPD": "#377eb8", "SPAD": "#ff7f00"}
+MDI_COLORS  = ["#e41a1c", "#984ea3", "#a65628", "#f781bf", "#999999"]
+MDI_MARKERS = ["o", "s", "^", "D", "v"]
+
 
 def _pair_avgs(pair_rates):
     avgs = []
@@ -78,7 +94,8 @@ def _pair_avgs(pair_rates):
 
 def main():
     parser = argparse.ArgumentParser(description="User count sweep (Experiment 2)")
-    parser.add_argument("--k",        type=int,   default=2,    help="Number of relays (fixed)")
+    parser.add_argument("--k",        type=str,   default="2",
+                        help="Relay count(s), comma-separated for multi-K comparison (e.g. 2,3)")
     parser.add_argument("--strategy", type=str,   default="weiszfeld", choices=list(RELAY_STRATEGIES),
                         help="Relay placement strategy, applied once at n-min then frozen")
     parser.add_argument("--n-min",    type=int,   default=4,    help="Min user count; also N at which relays are placed")
@@ -121,17 +138,20 @@ def main():
         _area_km    = max(_w, _h) + 60.0   # 30 km buffer on each side
         _spread     = args.spread if args.spread is not None else 15.0
         _catchment_radius = args.catchment_radius if args.catchment_radius is not None else 30.0
-        _K          = _rt_topo.K
+        K_list      = [_rt_topo.K]
         _protocols  = _rt_meta["protocols"]
-        print(f"Real topology '{args.real}': {_K} relays, bbox {_w:.1f}×{_h:.1f} km → area={_area_km:.1f} km")
+        print(f"Real topology '{args.real}': {_rt_topo.K} relays, bbox {_w:.1f}×{_h:.1f} km → area={_area_km:.1f} km")
         print(f"  Protocols: {_protocols}")
     else:
         _fixed_relay_pos = None
         _area_km    = args.area
         _spread     = args.spread if args.spread is not None else args.area / 5
         _catchment_radius = args.catchment_radius
-        _K          = args.k
+        K_list      = sorted({int(k) for k in args.k.split(",")})
         _protocols  = ["BB84", "MDI"]
+
+    K_ref  = K_list[0]
+    K_tag  = "-".join(str(k) for k in K_list)
 
     if args.seeds == 1:
         seeds = [args.seed]
@@ -141,94 +161,113 @@ def main():
 
     area_label = f"{args.real}" if args.real else f"{_area_km}×{_area_km} km"
 
-    bb84_per_seed        = {N: [] for N in N_values}
-    mdi_per_seed         = {N: [] for N in N_values}
+    bb84_per_seed        = {v: {N: [] for N in N_values} for v, _ in DETECTOR_VARIANTS}
+    bb84_ok_per_seed     = {v: {N: [] for N in N_values} for v, _ in DETECTOR_VARIANTS}
+    bb84_fibre_per_seed  = {v: {N: [] for N in N_values} for v, _ in DETECTOR_VARIANTS}
+    mdi_per_seed         = {K: {N: [] for N in N_values} for K in K_list}
+    mdi_ok_per_seed      = {K: {N: [] for N in N_values} for K in K_list}
+    mdi_fibre_per_seed   = {K: {N: [] for N in N_values} for K in K_list}
     tbb84_per_seed       = {N: [] for N in N_values}
-    bb84_ok_per_seed     = {N: [] for N in N_values}
-    mdi_ok_per_seed      = {N: [] for N in N_values}
     tbb84_ok_per_seed    = {N: [] for N in N_values}
-    bb84_fibre_per_seed  = {N: [] for N in N_values}
-    mdi_fibre_per_seed   = {N: [] for N in N_values}
     tbb84_fibre_per_seed = {N: [] for N in N_values}
 
     seed_total  = len(N_values)
     total_start = time.time()
 
     _user_pos_by_seed  = {}
-    _relay_pos_by_seed = {}
+    _relay_pos_by_seed = {K: {} for K in K_list}
 
     for s_idx, seed in enumerate(seeds):
         print(f"\n--- Seed {s_idx+1}/{args.seeds}  (seed={seed}) ---")
         seed_start = time.time()
         prog = Progress(seed_total)
         step = 0
-        # provider-growth model: draw n_max users incrementally (uniform-random
-        # catchment, membership fixed once assigned), place relays once at
-        # n_min per the chosen strategy, then freeze for the rest of the sweep
-        all_user_pos, all_labels, _ = grow_catchments(
-            args.n_min, args.n_max, _K, _area_km, _spread, seed,
-            anchors=_fixed_relay_pos, catchment_radius_km=_catchment_radius)
-        if _fixed_relay_pos is not None:
-            relay_pos = _fixed_relay_pos
-        else:
-            relay_pos = RELAY_STRATEGIES[args.strategy](
-                all_user_pos[:args.n_min], all_labels[:args.n_min], _K)
 
-        _user_pos_by_seed[seed]  = np.round(all_user_pos, 3).tolist()
-        _relay_pos_by_seed[seed] = np.round(np.array(relay_pos), 3).tolist()
+        # per-K catchment/relay draws: grow_catchments ties catchment anchors
+        # to K, so each K value in K_list gets its own independent draw.
+        # K_ref's draw doubles as the shared BB84 mesh reference topology.
+        _draws = {}
+        for K in K_list:
+            all_user_pos, all_labels, _ = grow_catchments(
+                args.n_min, args.n_max, K, _area_km, _spread, seed,
+                anchors=_fixed_relay_pos, catchment_radius_km=_catchment_radius)
+            if _fixed_relay_pos is not None:
+                relay_pos = _fixed_relay_pos
+            else:
+                relay_pos = RELAY_STRATEGIES[args.strategy](
+                    all_user_pos[:args.n_min], all_labels[:args.n_min], K)
+            _draws[K] = (all_user_pos, all_labels, relay_pos)
+            _relay_pos_by_seed[K][seed] = np.round(np.array(relay_pos), 3).tolist()
+
+        ref_user_pos, ref_labels, _ = _draws[K_ref]
+        _user_pos_by_seed[seed] = np.round(ref_user_pos, 3).tolist()
 
         for N in N_values:
-            if N < _K:
+            if N < K_ref:
                 step += 1
                 continue
 
-            prog.update(step, f"User count: {N}/{N_values[-1]}  Both protocols running...")
-            user_pos = all_user_pos[:N]
-            labels   = all_labels[:N]
-            topo_bb84 = Topology(user_pos)
-            topo_mdi  = Topology(user_pos, relay_pos, user_relay=labels)
+            prog.update(step, f"User count: {N}/{N_values[-1]}  Running...")
+
+            topo_bb84 = Topology(ref_user_pos[:N])
 
             if args.output_dir and not args.no_figure:
-                _topo_dir = os.path.join(args.output_dir, f"user_sweep_K{args.k}", f"seed{seed}", "topologies")
+                _topo_dir = os.path.join(args.output_dir, f"user_sweep_K{K_tag}", f"seed{seed}", "topologies")
                 os.makedirs(_topo_dir, exist_ok=True)
-                fig_m, ax_m = plt.subplots(figsize=(6, 5))
-                draw_mdi(ax_m, topo_mdi, tortuosity_mean=args.tortuosity,
-                         strategy=None if _fixed_relay_pos is not None else args.strategy.capitalize(),
-                         seed=seed)
-                plt.tight_layout()
-                fig_m.savefig(os.path.join(_topo_dir, f"N{N}_mdi.png"), dpi=150, bbox_inches="tight")
-                plt.close(fig_m)
-
                 fig_b, ax_b = plt.subplots(figsize=(6, 5))
-                draw_bb84(ax_b, topo_mdi, tortuosity_mean=args.tortuosity, seed=seed)
+                draw_bb84(ax_b, topo_bb84, tortuosity_mean=args.tortuosity, seed=seed)
                 plt.tight_layout()
                 fig_b.savefig(os.path.join(_topo_dir, f"N{N}_bb84.png"), dpi=150, bbox_inches="tight")
                 plt.close(fig_b)
 
-            bb84_res = run_bb84_network(topo_bb84, cfg, runtimes=args.runtimes, workers=args.workers,
-                              p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
-                              net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
-                              experiment="user_sweep", seed=seed, area_km=_area_km,
-                              config_preset=args.config)
-            mdi_res  = run_mdi_network(topo_mdi,  cfg, runtimes=args.runtimes, workers=args.workers,
-                                       p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
-                                       net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
-                                       experiment="user_sweep", seed=seed, area_km=_area_km,
-                                       config_preset=args.config)
+            for variant, det_eff in DETECTOR_VARIANTS:
+                cfg_v = dict(cfg)
+                cfg_v["detector_efficiency"] = det_eff
+                bb84_res = run_bb84_network(
+                    topo_bb84, cfg_v, runtimes=args.runtimes, workers=args.workers,
+                    p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
+                    net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
+                    experiment="user_sweep", seed=seed, area_km=_area_km,
+                    config_preset=args.config)
+                bp = _pair_avgs(bb84_res["pair_rates"])
+                bb84_per_seed[variant][N].append(np.mean(bp) if bp else 0.0)
+                bb84_ok_per_seed[variant][N].append(bb84_res["success_rate"] * 100)
+                bb84_fibre_per_seed[variant][N].append(bb84_res["total_fibre_km"])
 
-            bp = _pair_avgs(bb84_res["pair_rates"])
-            mp = _pair_avgs(mdi_res["pair_rates"])
+            topo_mdi_ref = None
+            for K in K_list:
+                all_user_pos, all_labels, relay_pos = _draws[K]
+                user_pos = all_user_pos[:N]
+                labels   = all_labels[:N]
+                topo_mdi = Topology(user_pos, relay_pos, user_relay=labels)
+                if K == K_ref:
+                    topo_mdi_ref = topo_mdi
 
-            bb84_per_seed[N].append(np.mean(bp) if bp else 0.0)
-            mdi_per_seed[N].append(np.mean(mp)  if mp else 0.0)
-            bb84_ok_per_seed[N].append(bb84_res["success_rate"] * 100)
-            mdi_ok_per_seed[N].append(mdi_res["success_rate"] * 100)
-            bb84_fibre_per_seed[N].append(bb84_res["total_fibre_km"])
-            mdi_fibre_per_seed[N].append(mdi_res["total_fibre_km"])
+                if args.output_dir and not args.no_figure:
+                    _mdi_dir = os.path.join(_topo_dir, f"K{K}")
+                    os.makedirs(_mdi_dir, exist_ok=True)
+                    fig_m, ax_m = plt.subplots(figsize=(6, 5))
+                    draw_mdi(ax_m, topo_mdi, tortuosity_mean=args.tortuosity,
+                             strategy=None if _fixed_relay_pos is not None else args.strategy.capitalize(),
+                             seed=seed)
+                    plt.tight_layout()
+                    fig_m.savefig(os.path.join(_mdi_dir, f"N{N}_mdi.png"), dpi=150, bbox_inches="tight")
+                    plt.close(fig_m)
+
+                mdi_res = run_mdi_network(
+                    topo_mdi, cfg, runtimes=args.runtimes, workers=args.workers,
+                    p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
+                    net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
+                    experiment="user_sweep", seed=seed, area_km=_area_km,
+                    config_preset=args.config)
+                mp = _pair_avgs(mdi_res["pair_rates"])
+                mdi_per_seed[K][N].append(np.mean(mp) if mp else 0.0)
+                mdi_ok_per_seed[K][N].append(mdi_res["success_rate"] * 100)
+                mdi_fibre_per_seed[K][N].append(mdi_res["total_fibre_km"])
 
             if "TBB84" in _protocols:
                 tbb84_res = run_trusted_bb84_network(
-                    topo_mdi, cfg, runtimes=args.runtimes, workers=args.workers,
+                    topo_mdi_ref, cfg, runtimes=args.runtimes, workers=args.workers,
                     p2p_db_path=None if args.no_p2p_db else DEFAULT_DB_PATH,
                     net_db_path=None if args.no_net_db else DEFAULT_DB_PATH,
                     experiment="user_sweep", seed=seed, area_km=_area_km,
@@ -239,22 +278,20 @@ def main():
                 tbb84_fibre_per_seed[N].append(tbb84_res["total_fibre_km"])
 
             step += 1
-            prog.update(step, f"User count: {N}/{N_values[-1]}  BB84 {bb84_per_seed[N][-1]/1000:.2f} | MDI {mdi_per_seed[N][-1]/1000:.2f} kbps")
+            _snspd_last = bb84_per_seed["SNSPD"][N][-1] / 1000
+            _mdi_last   = mdi_per_seed[K_ref][N][-1] / 1000
+            prog.update(step, f"User count: {N}/{N_values[-1]}  BB84-SNSPD {_snspd_last:.2f} | MDI K={K_ref} {_mdi_last:.2f} kbps")
 
         prog.stop()
         m, s = divmod(int(time.time() - seed_start), 60)
         print(f"✓ Seed {s_idx+1}/{args.seeds} complete  {m}m {s:02d}s")
 
         if args.output_dir and not args.no_figure:
-            _seed_N = [N for N in N_values if bb84_per_seed[N]]
-            seed_bb84 = [bb84_per_seed[N][s_idx] for N in _seed_N]
-            seed_mdi  = [mdi_per_seed[N][s_idx]  for N in _seed_N]
+            _seed_N = [N for N in N_values if bb84_per_seed["SNSPD"][N]]
             fig_s, ax_s = plt.subplots(figsize=(8, 5))
-            ax_s.plot(_seed_N, np.array(seed_bb84) / 1000, '--', color="#377eb8", lw=1.5, label="BB84")
-            ax_s.plot(_seed_N, np.array(seed_mdi)  / 1000, color="#e41a1c", marker="o", lw=1.5, label="MDI")
             _seed_assumptions = {
                 "Seed": seed,
-                "Relay count (fixed)": _K,
+                "Relay counts (K)": K_list,
                 "User count sweep range": f"{args.n_min}-{args.n_max} (step {args.n_step})",
                 "Area": area_label,
                 "Relay strategy": "real (fixed)" if args.real else args.strategy,
@@ -263,9 +300,17 @@ def main():
                                      else f"Gaussian, std {_spread:.2f} km"),
                 "Tortuosity mean": args.tortuosity,
                 "Runtimes per pair": args.runtimes,
-                "BB84 key rate (bps) per N": dict(zip(_seed_N, seed_bb84)),
-                "MDI key rate (bps) per N": dict(zip(_seed_N, seed_mdi)),
             }
+            for variant, _ in DETECTOR_VARIANTS:
+                seed_bb84 = [bb84_per_seed[variant][N][s_idx] for N in _seed_N]
+                ax_s.plot(_seed_N, np.array(seed_bb84) / 1000, '--', color=BB84_COLORS[variant],
+                          lw=1.5, label=f"BB84-{variant}")
+                _seed_assumptions[f"BB84-{variant} key rate (bps) per N"] = dict(zip(_seed_N, seed_bb84))
+            for ki, K in enumerate(K_list):
+                seed_mdi = [mdi_per_seed[K][N][s_idx] for N in _seed_N]
+                ax_s.plot(_seed_N, np.array(seed_mdi) / 1000, color=MDI_COLORS[ki % len(MDI_COLORS)],
+                          marker=MDI_MARKERS[ki % len(MDI_MARKERS)], lw=1.5, label=f"MDI K={K}")
+                _seed_assumptions[f"MDI K={K} key rate (bps) per N"] = dict(zip(_seed_N, seed_mdi))
             if "TBB84" in _protocols:
                 seed_tbb84 = [tbb84_per_seed[N][s_idx] for N in _seed_N]
                 ax_s.plot(_seed_N, np.array(seed_tbb84) / 1000, ':', color="#4daf4a", marker="s", lw=1.5, label="TBB84")
@@ -279,7 +324,7 @@ def main():
             ax_s.set_title(f"Key Rate vs User Count (seed={seed})", fontsize=10)
             plt.tight_layout()
             save_bundle(
-                fig_s, os.path.join(args.output_dir, f"user_sweep_K{args.k}"), f"seed{seed}",
+                fig_s, os.path.join(args.output_dir, f"user_sweep_K{K_tag}"), f"seed{seed}",
                 title=f"Key Rate vs User Count (seed={seed})",
                 assumptions=_seed_assumptions,
             )
@@ -287,15 +332,28 @@ def main():
     m, s = divmod(int(time.time() - total_start), 60)
     print(f"✓ complete  total {m}m {s:02d}s")
 
-    N_arr_final    = [N for N in N_values if bb84_per_seed[N]]
-    bb84_means     = [np.mean(bb84_per_seed[N])         for N in N_arr_final]
-    bb84_stds      = [np.std(bb84_per_seed[N])          for N in N_arr_final]
-    bb84_ok        = [np.mean(bb84_ok_per_seed[N])      for N in N_arr_final]
-    bb84_fibre     = [np.mean(bb84_fibre_per_seed[N])   for N in N_arr_final]
-    mdi_means      = [np.mean(mdi_per_seed[N])          for N in N_arr_final]
-    mdi_stds       = [np.std(mdi_per_seed[N])           for N in N_arr_final]
-    mdi_ok         = [np.mean(mdi_ok_per_seed[N])       for N in N_arr_final]
-    mdi_fibre      = [np.mean(mdi_fibre_per_seed[N])    for N in N_arr_final]
+    N_arr_final = [N for N in N_values if bb84_per_seed["SNSPD"][N]]
+
+    bb84_stats = {}
+    for variant, _ in DETECTOR_VARIANTS:
+        bb84_stats[variant] = {
+            "mean":  [np.mean(bb84_per_seed[variant][N])       for N in N_arr_final],
+            "std":   [np.std(bb84_per_seed[variant][N])        for N in N_arr_final],
+            "ok":    [np.mean(bb84_ok_per_seed[variant][N])    for N in N_arr_final],
+            "fibre": [np.mean(bb84_fibre_per_seed[variant][N]) for N in N_arr_final],
+            "q1":    [np.percentile(bb84_per_seed[variant][N], 25) for N in N_arr_final],
+            "q3":    [np.percentile(bb84_per_seed[variant][N], 75) for N in N_arr_final],
+        }
+    mdi_stats = {}
+    for K in K_list:
+        mdi_stats[K] = {
+            "mean":  [np.mean(mdi_per_seed[K][N])       for N in N_arr_final],
+            "std":   [np.std(mdi_per_seed[K][N])        for N in N_arr_final],
+            "ok":    [np.mean(mdi_ok_per_seed[K][N])    for N in N_arr_final],
+            "fibre": [np.mean(mdi_fibre_per_seed[K][N]) for N in N_arr_final],
+            "q1":    [np.percentile(mdi_per_seed[K][N], 25) for N in N_arr_final],
+            "q3":    [np.percentile(mdi_per_seed[K][N], 75) for N in N_arr_final],
+        }
     _run_tbb84 = "TBB84" in _protocols
     if _run_tbb84:
         tbb84_means = [np.mean(tbb84_per_seed[N])        for N in N_arr_final]
@@ -303,70 +361,56 @@ def main():
         tbb84_ok    = [np.mean(tbb84_ok_per_seed[N])     for N in N_arr_final]
         tbb84_fibre = [np.mean(tbb84_fibre_per_seed[N])  for N in N_arr_final]
 
-    if _run_tbb84:
-        print(f"\n{'N':>3}  {'BB84 kbps':>10}  {'MDI kbps':>9}  {'TBB84 kbps':>11}  {'BB84 ok%':>9}  {'MDI ok%':>8}  {'TBB84 ok%':>10}")
-        print("-" * 88)
-        for i, N in enumerate(N_arr_final):
-            print(
-                f"{N:>3}  {bb84_means[i]/1000:>10.2f}  {mdi_means[i]/1000:>9.2f}  "
-                f"{tbb84_means[i]/1000:>11.2f}  {bb84_ok[i]:>8.0f}%  {mdi_ok[i]:>7.0f}%  {tbb84_ok[i]:>9.0f}%"
-            )
-    else:
-        print(f"\n{'N':>3}  {'BB84 kbps':>10}  {'MDI kbps':>9}  {'BB84 ok%':>9}  {'MDI ok%':>8}  {'BB84 km':>8}  {'MDI km':>7}")
-        print("-" * 68)
-        for N, b_r, m_r, b_ok, m_ok, b_km, m_km in zip(
-                N_arr_final, bb84_means, mdi_means,
-                bb84_ok, mdi_ok, bb84_fibre, mdi_fibre):
-            print(
-                f"{N:>3}  {b_r/1000:>10.2f}  {m_r/1000:>9.2f}  "
-                f"{b_ok:>8.0f}%  {m_ok:>7.0f}%  "
-                f"{b_km:>8.1f}  {m_km:>7.1f}"
-            )
+    # --- summary table ---
+    _headers = ["N"] + [f"BB84-{v} kbps" for v, _ in DETECTOR_VARIANTS] + [f"MDI K={K} kbps" for K in K_list]
+    print("\n" + "  ".join(f"{h:>13}" for h in _headers))
+    print("-" * (15 * len(_headers)))
+    for i, N in enumerate(N_arr_final):
+        row = [f"{N:>13}"]
+        for variant, _ in DETECTOR_VARIANTS:
+            row.append(f"{bb84_stats[variant]['mean'][i]/1000:>13.2f}")
+        for K in K_list:
+            row.append(f"{mdi_stats[K]['mean'][i]/1000:>13.2f}")
+        print("  ".join(row))
 
-    N_arr  = np.array(N_arr_final)
-    b_mean = np.array(bb84_means) / 1000
-    b_std  = np.array(bb84_stds)  / 1000
-    b_q1   = np.array([np.percentile(bb84_per_seed[N], 25) for N in N_arr_final]) / 1000
-    b_q3   = np.array([np.percentile(bb84_per_seed[N], 75) for N in N_arr_final]) / 1000
-    m_mean = np.array(mdi_means)  / 1000
-    m_std  = np.array(mdi_stds)   / 1000
-    m_q1   = np.array([np.percentile(mdi_per_seed[N], 25) for N in N_arr_final]) / 1000
-    m_q3   = np.array([np.percentile(mdi_per_seed[N], 75) for N in N_arr_final]) / 1000
+    N_arr = np.array(N_arr_final)
+
+    # --- Figure 1: key rate vs N ---
+    fig, ax1 = plt.subplots(figsize=(8, 5))
+
+    def _plot_series(x, mean, std, q1, q3, color, marker, linestyle, label):
+        mean = np.array(mean) / 1000
+        if args.error == "bars":
+            std = np.array(std) / 1000
+            ax1.errorbar(x, mean, yerr=std, label=label, color=color,
+                         marker=marker, linestyle=linestyle, capsize=4, lw=1.5)
+        elif args.error == "shade":
+            std = np.array(std) / 1000
+            ax1.plot(x, mean, linestyle, color=color, marker=marker, lw=1.5, label=label)
+            ax1.fill_between(x, mean - std, mean + std, alpha=0.2, color=color)
+        else:  # iqr
+            q1 = np.array(q1) / 1000
+            q3 = np.array(q3) / 1000
+            ax1.plot(x, mean, linestyle, color=color, marker=marker, lw=1.5, label=label)
+            ax1.fill_between(x, q1, q3, alpha=0.2, color=color)
+
+    for variant, _ in DETECTOR_VARIANTS:
+        st = bb84_stats[variant]
+        _plot_series(N_arr, st["mean"], st["std"], st["q1"], st["q3"],
+                     BB84_COLORS[variant], None, "--", f"BB84-{variant}")
+    for ki, K in enumerate(K_list):
+        st = mdi_stats[K]
+        _plot_series(N_arr, st["mean"], st["std"], st["q1"], st["q3"],
+                     MDI_COLORS[ki % len(MDI_COLORS)], MDI_MARKERS[ki % len(MDI_MARKERS)], "-", f"MDI K={K}")
     if _run_tbb84:
         t_mean = np.array(tbb84_means) / 1000
         t_std  = np.array(tbb84_stds)  / 1000
         t_q1   = np.array([np.percentile(tbb84_per_seed[N], 25) for N in N_arr_final]) / 1000
         t_q3   = np.array([np.percentile(tbb84_per_seed[N], 75) for N in N_arr_final]) / 1000
+        _plot_series(N_arr, tbb84_means, tbb84_stds, [q*1000 for q in t_q1], [q*1000 for q in t_q3],
+                     "#4daf4a", "s", ":", "TBB84")
 
-    bb84_ref = b_mean[0] if b_mean[0] > 0 else 1.0
-
-    # --- Figure 1: key rate vs N ---
-    fig, ax1 = plt.subplots(figsize=(8, 5))
-
-    if args.error == "bars":
-        ax1.errorbar(N_arr, b_mean, yerr=b_std, label="BB84", color="#377eb8",
-                     linestyle="--", capsize=4, lw=1.5)
-        ax1.errorbar(N_arr, m_mean, yerr=m_std, label="MDI", color="#e41a1c",
-                     marker="o", capsize=4, lw=1.5)
-        if _run_tbb84:
-            ax1.errorbar(N_arr, t_mean, yerr=t_std, label="TBB84", color="#4daf4a",
-                         marker="s", capsize=4, lw=1.5, linestyle=":")
-    elif args.error == "shade":
-        ax1.plot(N_arr, b_mean, '--', color="#377eb8", lw=1.5, label="BB84")
-        ax1.fill_between(N_arr, b_mean - b_std, b_mean + b_std, alpha=0.2, color="#377eb8")
-        ax1.plot(N_arr, m_mean, color="#e41a1c", marker="o", lw=1.5, label="MDI")
-        ax1.fill_between(N_arr, m_mean - m_std, m_mean + m_std, alpha=0.2, color="#e41a1c")
-        if _run_tbb84:
-            ax1.plot(N_arr, t_mean, ':', color="#4daf4a", marker="s", lw=1.5, label="TBB84")
-            ax1.fill_between(N_arr, t_mean - t_std, t_mean + t_std, alpha=0.2, color="#4daf4a")
-    else:  # iqr
-        ax1.plot(N_arr, b_mean, '--', color="#377eb8", lw=1.5, label="BB84")
-        ax1.fill_between(N_arr, b_q1, b_q3, alpha=0.2, color="#377eb8")
-        ax1.plot(N_arr, m_mean, color="#e41a1c", marker="o", lw=1.5, label="MDI")
-        ax1.fill_between(N_arr, m_q1, m_q3, alpha=0.2, color="#e41a1c")
-        if _run_tbb84:
-            ax1.plot(N_arr, t_mean, ':', color="#4daf4a", marker="s", lw=1.5, label="TBB84")
-            ax1.fill_between(N_arr, t_q1, t_q3, alpha=0.2, color="#4daf4a")
+    bb84_ref = bb84_stats["SNSPD"]["mean"][0] / 1000 if bb84_stats["SNSPD"]["mean"][0] > 0 else 1.0
 
     ax1.set_yscale("log")
     ax1.set_xlabel("User count N")
@@ -376,8 +420,7 @@ def main():
     ax1.grid(True, alpha=0.3)
 
     ax2 = ax1.twinx()
-    ax2.plot(N_arr, b_mean / bb84_ref, alpha=0)
-    ax2.plot(N_arr, m_mean / bb84_ref, alpha=0)
+    ax2.plot(N_arr, np.array(bb84_stats["SNSPD"]["mean"]) / 1000 / bb84_ref, alpha=0)
     ax2.set_ylabel("Relative key rate")
     ax2.set_yscale("log")
 
@@ -387,41 +430,46 @@ def main():
 
     if not args.no_figure:
         if args.output_dir:
+            _assumptions = {
+                "Relay counts (K)": K_list,
+                "User count sweep range": f"{args.n_min}-{args.n_max} (step {args.n_step})",
+                "Relay placement": f"computed once at N={args.n_min} via "
+                                    f"{'real (fixed)' if args.real else args.strategy}, then frozen (per K)",
+                "Growth model": "one user at a time, uniform-random catchment, "
+                                "catchment membership fixed once assigned (drawn separately per K)",
+                "Catchment shape": (f"hard disc, radius {_catchment_radius:.1f} km"
+                                 if _catchment_radius is not None
+                                 else f"Gaussian, std {_spread:.2f} km"),
+                "Area": area_label,
+                "Seed": seed_label,
+                "Tortuosity mean": args.tortuosity,
+                "Runtimes per pair": args.runtimes,
+                "Error display": args.error,
+                "Real topology": args.real if args.real else "none (synthetic)",
+                "BB84 detector variants": {v: e for v, e in DETECTOR_VARIANTS},
+                "BB84 reference topology": f"K={K_ref} draw (BB84 is a mesh, independent of relay count)",
+                "Final user positions (N=n_max, km, per seed, K_ref draw)": _user_pos_by_seed,
+                "Final relay positions (km, per seed, per K)": _relay_pos_by_seed,
+            }
+            for variant, _ in DETECTOR_VARIANTS:
+                _assumptions[f"BB84-{variant} key rate (bps) per N per seed"] = {
+                    N: dict(zip(seeds, bb84_per_seed[variant][N])) for N in N_arr_final
+                }
+            for K in K_list:
+                _assumptions[f"MDI K={K} key rate (bps) per N per seed"] = {
+                    N: dict(zip(seeds, mdi_per_seed[K][N])) for N in N_arr_final
+                }
             save_bundle(
-                fig, args.output_dir, f"user_sweep_K{args.k}",
+                fig, args.output_dir, f"user_sweep_K{K_tag}",
                 title="Key Rate vs User Count",
-                assumptions={
-                    "Relay count (fixed)": _K,
-                    "User count sweep range": f"{args.n_min}-{args.n_max} (step {args.n_step})",
-                    "Relay placement": f"computed once at N={args.n_min} via "
-                                        f"{'real (fixed)' if args.real else args.strategy}, then frozen",
-                    "Growth model": "one user at a time, uniform-random catchment, "
-                                    "catchment membership fixed once assigned",
-                    "Catchment shape": (f"hard disc, radius {_catchment_radius:.1f} km"
-                                     if _catchment_radius is not None
-                                     else f"Gaussian, std {_spread:.2f} km"),
-                    "Area": area_label,
-                    "Seed": seed_label,
-                    "Tortuosity mean": args.tortuosity,
-                    "Runtimes per pair": args.runtimes,
-                    "Error display": args.error,
-                    "Real topology": args.real if args.real else "none (synthetic)",
-                    "Final user positions (N=n_max, km, per seed)": _user_pos_by_seed,
-                    "Final relay positions (km, per seed)": _relay_pos_by_seed,
-                    "BB84 key rate (bps) per N per seed": {
-                        N: dict(zip(seeds, bb84_per_seed[N])) for N in N_arr_final
-                    },
-                    "MDI key rate (bps) per N per seed": {
-                        N: dict(zip(seeds, mdi_per_seed[N])) for N in N_arr_final
-                    },
-                },
+                assumptions=_assumptions,
             )
-            print(f"Saved to {os.path.join(args.output_dir, f'user_sweep_K{args.k}')}")
+            print(f"Saved to {os.path.join(args.output_dir, f'user_sweep_K{K_tag}')}")
         else:
             plt.show()
 
     if args.output_dir and not args.no_figure:
-        print(f"Per-seed plots + topologies saved under {os.path.join(args.output_dir, f'user_sweep_K{args.k}')}/seed<seed>/")
+        print(f"Per-seed plots + topologies saved under {os.path.join(args.output_dir, f'user_sweep_K{K_tag}')}/seed<seed>/")
 
 
 if __name__ == "__main__":
