@@ -1,0 +1,13 @@
+{
+    "layer": 9,
+    "description": "Layer 9 (full realistic stack) with SPAD detectors instead of SNSPD. eta_d = 0.20 (IDQ ID230 at telecom wavelength) in place of the 0.90 SNSPD default; used to compare SPAD-BB84 against SNSPD-MDI network key rate in the relay sweep.",
+    "fibre_loss_db_per_km": 0.18,
+    "init_loss": 0.1,
+    "detector_efficiency": 0.20,
+    "dark_count_rate": 50,
+    "node_loss_db": 2.0,
+    "source_error_rate": 0.015,
+    "dephasing_rate": 3.2e-7,
+    "det_eff_x": 0.715,
+    "bs_eff": 0.97
+}
