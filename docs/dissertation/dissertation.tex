@@ -308,7 +308,7 @@ The multi-user simulation models a metropolitan network of $N$ users within an $
 
 \paragraph{Relay placement.}
 \label{sec:relay_placement}
-Placing the $K$ MDI relay nodes is a facility-location problem: given fixed user locations and free relay nodes that connect to their assigned users and, for $K>1$, to each other over a fully meshed backbone (Table~\ref{tab:components}), the placement that minimises deployment cost is the one that minimises total fibre length, since fibre enters the cost model linearly through $c_f$ (Equation~\ref{eq:cost_mdi}, Section~\ref{sec:cost_model}). This is a sum of \emph{unsquared} distances, so the objective that actually matches the network's linear cost structure is the geometric median (the Weber point), not the centroid a plain $k$-means returns, which instead minimises squared distance; the two coincide only for symmetric configurations. The single-facility geometric median has no closed form and is obtained iteratively via Weiszfeld's algorithm,
+Placing the $K$ MDI relay nodes is a facility-location problem: given fixed user locations and free relay nodes that connect to their assigned users and, for $K>1$, to each other over a fully meshed backbone (Table~\ref{tab:components}), the placement that minimises deployment cost is the one that minimises total fibre length, since fibre enters the cost model linearly through $c_f$ (Section~\ref{sec:cost_model}; Equation~\ref{eq:cost_mdi}). This is a sum of \emph{unsquared} distances, so the objective that actually matches the network's linear cost structure is the geometric median (the Weber point), not the centroid a plain $k$-means returns, which instead minimises squared distance; the two coincide only for symmetric configurations. The single-facility geometric median has no closed form and is obtained iteratively via Weiszfeld's algorithm,
 \begin{equation}
     x^{(t+1)} = \frac{\sum_i p_i / \|x^{(t)} - p_i\|}{\sum_i 1/\|x^{(t)} - p_i\|},
     \label{eq:weiszfeld}
@@ -333,7 +333,7 @@ To decouple topology variability from Monte Carlo noise, all network experiments
 
 This work focuses on metropolitan-scale networks, where inter-node distances are short enough for both BB84 and MDI-QKD to establish keys at viable rates. Two network protocols are simulated:
 
-\textbf{BB84 mesh.} Every user pair $(i,j)$ communicates over a dedicated direct dark-fibre link. Per-link tortuosity is sampled independently for each of the $N(N-1)/2$ links: $\tau_{ij} \sim \max(1, \mathcal{N}(\mu_\tau, \sigma_\tau^2))$. The physical cable length is $d_{ij}\,\tau_{ij}$~km. All pairs are dispatched to the multiprocessing pool simultaneously; $r$ Monte Carlo trials are run per pair. Network key rate is the mean over all valid (pair, trial) combinations.
+\textbf{BB84 mesh.} Every user pair $(i,j)$ communicates over a dedicated direct dark-fibre link. Installed cable follows duct routes longer than the straight-line Euclidean distance; per-link tortuosity is sampled independently for each of the $N(N-1)/2$ links from a truncated normal distribution, $\tau_{ij} \sim \max(1, \mathcal{N}(\mu_\tau, \sigma_\tau^2))$ with $\mu_\tau = 1.2$, $\sigma_\tau = 0.1$, representative of urban cable routing where installed fibre is typically 15--25\% longer than the Euclidean distance. The physical cable length is $d_{ij}\,\tau_{ij}$~km. Tortuosity affects both the simulated key rate, through increased fibre loss on longer cables, and installed fibre cost (Section~\ref{sec:cost_model}). All pairs are dispatched to the multiprocessing pool simultaneously; $r$ Monte Carlo trials are run per pair. Network key rate is the mean over all valid (pair, trial) combinations.
 
 \textbf{MDI network.} Tortuosity is sampled once per physical cable rather than per pair, ensuring that all simulation pairs sharing a cable see the same physical routing factor. Specifically, $N$ user-to-relay cables and $K(K-1)/2$ relay-to-relay backbone cables each draw one independent tortuosity factor at the start of each seed.
 
@@ -349,9 +349,7 @@ The network key rate reported throughout this work is the mean pairwise point-to
 \subsection{Cost Model}
 \label{sec:cost_model}
 
-We model the total deployment cost of a QKD network algebraically using symbolic per-component parameters. All costs are capital expenditure (CapEx) only; operational expenditure --- in particular the cryogenic cooling required by superconducting nanowire single-photon detectors (SNSPDs) and quantum dot (QD) sources --- is not modelled. Classical communication infrastructure (basis reconciliation, error correction, and key forwarding) is assumed to be a sunk cost of existing network infrastructure. The most directly related prior cost analysis is that of Karavias \textit{et al.}~\cite{DBLP:conf/ondm/KaraviasHBLP25}, which applies integer linear programming to PM-QKD and entanglement-based infrastructure planning with concrete component costs; MDI-QKD is not considered there. We extend this structural analysis to MDI-QKD, deriving cost formulae that expose the scaling difference between the two protocols without requiring absolute price data.
-
-\subsubsection{Component Counts}
+We model the total deployment cost of a QKD network algebraically using three symbolic per-component parameters: $c_s$ (cost per photon source), $c_d$ (cost per single-photon detector), and $c_f$ (cost per km of installed dark fibre), since manufacturer prices for quantum dot photon sources and single-photon detectors are not publicly available. All costs are capital expenditure (CapEx) only; operational expenditure --- in particular the cryogenic cooling required by superconducting nanowire single-photon detectors (SNSPDs) and quantum dot (QD) sources --- is not modelled. Classical communication infrastructure (basis reconciliation, error correction, and key forwarding) is assumed to be a sunk cost of existing network infrastructure. The most directly related prior cost analysis is that of Karavias \textit{et al.}~\cite{DBLP:conf/ondm/KaraviasHBLP25}, which applies integer linear programming to PM-QKD and entanglement-based infrastructure planning with concrete component costs; MDI-QKD is not considered there. We extend this structural analysis to MDI-QKD; the resulting cost formulae, crossover analysis, and commercial packaging discussion are presented alongside the results they inform in Section~\ref{sec:results_cost}.
 
 The two network topologies impose fundamentally different hardware structures. In BB84, every user pair requires a dedicated direct dark-fibre link: the network is a complete mesh of $N(N-1)/2$ quantum channels. At each receiver, a polarising beam splitter (PBS) separates Z and X basis outputs to two single-photon detectors (SPDs), and an electro-optic modulator (EOM) performs active basis selection. No relay infrastructure is required.
 
@@ -378,30 +376,7 @@ Fibre links & $\dfrac{N(N-1)}{2}$ & $N + \dfrac{K(K-1)}{2}$ \\
 \label{tab:components}
 \end{table}
 
-Fibre cost scales as $\mathcal{O}(N^2)$ for BB84 and as $\mathcal{O}(N)$ for MDI at fixed $K$, providing the structural cost incentive for relay-based architectures as user counts grow.
-
-\subsubsection{Symbolic Cost Formulae}
-
-Manufacturer prices for quantum dot photon sources and single-photon detectors are not publicly available. We therefore parameterise the cost model with three symbolic constants: $c_s$ (cost per photon source), $c_d$ (cost per single-photon detector), and $c_f$ (cost per km of installed dark fibre). Using the component counts in Table~\ref{tab:components}, the total CapEx for each protocol is:
-\begin{equation}
-    C_\text{BB84} = N\,c_s + 2N\,c_d + \frac{N(N-1)}{2}\,\bar{d}_\text{BB84}\,c_f,
-    \label{eq:cost_bb84}
-\end{equation}
-\begin{equation}
-    C_\text{MDI} = N\,c_s + 4K\,c_d + \left(N\,\bar{d}_u + \frac{K(K-1)}{2}\,\bar{d}_r\right) c_f,
-    \label{eq:cost_mdi}
-\end{equation}
-where $\bar{d}_\text{BB84}$ is the mean user-pair distance in the BB84 mesh, $\bar{d}_u$ the mean user-to-relay distance, and $\bar{d}_r$ the mean relay-to-relay backbone link length. Passive relay hardware (HOM beam splitters, polarising beam splitters, optical switches) contributes additional fixed cost per relay and is omitted here for clarity.
-
-The dominant asymptotic difference between the two protocols is the fibre term: BB84 scales as $\mathcal{O}(N^2)$ (one dedicated link per user pair) whilst MDI scales as $\mathcal{O}(N)$ at fixed relay count $K$. Setting $C_\text{BB84} = C_\text{MDI}$ and solving for $N$ yields a crossover threshold $N^*$ above which MDI is cheaper, whose value depends on the ratio $c_d/c_f$, relay count $K$, and network geometry.
-
-Commercial SNSPD detectors are typically sold as multi-channel units integrating several channels within a single cryostat (e.g.\ 2--8 channels per unit), so an MDI relay's four SPDs may in practice be equipped with a single packaged unit rather than four independent $c_d$ purchases; this packaging effect is not reflected in Equation~\ref{eq:cost_mdi}, and its implications for the cost crossover are discussed in Section~\ref{sec:results_cost}.
-
-In practice, installed cable follows duct routes longer than the straight-line Euclidean distance. We model this through per-link tortuosity: each physical cable $(i,j)$ is assigned an independent factor $\tau_{ij}$ drawn from a truncated normal distribution:
-\begin{equation}
-    \tau_{ij} \sim \max\!\left(1,\;\mathcal{N}(\mu_\tau,\,\sigma_\tau^2)\right), \qquad \mu_\tau = 1.2,\quad \sigma_\tau = 0.1.
-\end{equation}
-The mean $\mu_\tau = 1.2$ is representative of urban cable routing, where installed fibre is typically 15--25\% longer than the Euclidean distance. Tortuosity affects the simulated key rate through increased fibre loss on longer cables. Each physical cable draws one factor, held constant across all simulation runs; for MDI, user-to-relay and relay-to-relay cables each draw a single factor shared across all user pairs that traverse that cable, ensuring physical consistency when the same cable appears in multiple paths.
+Every fibre link's installed cost is linear in its length via $c_f$ (Section~\ref{sec:relay_placement} uses this to justify a fibre-length placement objective), and fibre length itself scales as $\mathcal{O}(N^2)$ for BB84's complete mesh versus $\mathcal{O}(N)$ for MDI at fixed relay count $K$ (Table~\ref{tab:components}) --- the structural cost incentive for relay-based architectures as user counts grow, and the difference the full cost formulae of Section~\ref{sec:results_cost} build on to derive a cost crossover user count $N^*$. Installed fibre length additionally reflects the per-link tortuosity model of Section~\ref{sec:network_analysis}.
 
 \subsection{Scalability Analysis}
 \label{sec:scalability}
@@ -583,7 +558,18 @@ Figure~\ref{fig:relay_sweep_n10} shows the corresponding sweep at $N=10$ users, 
 \subsection{Cost}
 \label{sec:results_cost}
 
-The cost formulae of Section~\ref{sec:cost_model} predict that the fibre term dominates at large $N$ for any positive $c_f$, so a crossover user count $N^*$ above which MDI is cheaper always exists; the practical question is whether $N^*$ falls within the user counts of realistic metropolitan deployments, which depends on the ratio $c_d/c_f$, relay count $K$, and network geometry.
+Using the component counts of Table~\ref{tab:components} (Section~\ref{sec:cost_model}), the total CapEx for each protocol is
+\begin{equation}
+    C_\text{BB84} = N\,c_s + 2N\,c_d + \frac{N(N-1)}{2}\,\bar{d}_\text{BB84}\,c_f,
+    \label{eq:cost_bb84}
+\end{equation}
+\begin{equation}
+    C_\text{MDI} = N\,c_s + 4K\,c_d + \left(N\,\bar{d}_u + \frac{K(K-1)}{2}\,\bar{d}_r\right) c_f,
+    \label{eq:cost_mdi}
+\end{equation}
+where $\bar{d}_\text{BB84}$ is the mean user-pair distance in the BB84 mesh, $\bar{d}_u$ the mean user-to-relay distance, and $\bar{d}_r$ the mean relay-to-relay backbone link length. Passive relay hardware (HOM beam splitters, polarising beam splitters, optical switches) contributes additional fixed cost per relay and is omitted here for clarity.
+
+The fibre term dominates at large $N$ for any positive $c_f$, since it scales as $\mathcal{O}(N^2)$ for BB84 against $\mathcal{O}(N)$ for MDI at fixed $K$, so a crossover user count $N^*$ above which MDI is cheaper always exists: setting $C_\text{BB84} = C_\text{MDI}$ and solving for $N$ gives $N^*$ as a function of the ratio $c_d/c_f$, relay count $K$, and network geometry, rather than as a single number, since manufacturer prices for photon sources and single-photon detectors are not publicly available. The practical question is whether $N^*$ falls within the user counts of realistic metropolitan deployments: a high $c_d/c_f$ ratio (expensive detectors relative to fibre) widens BB84's advantage from its lower per-user detector count, whilst a high $c_f/c_d$ ratio amplifies MDI's $\mathcal{O}(N)$ vs $\mathcal{O}(N^2)$ fibre advantage and pulls $N^*$ down.
 
 Commercial detector packaging complicates this picture. SNSPDs are typically sold as multi-channel units integrating several channels within a single cryostat (e.g.\ 2--8 channels per unit), so an MDI relay's four SPDs may in practice be equipped with a single packaged unit rather than four independent $c_d$ purchases, reducing per-relay detector cost below $4c_d$. This narrows MDI's cost advantage at small $N$ and shifts $N^*$ upward; since it cannot be quantified without product pricing, it is treated here as a sensitivity consideration on the crossover result rather than a correction to Equation~\ref{eq:cost_mdi}.
 
