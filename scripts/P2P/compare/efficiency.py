@@ -147,6 +147,9 @@ if __name__ == "__main__":
     parser.add_argument("--output-dir", type=str, default=None, help="Directory to save figure into (skips interactive display)")
     parser.add_argument("--compare-configs", nargs="+", metavar="PATH", dest="compare_configs",
                         help="2–4 config paths; overlay same efficiency sweep under each preset on one figure")
+    parser.add_argument("--points", type=float, nargs="+", default=None, metavar="ETA",
+                        help="Override the swept efficiency points (e.g. --points 0.10 for a single "
+                             "isolated point instead of the full default sweep)")
     args = parser.parse_args()
     cfg  = load_config(args.config)
     if args.loss is not None:        cfg["fibre_loss_db_per_km"] = args.loss
@@ -158,9 +161,8 @@ if __name__ == "__main__":
     print()
     if args.config is not None and cfg["detector_efficiency"] != 1.0:
         print(f"Note: detector_efficiency={cfg['detector_efficiency']} from config ignored — η_d is the sweep axis")
-    print(f"Sweep: η_d [1.0->0.15]  |  Fixed: L={args.fibre} km  α={cfg['fibre_loss_db_per_km']} dB/km  d_c={cfg['dark_count_rate']} cps")
-
-    Ex = [1.0, 0.99, 0.95, 0.90, 0.80, 0.70, 0.65, 0.60, 0.50, 0.40, 0.30, 0.20, 0.15]
+    Ex = args.points if args.points else [1.0, 0.99, 0.95, 0.90, 0.80, 0.70, 0.65, 0.60, 0.50, 0.40, 0.30, 0.20, 0.15, 0.10]
+    print(f"Sweep: η_d {Ex}  |  Fixed: L={args.fibre} km  α={cfg['fibre_loss_db_per_km']} dB/km  d_c={cfg['dark_count_rate']} cps")
 
     def _run_sweep(sweep_cfg, label=""):
         prog = Progress(len(Ex))
