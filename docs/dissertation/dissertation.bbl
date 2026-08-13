@@ -1,237 +1,161 @@
 \begin{thebibliography}{10}
 
 \bibitem{RSA_1978}
-R.~L. Rivest, A.~Shamir, and L.~Adleman, ``{A method for obtaining digital
-  signatures and public-key cryptosystems},'' {\em Commun. ACM}, vol.~21,
-  p.~120–126, Feb. 1978.
+R.~L. Rivest, A.~Shamir, and L.~Adleman, ``{A method for obtaining digital signatures and public-key cryptosystems},'' {\em Commun. ACM}, vol.~21, p.~120–126, Feb. 1978.
 
 \bibitem{Koblitz_ECC}
-N.~Koblitz, ``{Elliptic Curve Cryptosystems},'' {\em Mathematics of
-  Computation}, vol.~48, pp.~203--209, Jan. 1987.
+N.~Koblitz, ``{Elliptic Curve Cryptosystems},'' {\em Mathematics of Computation}, vol.~48, pp.~203--209, Jan. 1987.
 
 \bibitem{Miller_ECC}
-V.~S. Miller, ``{Use of Elliptic Curves in Cryptography},'' in {\em Advances in
-  Cryptology --- CRYPTO '85 Proceedings} (H.~C. Williams, ed.), (Berlin,
-  Heidelberg), pp.~417--426, Springer Berlin Heidelberg, 1986.
+V.~S. Miller, ``{Use of Elliptic Curves in Cryptography},'' in {\em Advances in Cryptology --- CRYPTO '85 Proceedings} (H.~C. Williams, ed.), (Berlin, Heidelberg), pp.~417--426, Springer Berlin Heidelberg, 1986.
 
 \bibitem{Shor_1997}
-P.~W. Shor, ``{Polynomial-Time Algorithms for Prime Factorization and Discrete
-  Logarithms on a Quantum Computer},'' {\em SIAM Journal on Computing},
-  vol.~26, p.~1484–1509, Oct. 1997.
+P.~W. Shor, ``{Polynomial-Time Algorithms for Prime Factorization and Discrete Logarithms on a Quantum Computer},'' {\em SIAM Journal on Computing}, vol.~26, p.~1484–1509, Oct. 1997.
 
 \bibitem{Wiesner_1983}
-S.~Wiesner, ``{Conjugate coding},'' {\em SIGACT News}, vol.~15, p.~78–88,
-  Jan. 1983.
+S.~Wiesner, ``{Conjugate coding},'' {\em SIGACT News}, vol.~15, p.~78–88, Jan. 1983.
 
 \bibitem{Bennett_2014}
-C.~H. Bennett and G.~Brassard, ``{Quantum cryptography: Public key distribution
-  and coin tossing},'' {\em Theoretical Computer Science}, vol.~560, p.~7–11,
-  Dec. 2014.
+C.~H. Bennett and G.~Brassard, ``{Quantum cryptography: Public key distribution and coin tossing},'' {\em Theoretical Computer Science}, vol.~560, p.~7–11, Dec. 2014.
 
 \bibitem{chen2021}
-Y.-A. Chen {\em et~al.}, ``{An integrated space-to-ground quantum communication
-  network over 4,600 kilometres},'' {\em Nature}, vol.~589, 01 2021.
+Y.-A. Chen {\em et~al.}, ``{An integrated space-to-ground quantum communication network over 4,600 kilometres},'' {\em Nature}, vol.~589, 01 2021.
 
 \bibitem{Peev_2009}
-M.~Peev {\em et~al.}, ``{The SECOQC quantum key distribution network in
-  Vienna},'' {\em New Journal of Physics}, vol.~11, p.~075001, 07 2009.
+M.~Peev {\em et~al.}, ``{The SECOQC quantum key distribution network in Vienna},'' {\em New Journal of Physics}, vol.~11, p.~075001, 07 2009.
 
 \bibitem{Sasaki_2011}
-M.~Sasaki {\em et~al.}, ``{Field test of quantum key distribution in the Tokyo
-  QKD Network},'' {\em Optics Express}, vol.~19, p.~10387, May 2011.
+M.~Sasaki {\em et~al.}, ``{Field test of quantum key distribution in the Tokyo QKD Network},'' {\em Optics Express}, vol.~19, p.~10387, May 2011.
 
 \bibitem{Lo_2012}
-H.-K. Lo, M.~Curty, and B.~Qi, ``{Measurement-Device-Independent Quantum Key
-  Distribution},'' {\em Phys. Rev. Lett.}, vol.~108, p.~130503, Mar 2012.
+H.-K. Lo, M.~Curty, and B.~Qi, ``{Measurement-Device-Independent Quantum Key Distribution},'' {\em Phys. Rev. Lett.}, vol.~108, p.~130503, Mar 2012.
 
 \bibitem{Dynes_2019}
-J.~Dynes {\em et~al.}, ``{Cambridge quantum network},'' {\em npj Quantum
-  Information}, vol.~5, 12 2019.
+J.~Dynes {\em et~al.}, ``{Cambridge quantum network},'' {\em npj Quantum Information}, vol.~5, 12 2019.
 
 \bibitem{Yan2025}
-W.~Yan, X.~Zheng, W.~Wen, L.~Lu, Y.~Du, Y.~Lu, S.~Zhu, and X.-S. Ma, ``{A
-  measurement-device-independent quantum key distribution network using optical
-  frequency comb},'' 2025.
+W.~Yan, X.~Zheng, W.~Wen, L.~Lu, Y.~Du, Y.~Lu, S.~Zhu, and X.-S. Ma, ``{A measurement-device-independent quantum key distribution network using optical frequency comb},'' 2025.
 
 \bibitem{Elliott_2002}
-C.~{Elliott}, ``{Building the quantum network},'' {\em New Journal of Physics},
-  vol.~4, p.~46, July 2002.
+C.~{Elliott}, ``{Building the quantum network},'' {\em New Journal of Physics}, vol.~4, p.~46, July 2002.
 
 \bibitem{Qin_NQSN_2024}
-H.~Qin {\em et~al.}, ``{The National Quantum-Safe Network in Singapore},'' in
-  {\em Proceedings of QCrypt 2024}, 2024.
+H.~Qin {\em et~al.}, ``{The National Quantum-Safe Network in Singapore},'' in {\em Proceedings of QCrypt 2024}, 2024.
 
 \bibitem{pittaluga_2024}
-M.~Pittaluga, Y.~S. Lo, A.~Brzosko, R.~I. Woodward, M.~S. Winnel, T.~Roger,
-  J.~F. Dynes, K.~A. Owen, S.~Juarez, P.~Rydlichowski, D.~Vicinanza,
-  G.~Roberts, and A.~J. Shields, ``{Coherent Quantum Communications Across
-  National Scale Telecommunication Infrastructure},'' 2024.
+M.~Pittaluga, Y.~S. Lo, A.~Brzosko, R.~I. Woodward, M.~S. Winnel, T.~Roger, J.~F. Dynes, K.~A. Owen, S.~Juarez, P.~Rydlichowski, D.~Vicinanza, G.~Roberts, and A.~J. Shields, ``{Coherent Quantum Communications Across National Scale Telecommunication Infrastructure},'' 2024.
 
 \bibitem{Tang_2016}
-Y.-L. Tang {\em et~al.}, ``{Measurement-Device-Independent Quantum Key
-  Distribution over Untrustful Metropolitan Network},'' {\em Physical Review
-  X}, vol.~6, Mar. 2016.
+Y.-L. Tang {\em et~al.}, ``{Measurement-Device-Independent Quantum Key Distribution over Untrustful Metropolitan Network},'' {\em Physical Review X}, vol.~6, Mar. 2016.
 
 \bibitem{Berrevoets_2022}
-R.~C. Berrevoets {\em et~al.}, ``{Deployed measurement-device independent
-  quantum key distribution and Bell-state measurements coexisting with standard
-  internet data and networking equipment},'' {\em Communications Physics},
-  vol.~5, July 2022.
+R.~C. Berrevoets {\em et~al.}, ``{Deployed measurement-device independent quantum key distribution and Bell-state measurements coexisting with standard internet data and networking equipment},'' {\em Communications Physics}, vol.~5, July 2022.
 
 \bibitem{qbird_belQCI}
-{Q*Bird}, ``{Fortifying Europe's quantum communication -- Q*Bird and BeQCI
-  achieve the first cross-border MDI QKD link in Benelux},'' 2025.
+{Q*Bird}, ``{Fortifying Europe's quantum communication -- Q*Bird and BeQCI achieve the first cross-border MDI QKD link in Benelux},'' 2025.
 
 \bibitem{Martins2024}
-V.~Martin {\em et~al.}, ``{MadQCI: a heterogeneous and scalable SDN-QKD network
-  deployed in production facilities},'' {\em npj Quantum Information}, vol.~10,
-  09 2024.
+V.~Martin {\em et~al.}, ``{MadQCI: a heterogeneous and scalable SDN-QKD network deployed in production facilities},'' {\em npj Quantum Information}, vol.~10, 09 2024.
 
 \bibitem{eu_open_qkd}
 E.~Commission, ``{Open European Quantum Key Distribution Testbed},'' 2024.
 
 \bibitem{Yehia_2022}
-R.~Yehia, S.~Neves, E.~Diamanti, and I.~Kerenidis, ``{Quantum {C}ity:
-  simulation of a practical near-term metropolitan quantum network},'' 2022.
+R.~Yehia, S.~Neves, E.~Diamanti, and I.~Kerenidis, ``{Quantum {C}ity: simulation of a practical near-term metropolitan quantum network},'' 2022.
 
 \bibitem{DBLP:conf/ondm/KaraviasHBLP25}
-V.~Karavias, E.~Hugues{-}Salas, A.~Beghelli, A.~Lord, and M.~C. Payne,
-  ``{Comparative Cost Analysis of Prepare and Measure and Entanglement-Based
-  {QKD} Networks},'' in {\em International Conference on Optical Network Design
-  and Modeling, {ONDM}, 2025}, 2025.
+V.~Karavias, E.~Hugues{-}Salas, A.~Beghelli, A.~Lord, and M.~C. Payne, ``{Comparative Cost Analysis of Prepare and Measure and Entanglement-Based {QKD} Networks},'' in {\em International Conference on Optical Network Design and Modeling, {ONDM}, 2025}, 2025.
 
 \bibitem{Yehia_2025}
-R.~Yehia, Y.~Piétri, C.~Pascual-García, P.~Lefebvre, and F.~Centrone,
-  ``{Energetic Analysis of Emerging Quantum Communication Protocols},'' 2025.
+R.~Yehia, Y.~Piétri, C.~Pascual-García, P.~Lefebvre, and F.~Centrone, ``{Energetic Analysis of Emerging Quantum Communication Protocols},'' 2025.
 
 \bibitem{Coopmans_2021}
-T.~Coopmans, R.~Knegjens, A.~Dahlberg, D.~Maier, L.~Nijsten,
-  J.~de~Oliveira~Filho, M.~Papendrecht, J.~Rabbie, F.~Rozpędek, M.~Skrzypczyk,
-  L.~Wubben, W.~de~Jong, D.~Podareanu, A.~Torres-Knoop, D.~Elkouss, and
-  S.~Wehner, ``{NetSquid, a NETwork Simulator for QUantum Information using
-  Discrete events},'' {\em Communications Physics}, vol.~4, no.~1, 2021.
+T.~Coopmans, R.~Knegjens, A.~Dahlberg, D.~Maier, L.~Nijsten, J.~de~Oliveira~Filho, M.~Papendrecht, J.~Rabbie, F.~Rozpędek, M.~Skrzypczyk, L.~Wubben, W.~de~Jong, D.~Podareanu, A.~Torres-Knoop, D.~Elkouss, and S.~Wehner, ``{NetSquid, a NETwork Simulator for QUantum Information using Discrete events},'' {\em Communications Physics}, vol.~4, no.~1, 2021.
 
 \bibitem{henderson2008network}
-T.~R. Henderson, M.~Lacage, G.~F. Riley, C.~Dowell, and J.~Kopena, ``Network
-  simulations with the ns-3 simulator,'' in {\em SIGCOMM demonstration},
-  vol.~14, p.~527, 2008.
+T.~R. Henderson, M.~Lacage, G.~F. Riley, C.~Dowell, and J.~Kopena, ``Network simulations with the ns-3 simulator,'' in {\em SIGCOMM demonstration}, vol.~14, p.~527, 2008.
 
 \bibitem{varga2001omnet++}
-A.~Varga, ``The {OMNeT++} discrete event simulation system,'' in {\em
-  Proceedings of the European Simulation Multiconference (ESM'2001)}, vol.~9,
-  p.~65, 2001.
+A.~Varga, ``The {OMNeT++} discrete event simulation system,'' in {\em Proceedings of the European Simulation Multiconference (ESM'2001)}, vol.~9, p.~65, 2001.
 
 \bibitem{Shor_2000}
-P.~W. Shor and J.~Preskill, ``{Simple Proof of Security of the BB84 Quantum Key
-  Distribution Protocol},'' {\em Physical Review Letters}, vol.~85,
-  p.~441–444, July 2000.
+P.~W. Shor and J.~Preskill, ``{Simple Proof of Security of the BB84 Quantum Key Distribution Protocol},'' {\em Physical Review Letters}, vol.~85, p.~441–444, July 2000.
 
 \bibitem{PNS_desc}
-E.~I. T.~C. Institute, ``{What is the Photon Number Splitting (PNS) attack, and
-  how does it constrain the communication distance in quantum cryptography?},''
-  2024.
+E.~I. T.~C. Institute, ``{What is the Photon Number Splitting (PNS) attack, and how does it constrain the communication distance in quantum cryptography?},'' 2024.
 
 \bibitem{Lo_decoys}
-H.-K. Lo, X.~Ma, and K.~Chen, ``{Decoy State Quantum Key Distribution},'' {\em
-  Phys. Rev. Lett.}, vol.~94, p.~230504, Jun 2005.
+H.-K. Lo, X.~Ma, and K.~Chen, ``{Decoy State Quantum Key Distribution},'' {\em Phys. Rev. Lett.}, vol.~94, p.~230504, Jun 2005.
 
 \bibitem{Hong_1987}
-C.~K. Hong, Z.~Y. Ou, and L.~Mandel, ``{Measurement of subpicosecond time
-  intervals between two photons by interference},'' {\em Phys. Rev. Lett.},
-  vol.~59, pp.~2044--2046, Nov. 1987.
+C.~K. Hong, Z.~Y. Ou, and L.~Mandel, ``{Measurement of subpicosecond time intervals between two photons by interference},'' {\em Phys. Rev. Lett.}, vol.~59, pp.~2044--2046, Nov. 1987.
 
 \bibitem{Pirandola_2017}
-S.~Pirandola, R.~Laurenza, C.~Ottaviani, and L.~Banchi, ``{Fundamental limits
-  of repeaterless quantum communications},'' {\em Nature Communications},
-  vol.~8, Apr. 2017.
+S.~Pirandola, R.~Laurenza, C.~Ottaviani, and L.~Banchi, ``{Fundamental limits of repeaterless quantum communications},'' {\em Nature Communications}, vol.~8, Apr. 2017.
 
 \bibitem{Lucamarini_2018}
-M.~Lucamarini, Z.~L. Yuan, J.~F. Dynes, and A.~J. Shields, ``{Overcoming the
-  rate--distance limit of quantum key distribution without quantum
-  repeaters},'' {\em Nature}, vol.~557, p.~400–403, May 2018.
+M.~Lucamarini, Z.~L. Yuan, J.~F. Dynes, and A.~J. Shields, ``{Overcoming the rate--distance limit of quantum key distribution without quantum repeaters},'' {\em Nature}, vol.~557, p.~400–403, May 2018.
 
 \bibitem{corning_smf28}
-Corning, ``{SMF-28 Ultra Optical Fiber -- Product Information Sheet
-  PI-1424-AEN}.'' Product datasheet, 2023.
+Corning, ``{SMF-28 Ultra Optical Fiber -- Product Information Sheet PI-1424-AEN}.'' Product datasheet, 2023.
 
 \bibitem{idq_id281}
-{ID Quantique}, ``{ID281 Superconducting Nanowire Single-Photon Detection
-  System -- Product Datasheet}.'' Product datasheet, 2024.
+{ID Quantique}, ``{ID281 Superconducting Nanowire Single-Photon Detection System -- Product Datasheet}.'' Product datasheet, 2024.
 
 \bibitem{ozoptics_dts0092}
-{OZ Optics}, ``{Polarization Maintaining Fused Fiber Couplers/Splitters --
-  Product Datasheet (DTS0092)}.'' Product datasheet, 2013.
+{OZ Optics}, ``{Polarization Maintaining Fused Fiber Couplers/Splitters -- Product Datasheet (DTS0092)}.'' Product datasheet, 2013.
 
 \bibitem{Duplinskiy_2017}
-A.~Duplinskiy, V.~Ustimchik, A.~Kanapin, V.~Kurochkin, and Y.~Kurochkin, ``{Low
-  loss QKD optical scheme for fast polarization encoding},'' {\em Optics
-  Express}, vol.~25, no.~23, pp.~28886--28897, 2017.
+A.~Duplinskiy, V.~Ustimchik, A.~Kanapin, V.~Kurochkin, and Y.~Kurochkin, ``{Low loss QKD optical scheme for fast polarization encoding},'' {\em Optics Express}, vol.~25, no.~23, pp.~28886--28897, 2017.
 
 \bibitem{QuandelaSPS}
-Quandela, ``{Prometheus Single-Photon Source -- Product Datasheet}.'' Product
-  datasheet, 2024.
+Quandela, ``{Prometheus Single-Photon Source -- Product Datasheet}.'' Product datasheet, 2024.
 
 \bibitem{Grasselli_2025}
-F.~Grasselli, G.~Chesi, N.~Walk, H.~Kampermann, A.~Widomski, M.~Ogrodnik,
-  M.~Karpi{\'n}ski, C.~Macchiavello, D.~Bru{\ss}, and N.~Wyderka, ``{Quantum
-  Key Distribution with Basis-Dependent Detection Probability},'' {\em Physical
-  Review Applied}, vol.~23, p.~044011, 2025.
+F.~Grasselli, G.~Chesi, N.~Walk, H.~Kampermann, A.~Widomski, M.~Ogrodnik, M.~Karpi{\'n}ski, C.~Macchiavello, D.~Bru{\ss}, and N.~Wyderka, ``{Quantum Key Distribution with Basis-Dependent Detection Probability},'' {\em Physical Review Applied}, vol.~23, p.~044011, 2025.
 
 \bibitem{thorlabs_tn1550r5f2}
-Thorlabs, ``{TN1550R5F2 -- Narrowband Fiber Optic Coupler, 1550~nm, 50:50 Ratio
-  -- Product Datasheet (TTN168601-S01, Rev C)}.'' Product datasheet, 2021.
+Thorlabs, ``{TN1550R5F2 -- Narrowband Fiber Optic Coupler, 1550~nm, 50:50 Ratio -- Product Datasheet (TTN168601-S01, Rev C)}.'' Product datasheet, 2021.
 
 \bibitem{idq_id230}
-{ID Quantique}, ``{ID230 Infrared Single-Photon Detector -- Product
-  Datasheet}.'' Product datasheet, 2024.
+{ID Quantique}, ``{ID230 Infrared Single-Photon Detector -- Product Datasheet}.'' Product datasheet, 2024.
 
 \bibitem{Kuhn_1973}
-H.~W. Kuhn, ``{A note on Fermat's problem},'' {\em Mathematical Programming},
-  vol.~4, no.~1, pp.~98--107, 1973.
+H.~W. Kuhn, ``{A note on Fermat's problem},'' {\em Mathematical Programming}, vol.~4, no.~1, pp.~98--107, 1973.
+
+\bibitem{Finch_2003}
+S.~R. Finch, {\em {Mathematical Constants}}, vol.~94 of {\em Encyclopedia of Mathematics and its Applications}.
+\newblock Cambridge University Press, 2003.
+\newblock Section 8.1, Geometric Probability Constants, pp.~479--484.
 
 \bibitem{Lutkenhaus_2000}
-N.~L\"{u}tkenhaus, ``{Security against individual attacks for realistic quantum
-  key distribution},'' {\em Phys. Rev. A}, vol.~61, p.~052304, Apr 2000.
+N.~L\"{u}tkenhaus, ``{Security against individual attacks for realistic quantum key distribution},'' {\em Phys. Rev. A}, vol.~61, p.~052304, Apr 2000.
 
 \bibitem{Gottesman_2004}
-D.~Gottesman, H.-K. Lo, N.~L\"{u}tkenhaus, and J.~Preskill, ``{Security of
-  quantum key distribution with imperfect devices},'' {\em Quantum Information
-  \& Computation}, vol.~4, no.~5, pp.~325--360, 2004.
+D.~Gottesman, H.-K. Lo, N.~L\"{u}tkenhaus, and J.~Preskill, ``{Security of quantum key distribution with imperfect devices},'' {\em Quantum Information \& Computation}, vol.~4, no.~5, pp.~325--360, 2004.
 
 \bibitem{Tan_2021}
-E.~Y.-Z. Tan, R.~Schwonnek, K.~T. Goh, I.~W. Primaatmaja, and C.~C.-W. Lim,
-  ``{Computing secure key rates for quantum cryptography with untrusted
-  devices},'' {\em npj Quantum Information}, vol.~7, p.~158, 2021.
+E.~Y.-Z. Tan, R.~Schwonnek, K.~T. Goh, I.~W. Primaatmaja, and C.~C.-W. Lim, ``{Computing secure key rates for quantum cryptography with untrusted devices},'' {\em npj Quantum Information}, vol.~7, p.~158, 2021.
 
 \bibitem{Briegel_1998}
-H.-J. Briegel, W.~D\"{u}r, J.~I. Cirac, and P.~Zoller, ``Quantum repeaters: The
-  role of imperfect local operations in quantum communication,'' {\em Physical
-  Review Letters}, vol.~81, pp.~5932--5935, Dec. 1998.
+H.-J. Briegel, W.~D\"{u}r, J.~I. Cirac, and P.~Zoller, ``Quantum repeaters: The role of imperfect local operations in quantum communication,'' {\em Physical Review Letters}, vol.~81, pp.~5932--5935, Dec. 1998.
 
 \bibitem{Azuma_2015}
-K.~Azuma, K.~Tamaki, and H.-K. Lo, ``All-photonic quantum repeaters,'' {\em
-  Nature Communications}, vol.~6, Apr. 2015.
+K.~Azuma, K.~Tamaki, and H.-K. Lo, ``All-photonic quantum repeaters,'' {\em Nature Communications}, vol.~6, Apr. 2015.
 
 \bibitem{Kimble_2008}
-H.~J. Kimble, ``{The quantum internet},'' {\em Nature}, vol.~453,
-  p.~1023–1030, June 2008.
+H.~J. Kimble, ``{The quantum internet},'' {\em Nature}, vol.~453, p.~1023–1030, June 2008.
 
 \bibitem{Song-2012}
-T.-T. Song, Q.-Y. Wen, F.-Z. Guo, and X.-Q. Tan, ``{Finite-key analysis for
-  measurement-device-independent quantum key distribution},'' {\em Phys. Rev.
-  A}, vol.~86, p.~022332, Aug 2012.
+T.-T. Song, Q.-Y. Wen, F.-Z. Guo, and X.-Q. Tan, ``{Finite-key analysis for measurement-device-independent quantum key distribution},'' {\em Phys. Rev. A}, vol.~86, p.~022332, Aug 2012.
 
 \bibitem{Miehle_1958}
-W.~Miehle, ``{Link-Length Minimization in Networks},'' {\em Operations
-  Research}, vol.~6, no.~2, pp.~232--243, 1958.
+W.~Miehle, ``{Link-Length Minimization in Networks},'' {\em Operations Research}, vol.~6, no.~2, pp.~232--243, 1958.
 
 \bibitem{OKelly_1986}
-M.~E. O'Kelly, ``{The Location of Interacting Hub Facilities},'' {\em
-  Transportation Science}, vol.~20, no.~2, pp.~92--106, 1986.
+M.~E. O'Kelly, ``{The Location of Interacting Hub Facilities},'' {\em Transportation Science}, vol.~20, no.~2, pp.~92--106, 1986.
 
 \bibitem{Alumur_2008}
-S.~Alumur and B.~Y. Kara, ``{Network hub location problems: The state of the
-  art},'' {\em European Journal of Operational Research}, vol.~190, no.~1,
-  pp.~1--21, 2008.
+S.~Alumur and B.~Y. Kara, ``{Network hub location problems: The state of the art},'' {\em European Journal of Operational Research}, vol.~190, no.~1, pp.~1--21, 2008.
 
 \end{thebibliography}

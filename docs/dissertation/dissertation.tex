@@ -567,9 +567,66 @@ Using the component counts of Table~\ref{tab:components} (Section~\ref{sec:cost_
     C_\text{MDI} = N\,c_s + 4K\,c_d + \left(N\,\bar{d}_u + \frac{K(K-1)}{2}\,\bar{d}_r\right) c_f,
     \label{eq:cost_mdi}
 \end{equation}
-where $\bar{d}_\text{BB84}$ is the mean user-pair distance in the BB84 mesh, $\bar{d}_u$ the mean user-to-relay distance, and $\bar{d}_r$ the mean relay-to-relay backbone link length. Passive relay hardware (HOM beam splitters, polarising beam splitters, optical switches) contributes additional fixed cost per relay and is omitted here for clarity.
+where $\bar{d}_\text{BB84}$ is the mean user-pair distance in the BB84 mesh, $\bar{d}_u$ the mean user-to-relay distance, and $\bar{d}_r$ the mean relay-to-relay backbone link length. Passive relay hardware (HOM beam splitters, polarising beam splitters, optical switches) contributes additional fixed cost per relay and is omitted here for simplicity.
 
-The fibre term dominates at large $N$ for any positive $c_f$, since it scales as $\mathcal{O}(N^2)$ for BB84 against $\mathcal{O}(N)$ for MDI at fixed $K$, so a crossover user count $N^*$ above which MDI is cheaper always exists: setting $C_\text{BB84} = C_\text{MDI}$ and solving for $N$ gives $N^*$ as a function of the ratio $c_d/c_f$, relay count $K$, and network geometry, rather than as a single number, since manufacturer prices for photon sources and single-photon detectors are not publicly available. The practical question is whether $N^*$ falls within the user counts of realistic metropolitan deployments: a high $c_d/c_f$ ratio (expensive detectors relative to fibre) widens BB84's advantage from its lower per-user detector count, whilst a high $c_f/c_d$ ratio amplifies MDI's $\mathcal{O}(N)$ vs $\mathcal{O}(N^2)$ fibre advantage and pulls $N^*$ down.
+The fibre term dominates at large $N$ for any positive $c_f$, since it scales as $\mathcal{O}(N^2)$ for BB84 against $\mathcal{O}(N)$ for MDI at fixed $K$, so a crossover user count $N^*$ above which MDI is cheaper always exists: setting $C_\text{BB84} = C_\text{MDI}$ and solving for $N$ gives $N^*$ as a function of the ratio $c_d/c_f$, relay count $K$, and network geometry, rather than as a single number, since manufacturer prices for photon sources and single-photon detectors are not publicly available. Evaluating $N^*$ explicitly requires values for the two distance terms $\bar d_u$ and $\bar d_r$ in Equation~\ref{eq:cost_mdi}.
+
+Neither is a free parameter in practice: both follow from standard results in geometric probability once relay placement is assumed to spread roughly uniformly across the service area (Section~\ref{sec:relay_placement}). For $m$ points scattered independently and uniformly over a square of side $L$, the mean pairwise distance converges to
+\begin{equation}
+    \overline{|PQ|} = \frac{2+\sqrt2+5\,\mathrm{arcsinh}(1)}{15}\,L \approx 0.5214\,L,
+    \label{eq:pairwise_constant}
+\end{equation}
+independent of $m$~\cite{Finch_2003}. Setting $m=N$ is what already makes $\bar d_\text{BB84}$ itself independent of $N$ in Equation~\ref{eq:cost_bb84}; setting $m=K$ instead applies the same fact to the $K$ relay positions, giving
+\begin{equation}
+    \bar d_r \approx \bar d_\text{BB84}.
+    \label{eq:dr_approx}
+\end{equation}
+
+Spoke distance is a different quantity. $K$ relays partitioning the service area into roughly equal-area catchments gives each catchment area $\approx L^2/K$, i.e.\ linear (side) dimension $\ell\approx L/\sqrt K$; each user's assigned relay sits near that catchment's geometric median, close to its centre. The mean distance from a point drawn uniformly at random within a square of side $\ell$ to that square's own centre is a second, distinct geometric-probability constant~\cite{Finch_2003}:
+\begin{equation}
+    \overline{|PO|} = \frac{\sqrt2+\ln(1+\sqrt2)}{6}\,\ell \approx 0.3826\,\ell.
+    \label{eq:center_constant}
+\end{equation}
+Substituting $\ell\approx L/\sqrt K$ gives $\bar d_u \approx 0.3826\,L/\sqrt K$; eliminating the shared, unknown $L$ using Equation~\ref{eq:pairwise_constant} in its place yields the working approximation used below:
+\begin{equation}
+    \bar d_u \approx \frac{0.3826}{0.5214}\cdot\frac{\bar d_\text{BB84}}{\sqrt K} \approx 0.73\,\frac{\bar d_\text{BB84}}{\sqrt K}.
+    \label{eq:du_approx}
+\end{equation}
+Both approximations were checked directly against the relay and user coordinates recorded for the $N=10$ and $N=15$ relay-count sweeps (Section~\ref{sec:results_network}): Equation~\ref{eq:dr_approx} holds to within a few percent at $K=2$, and Equation~\ref{eq:du_approx} tracks the measured spoke distance's decline with $K$ (running 10--20\% high) up to $K=3$; both break down by $K=5$, where catchments become too small, relative to $N$, for the well-spread, roughly-square-catchment assumption behind either approximation to hold. Both are therefore used below only up to $K=3$ at $N=10$--$15$.
+
+Substituting Equations~\ref{eq:dr_approx} and~\ref{eq:du_approx} into Equations~\ref{eq:cost_bb84}--\ref{eq:cost_mdi} (writing $d\equiv\bar d_\text{BB84}$) gives a closed form for the cost difference, with the $N c_s$ source term cancelling identically:
+\begin{equation}
+    \Delta C \equiv C_\text{BB84} - C_\text{MDI} \approx 2c_d(N-2K) + c_f\,d\left[\frac{N(N-1)}{2} - 0.73\,\frac{N}{\sqrt K} - \frac{K(K-1)}{2}\right].
+    \label{eq:delta_cost}
+\end{equation}
+For $N\gg K$ --- true throughout the relay-count sweeps of Section~\ref{sec:results_network}, where $K\leq5$ against $N=10$--$15$ --- the $N(N-1)/2$ term dominates every other term in Equation~\ref{eq:delta_cost}, each $\mathcal{O}(N)$ or $\mathcal{O}(K^2)$, giving $\Delta C \approx \tfrac{1}{2}c_f\,\bar d_\text{BB84}\,N^2$: a quantitative version of the $\mathcal{O}(N^2)$ vs.\ $\mathcal{O}(N)$ scaling argument above, now with an explicit prefactor rather than only an asymptotic order.
+
+Equation~\ref{eq:delta_cost} is quadratic in $N$ and solves in closed form. Writing $\rho \equiv c_d/(c_f\,\bar d_\text{BB84})$ for the dimensionless ratio of detector to fibre cost, measured in units of the mean pairwise distance,
+\begin{equation}
+    N^*(\rho,K) = -\left(2\rho-\tfrac12-\tfrac{0.73}{\sqrt K}\right) + \sqrt{\left(2\rho-\tfrac12-\tfrac{0.73}{\sqrt K}\right)^{2} + 8\rho K + K(K-1)}.
+    \label{eq:nstar_closed}
+\end{equation}
+As $\rho\to\infty$ (arbitrarily expensive detectors relative to fibre), Equation~\ref{eq:nstar_closed} approaches the limit $N^*\to2K$ --- exactly the user count at which BB84's total detector count $2N$ equals MDI's fixed $4K$ --- and never exceeds it for $K\geq2$: substituting $N=2K$ into Equation~\ref{eq:delta_cost} gives $\Delta C(2K) = c_f\,\bar d_\text{BB84}\left[1.5K^2-0.5K-1.46\sqrt K\right]$, positive for every $K\geq2$, so the crossover is already passed by $N=2K$. Throughout the range where BB84 is still the cheaper protocol ($N<N^*\leq2K$), its total detector count therefore remains below MDI's; a higher $c_d/c_f$ ratio makes that detector-count advantage more valuable and pushes $N^*$ up towards the $2K$ ceiling, while a higher $c_f/c_d$ ratio instead lets the $\mathcal{O}(N^2)$ fibre term dominate sooner, pulling $N^*$ down towards its $\rho=0$ floor. This is the reverse of the naive expectation that BB84, needing two detectors per user against MDI's four per relay, has an unconditionally lower detector count: it does only below $N^*$, and Equation~\ref{eq:nstar_closed} shows that boundary itself never reaches beyond $2K$ --- for the $K\leq5$ relay counts swept in this work, $N^*$ stays in the single digits regardless of detector price.
+
+Figure~\ref{fig:nstar} plots Equation~\ref{eq:nstar_closed} directly. Panel (a) sweeps $c_d/c_f$ (in km of fibre per detector) for $K=2$--$5$ at the $25\times25$~km service area used throughout this work's network simulations ($\bar d_\text{BB84}\approx13$~km): every curve rises monotonically and flattens towards its $2K$ ceiling (dotted), confirming $N^*$ stays below 9 even as $c_d/c_f\to100$~km, for every relay count tested. Panel (b) fixes $K=3$ and sweeps the service-area side length $L$ for three representative price ratios: $N^*$ falls as the area grows, since $\bar d_\text{BB84}$ grows with $L$ and the fibre term of Equation~\ref{eq:delta_cost} scales with it directly, so a larger metropolitan footprint reaches the crossover at a smaller user count for the same detector price. Both panels use Equation~\ref{eq:nstar_closed} directly rather than simulated data, and inherit its two approximations' validity range ($K\lesssim3$ at $N=10$--$15$, discussed above); they illustrate how the crossover moves with these design parameters rather than offering precise predictions at $K=4$--$5$.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{0.48\textwidth}
+        \centering
+        \input{figures/cost/nstar_ratio.tex}
+        \caption{$N^*$ vs.\ $c_d/c_f$, by $K$}
+        \label{fig:nstar_ratio}
+    \end{subfigure}%
+    \begin{subfigure}[t]{0.48\textwidth}
+        \centering
+        \input{figures/cost/nstar_geometry.tex}
+        \caption{$N^*$ vs.\ service-area size, $K=3$}
+        \label{fig:nstar_geometry}
+    \end{subfigure}
+    \caption{Crossover user count $N^*$ from the closed-form solution of Equation~\ref{eq:nstar_closed}. (a) $N^*$ against the detector-to-fibre price ratio $c_d/c_f$ (expressed in km of fibre per detector) for $K=2$--$5$, at $L=25$~km ($\bar d_\text{BB84}\approx13$~km); dotted lines mark each curve's $N^*\to2K$ asymptote. (b) $N^*$ against service-area side length $L$, at fixed $K=3$, for three representative price ratios; dashed vertical line marks $L=25$~km, the service area used elsewhere in this work.}
+    \label{fig:nstar}
+\end{figure}
 
 Commercial detector packaging complicates this picture. SNSPDs are typically sold as multi-channel units integrating several channels within a single cryostat (e.g.\ 2--8 channels per unit), so an MDI relay's four SPDs may in practice be equipped with a single packaged unit rather than four independent $c_d$ purchases, reducing per-relay detector cost below $4c_d$. This narrows MDI's cost advantage at small $N$ and shifts $N^*$ upward; since it cannot be quantified without product pricing, it is treated here as a sensitivity consideration on the crossover result rather than a correction to Equation~\ref{eq:cost_mdi}.
 
