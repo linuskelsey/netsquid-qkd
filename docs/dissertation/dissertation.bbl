@@ -37,7 +37,7 @@ J.~Dynes {\em et~al.}, ``{Cambridge quantum network},'' {\em npj Quantum Informa
 W.~Yan, X.~Zheng, W.~Wen, L.~Lu, Y.~Du, Y.~Lu, S.~Zhu, and X.-S. Ma, ``{A measurement-device-independent quantum key distribution network using optical frequency comb},'' 2025.
 
 \bibitem{Elliott_2002}
-C.~{Elliott}, ``{Building the quantum network},'' {\em New Journal of Physics}, vol.~4, p.~46, July 2002.
+C.~Elliott, ``{Building the quantum network},'' {\em New Journal of Physics}, vol.~4, p.~46, July 2002.
 
 \bibitem{Qin_NQSN_2024}
 H.~Qin {\em et~al.}, ``{The National Quantum-Safe Network in Singapore},'' in {\em Proceedings of QCrypt 2024}, 2024.
@@ -127,6 +127,15 @@ H.~W. Kuhn, ``{A note on Fermat's problem},'' {\em Mathematical Programming}, vo
 S.~R. Finch, {\em {Mathematical Constants}}, vol.~94 of {\em Encyclopedia of Mathematics and its Applications}.
 \newblock Cambridge University Press, 2003.
 \newblock Section 8.1, Geometric Probability Constants, pp.~479--484.
+
+\bibitem{Acin_2007}
+A.~Ac\'{\i}n, N.~Brunner, N.~Gisin, S.~Massar, S.~Pironio, and V.~Scarani, ``{Device-Independent Security of Quantum Cryptography against Collective Attacks},'' {\em Phys. Rev. Lett.}, vol.~98, p.~230501, Jun 2007.
+
+\bibitem{Lu2026}
+B.-W. Lu {\em et~al.}, ``{Device-independent quantum key distribution over 100 km with single atoms},'' {\em Science}, vol.~391, no.~6785, pp.~592--597, 2026.
+
+\bibitem{Chen_2021_46node}
+T.-Y. Chen, X.~Jiang, S.-B. Tang, {\em et~al.}, ``{Implementation of a 46-node quantum metropolitan area network},'' {\em npj Quantum Information}, vol.~7, p.~134, Sept. 2021.
 
 \bibitem{Lutkenhaus_2000}
 N.~L\"{u}tkenhaus, ``{Security against individual attacks for realistic quantum key distribution},'' {\em Phys. Rev. A}, vol.~61, p.~052304, Apr 2000.

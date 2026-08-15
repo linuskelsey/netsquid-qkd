@@ -40,3 +40,6 @@ merge-all.sh
 
 # real topologies
 data/real_topologies/
+
+# local working notes
+docs/dissertation/citation_check.md
