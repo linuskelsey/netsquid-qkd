@@ -1,0 +1,101 @@
+% This file was created with tikzplotlib v0.10.1.
+\begin{tikzpicture}
+
+\definecolor{crimson2282628}{RGB}{228,26,28}
+\definecolor{darkgray176}{RGB}{176,176,176}
+\definecolor{darkorange2551270}{RGB}{255,127,0}
+\definecolor{darkorchid15278163}{RGB}{152,78,163}
+\definecolor{lightgray204}{RGB}{204,204,204}
+\definecolor{steelblue55126184}{RGB}{55,126,184}
+
+\begin{axis}[
+legend cell align={left},
+legend style={
+  fill opacity=0.8,
+  draw opacity=1,
+  text opacity=1,
+  at={(0.91,0.5)},
+  anchor=east,
+  draw=lightgray204
+},
+log basis y={10},
+tick align=outside,
+tick pos=left,
+title={Key Rate vs User Count (seed=3622)},
+x grid style={darkgray176},
+xlabel={User count N},
+xmajorgrids,
+xmin=7.4, xmax=20.6,
+xtick style={color=black},
+xtick={8,10,12,14,16,18,20},
+xticklabels={
+  \(\displaystyle {8}\),
+  \(\displaystyle {10}\),
+  \(\displaystyle {12}\),
+  \(\displaystyle {14}\),
+  \(\displaystyle {16}\),
+  \(\displaystyle {18}\),
+  \(\displaystyle {20}\)
+},
+y grid style={darkgray176},
+ylabel={Avg key rate (kbps)},
+ymajorgrids,
+ymin=43.368879981665, ymax=810.921740742904,
+ymode=log,
+ytick style={color=black},
+ytick={1,10,100,1000,10000},
+yticklabels={
+  \(\displaystyle {10^{0}}\),
+  \(\displaystyle {10^{1}}\),
+  \(\displaystyle {10^{2}}\),
+  \(\displaystyle {10^{3}}\),
+  \(\displaystyle {10^{4}}\)
+}
+]
+\addplot [semithick, steelblue55126184, dashed]
+table {%
+8 608.090737806878
+10 653.599051180245
+12 709.85528411402
+14 707.363058390138
+16 642.536777467713
+18 639.299605924753
+20 644.962564865966
+};
+\addlegendentry{BB84-SNSPD}
+\addplot [semithick, darkorange2551270, dashed]
+table {%
+8 135.296880980986
+10 145.019970736891
+12 157.532327799245
+14 157.002955256065
+16 142.636928142966
+18 142.259501713318
+20 143.040379159673
+};
+\addlegendentry{BB84-SPAD}
+\addplot [semithick, crimson2282628, mark=*, mark size=3, mark options={solid}]
+table {%
+8 67.7180215896263
+10 66.8956857473387
+12 59.997178932374
+14 59.6763359720132
+16 53.6111545509861
+18 56.9945902730399
+20 53.8730420175189
+};
+\addlegendentry{MDI K=2}
+\addplot [semithick, darkorchid15278163, mark=square*, mark size=3, mark options={solid}]
+table {%
+8 52.5332877652533
+10 52.6769813064721
+12 49.5435737901092
+14 51.673087730063
+16 50.4246966360485
+18 51.5244014036886
+20 52.3267095462032
+};
+\addlegendentry{MDI K=3}
+\end{axis}
+
+\end{tikzpicture}

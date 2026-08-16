@@ -76,6 +76,31 @@ def grow_catchments(n_min, n_max, K, area_km, spread_km, seed, anchors=None, cat
     return user_pos, labels, anchors
 
 
+def assign_nearest_catchment(user_pos, anchors, min_covered=None):
+    """Label each user by nearest anchor, for reusing one fixed user draw
+    across multiple K values (like-for-like relay-count comparison).
+
+    Nearest-anchor alone has no guarantee every anchor gets a user within
+    the first min_covered positions (unlike grow_catchments's forced
+    permutation over the first K draws) — with a big K relative to spread,
+    an anchor can end up with zero members there, which breaks relay
+    placement (e.g. relay_weiszfeld's initial centroid is mean of an empty
+    cluster -> NaN). If min_covered is given, any anchor left uncovered in
+    that prefix is patched by reassigning its nearest available prefix user.
+    """
+    d = np.linalg.norm(user_pos[:, None, :] - anchors[None, :, :], axis=2)
+    labels = d.argmin(axis=1)
+    if min_covered is not None:
+        prefix = labels[:min_covered]
+        missing = [k for k in range(len(anchors)) if k not in set(prefix)]
+        available = list(range(min_covered))
+        for k in missing:
+            pick = available[d[available, k].argmin()]
+            labels[pick] = k
+            available.remove(pick)
+    return labels
+
+
 def relay_centroid(user_pos, labels, K):
     """Relay k placed at the mean of its (fixed) catchment. No reassignment."""
     return np.array([user_pos[labels == k].mean(axis=0) for k in range(K)])

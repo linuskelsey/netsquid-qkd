@@ -11,11 +11,11 @@ the initial deployment. Relay positions are re-optimised per seed when
 --seeds > 1.
 
 --k accepts a comma-separated list (e.g. --k 2,3) to compare multiple relay
-counts on the same graph. Each K value draws its own catchments/relay
-positions (grow_catchments ties catchment anchors to K), so they are not
-directly comparable topologies — only the first K in the list is used as the
-shared reference topology for the BB84 curves (BB84 is a mesh and doesn't
-depend on K).
+counts on the same graph. User positions are drawn once from the first K in
+the list (K_ref); every other K reuses that same layout, just relabelled by
+nearest anchor for its own catchment/relay count — a like-for-like
+comparison. K_ref's draw also serves as the BB84 mesh reference (BB84 is a
+mesh and doesn't depend on K).
 
 Error bars show std across Monte Carlo runs (--seeds 1) or across random topologies
 (--seeds N). Topology visualisation only produced when --seeds 1.
@@ -67,7 +67,7 @@ from lib.plotting import apply_thesis_style, save_bundle
 from lib.functions import load_config
 from lib.db import DEFAULT_DB_PATH
 from lib.progress import Progress
-from topology import grow_catchments, RELAY_STRATEGIES, Topology
+from topology import grow_catchments, RELAY_STRATEGIES, Topology, catchment_anchors, assign_nearest_catchment
 from bb84_network import run_bb84_network
 from mdi_network import run_mdi_network
 from trusted_bb84_network import run_trusted_bb84_network
@@ -183,24 +183,31 @@ def main():
         prog = Progress(seed_total)
         step = 0
 
-        # per-K catchment/relay draws: grow_catchments ties catchment anchors
-        # to K, so each K value in K_list gets its own independent draw.
-        # K_ref's draw doubles as the shared BB84 mesh reference topology.
+        # User positions are drawn ONCE (via K_ref's catchment growth) and
+        # reused for every K in K_list, so each K only changes the
+        # catchment/relay assignment (nearest-anchor relabel) on the same
+        # physical layout — a like-for-like relay-count comparison.
+        ref_user_pos, _, ref_anchors = grow_catchments(
+            args.n_min, args.n_max, K_ref, _area_km, _spread, seed,
+            anchors=_fixed_relay_pos, catchment_radius_km=_catchment_radius)
+        _user_pos_by_seed[seed] = np.round(ref_user_pos, 3).tolist()
+
         _draws = {}
         for K in K_list:
-            all_user_pos, all_labels, _ = grow_catchments(
-                args.n_min, args.n_max, K, _area_km, _spread, seed,
-                anchors=_fixed_relay_pos, catchment_radius_km=_catchment_radius)
+            if _fixed_relay_pos is not None:
+                anchors = np.array(_fixed_relay_pos)
+            elif K == K_ref:
+                anchors = ref_anchors
+            else:
+                anchors = catchment_anchors(K, _area_km)
+            all_labels = assign_nearest_catchment(ref_user_pos, anchors, min_covered=args.n_min)
             if _fixed_relay_pos is not None:
                 relay_pos = _fixed_relay_pos
             else:
                 relay_pos = RELAY_STRATEGIES[args.strategy](
-                    all_user_pos[:args.n_min], all_labels[:args.n_min], K)
-            _draws[K] = (all_user_pos, all_labels, relay_pos)
+                    ref_user_pos[:args.n_min], all_labels[:args.n_min], K)
+            _draws[K] = (ref_user_pos, all_labels, relay_pos)
             _relay_pos_by_seed[K][seed] = np.round(np.array(relay_pos), 3).tolist()
-
-        ref_user_pos, ref_labels, _ = _draws[K_ref]
-        _user_pos_by_seed[seed] = np.round(ref_user_pos, 3).tolist()
 
         for N in N_values:
             if N < K_ref:
