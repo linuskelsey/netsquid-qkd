@@ -66,9 +66,6 @@ R.~Yehia, S.~Neves, E.~Diamanti, and I.~Kerenidis, ``{Quantum {C}ity: simulation
 \bibitem{DBLP:conf/ondm/KaraviasHBLP25}
 V.~Karavias, E.~Hugues{-}Salas, A.~Beghelli, A.~Lord, and M.~C. Payne, ``{Comparative Cost Analysis of Prepare and Measure and Entanglement-Based {QKD} Networks},'' in {\em International Conference on Optical Network Design and Modeling, {ONDM}, 2025}, 2025.
 
-\bibitem{Yehia_2025}
-R.~Yehia, Y.~Piétri, C.~Pascual-García, P.~Lefebvre, and F.~Centrone, ``{Energetic Analysis of Emerging Quantum Communication Protocols},'' 2025.
-
 \bibitem{Coopmans_2021}
 T.~Coopmans, R.~Knegjens, A.~Dahlberg, D.~Maier, L.~Nijsten, J.~de~Oliveira~Filho, M.~Papendrecht, J.~Rabbie, F.~Rozpędek, M.~Skrzypczyk, L.~Wubben, W.~de~Jong, D.~Podareanu, A.~Torres-Knoop, D.~Elkouss, and S.~Wehner, ``{NetSquid, a NETwork Simulator for QUantum Information using Discrete events},'' {\em Communications Physics}, vol.~4, no.~1, 2021.
 
@@ -136,6 +133,9 @@ B.-W. Lu {\em et~al.}, ``{Device-independent quantum key distribution over 100 k
 
 \bibitem{Chen_2021_46node}
 T.-Y. Chen, X.~Jiang, S.-B. Tang, {\em et~al.}, ``{Implementation of a 46-node quantum metropolitan area network},'' {\em npj Quantum Information}, vol.~7, p.~134, Sept. 2021.
+
+\bibitem{Yehia_2025}
+R.~Yehia, Y.~Piétri, C.~Pascual-García, P.~Lefebvre, and F.~Centrone, ``{Energetic Analysis of Emerging Quantum Communication Protocols},'' 2025.
 
 \bibitem{Lutkenhaus_2000}
 N.~L\"{u}tkenhaus, ``{Security against individual attacks for realistic quantum key distribution},'' {\em Phys. Rev. A}, vol.~61, p.~052304, Apr 2000.
