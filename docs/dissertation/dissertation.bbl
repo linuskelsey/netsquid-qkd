@@ -78,8 +78,8 @@ A.~Varga, ``The {OMNeT++} discrete event simulation system,'' in {\em Proceeding
 \bibitem{Shor_2000}
 P.~W. Shor and J.~Preskill, ``{Simple Proof of Security of the BB84 Quantum Key Distribution Protocol},'' {\em Physical Review Letters}, vol.~85, p.~441–444, July 2000.
 
-\bibitem{PNS_desc}
-E.~I. T.~C. Institute, ``{What is the Photon Number Splitting (PNS) attack, and how does it constrain the communication distance in quantum cryptography?},'' 2024.
+\bibitem{Brassard_2000}
+G.~Brassard, N.~L\"utkenhaus, T.~Mor, and B.~C. Sanders, ``{Limitations on Practical Quantum Cryptography},'' {\em Phys. Rev. Lett.}, vol.~85, pp.~1330--1333, Aug 2000.
 
 \bibitem{Lo_decoys}
 H.-K. Lo, X.~Ma, and K.~Chen, ``{Decoy State Quantum Key Distribution},'' {\em Phys. Rev. Lett.}, vol.~94, p.~230504, Jun 2005.
