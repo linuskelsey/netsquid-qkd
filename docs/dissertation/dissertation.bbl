@@ -1,5 +1,8 @@
 \begin{thebibliography}{10}
 
+\bibitem{Holz_2011}
+R.~Holz {\em et~al.}, ``{The SSL landscape: a thorough analysis of the x.509 PKI using active and passive measurements},'' in {\em Proceedings of the 2011 ACM SIGCOMM Conference on Internet Measurement Conference}, pp.~427--444, 2011.
+
 \bibitem{RSA_1978}
 R.~L. Rivest, A.~Shamir, and L.~Adleman, ``{A method for obtaining digital signatures and public-key cryptosystems},'' {\em Commun. ACM}, vol.~21, p.~120–126, Feb. 1978.
 
@@ -30,20 +33,26 @@ M.~Sasaki {\em et~al.}, ``{Field test of quantum key distribution in the Tokyo Q
 \bibitem{Lo_2012}
 H.-K. Lo, M.~Curty, and B.~Qi, ``{Measurement-Device-Independent Quantum Key Distribution},'' {\em Phys. Rev. Lett.}, vol.~108, p.~130503, Mar 2012.
 
+\bibitem{Lydersen_2010}
+L.~Lydersen, C.~Wiechers, C.~Wittmann, D.~Elser, J.~Skaar, and V.~Makarov, ``{Hacking commercial quantum cryptography systems by tailored bright illumination},'' {\em Nature Photonics}, vol.~4, no.~10, pp.~686--689, 2010.
+
+\bibitem{Makarov_2009}
+V.~Makarov, ``{Controlling passively quenched single photon detectors by bright light},'' {\em New Journal of Physics}, vol.~11, no.~6, p.~065003, 2009.
+
+\bibitem{Gerhardt_2011}
+I.~Gerhardt, Q.~Liu, A.~Lamas-Linares, J.~Skaar, C.~Kurtsiefer, and V.~Makarov, ``{Full-field implementation of a perfect eavesdropper on a quantum cryptography system},'' {\em Nature Communications}, vol.~2, p.~349, 2011.
+
 \bibitem{Dynes_2019}
 J.~Dynes {\em et~al.}, ``{Cambridge quantum network},'' {\em npj Quantum Information}, vol.~5, 12 2019.
 
 \bibitem{Yan2025}
 W.~Yan, X.~Zheng, W.~Wen, L.~Lu, Y.~Du, Y.~Lu, S.~Zhu, and X.-S. Ma, ``{A measurement-device-independent quantum key distribution network using optical frequency comb},'' 2025.
 
-\bibitem{Elliott_2002}
-C.~Elliott, ``{Building the quantum network},'' {\em New Journal of Physics}, vol.~4, p.~46, July 2002.
-
 \bibitem{Qin_NQSN_2024}
 H.~Qin {\em et~al.}, ``{The National Quantum-Safe Network in Singapore},'' in {\em Proceedings of QCrypt 2024}, 2024.
 
 \bibitem{pittaluga_2024}
-M.~Pittaluga, Y.~S. Lo, A.~Brzosko, R.~I. Woodward, M.~S. Winnel, T.~Roger, J.~F. Dynes, K.~A. Owen, S.~Juarez, P.~Rydlichowski, D.~Vicinanza, G.~Roberts, and A.~J. Shields, ``{Coherent Quantum Communications Across National Scale Telecommunication Infrastructure},'' 2024.
+M.~Pittaluga {\em et~al.}, ``{Coherent Quantum Communications Across National Scale Telecommunication Infrastructure},'' 2024.
 
 \bibitem{Tang_2016}
 Y.-L. Tang {\em et~al.}, ``{Measurement-Device-Independent Quantum Key Distribution over Untrustful Metropolitan Network},'' {\em Physical Review X}, vol.~6, Mar. 2016.
@@ -67,13 +76,13 @@ R.~Yehia, S.~Neves, E.~Diamanti, and I.~Kerenidis, ``{Quantum {C}ity: simulation
 V.~Karavias, E.~Hugues{-}Salas, A.~Beghelli, A.~Lord, and M.~C. Payne, ``{Comparative Cost Analysis of Prepare and Measure and Entanglement-Based {QKD} Networks},'' in {\em International Conference on Optical Network Design and Modeling, {ONDM}, 2025}, 2025.
 
 \bibitem{Coopmans_2021}
-T.~Coopmans, R.~Knegjens, A.~Dahlberg, D.~Maier, L.~Nijsten, J.~de~Oliveira~Filho, M.~Papendrecht, J.~Rabbie, F.~Rozpędek, M.~Skrzypczyk, L.~Wubben, W.~de~Jong, D.~Podareanu, A.~Torres-Knoop, D.~Elkouss, and S.~Wehner, ``{NetSquid, a NETwork Simulator for QUantum Information using Discrete events},'' {\em Communications Physics}, vol.~4, no.~1, 2021.
+T.~Coopmans {\em et~al.}, ``{NetSquid, a NETwork Simulator for QUantum Information using Discrete events},'' {\em Communications Physics}, vol.~4, no.~1, 2021.
 
 \bibitem{henderson2008network}
-T.~R. Henderson, M.~Lacage, G.~F. Riley, C.~Dowell, and J.~Kopena, ``Network simulations with the ns-3 simulator,'' in {\em SIGCOMM demonstration}, vol.~14, p.~527, 2008.
+T.~R. Henderson, M.~Lacage, G.~F. Riley, C.~Dowell, and J.~Kopena, ``{Network simulations with the ns-3 simulator},'' in {\em SIGCOMM demonstration}, vol.~14, p.~527, 2008.
 
 \bibitem{varga2001omnet++}
-A.~Varga, ``The {OMNeT++} discrete event simulation system,'' in {\em Proceedings of the European Simulation Multiconference (ESM'2001)}, vol.~9, p.~65, 2001.
+A.~Varga, ``{The {OMNeT++} discrete event simulation system},'' in {\em Proceedings of the European Simulation Multiconference (ESM'2001)}, vol.~9, p.~65, 2001.
 
 \bibitem{Shor_2000}
 P.~W. Shor and J.~Preskill, ``{Simple Proof of Security of the BB84 Quantum Key Distribution Protocol},'' {\em Physical Review Letters}, vol.~85, p.~441–444, July 2000.
@@ -109,13 +118,30 @@ A.~Duplinskiy, V.~Ustimchik, A.~Kanapin, V.~Kurochkin, and Y.~Kurochkin, ``{Low 
 Quandela, ``{Prometheus Single-Photon Source -- Product Datasheet}.'' Product datasheet, 2024.
 
 \bibitem{Grasselli_2025}
-F.~Grasselli, G.~Chesi, N.~Walk, H.~Kampermann, A.~Widomski, M.~Ogrodnik, M.~Karpi{\'n}ski, C.~Macchiavello, D.~Bru{\ss}, and N.~Wyderka, ``{Quantum Key Distribution with Basis-Dependent Detection Probability},'' {\em Physical Review Applied}, vol.~23, p.~044011, 2025.
+F.~Grasselli {\em et~al.}, ``{Quantum Key Distribution with Basis-Dependent Detection Probability},'' {\em Physical Review Applied}, vol.~23, p.~044011, 2025.
 
 \bibitem{thorlabs_tn1550r5f2}
 Thorlabs, ``{TN1550R5F2 -- Narrowband Fiber Optic Coupler, 1550~nm, 50:50 Ratio -- Product Datasheet (TTN168601-S01, Rev C)}.'' Product datasheet, 2021.
 
+\bibitem{Agrawal_2010}
+G.~P. Agrawal, {\em {Fiber-Optic Communication Systems}}.
+\newblock Wiley Series in Microwave and Optical Engineering, Wiley, 4th~ed., 2010.
+
 \bibitem{idq_id230}
 {ID Quantique}, ``{ID230 Infrared Single-Photon Detector -- Product Datasheet}.'' Product datasheet, 2024.
+
+\bibitem{Waks_2002}
+E.~Waks, C.~Santori, and Y.~Yamamoto, ``{Security aspects of quantum key distribution with a photon number resolving detector},'' {\em Physical Review A}, vol.~66, no.~4, p.~042315, 2002.
+
+\bibitem{qbird_falqon}
+{Q*Bird}, ``{Falqon{\textregistered} Series},'' 2026.
+\newblock Accessed 2026-08-22.
+
+\bibitem{Elliott_2002}
+C.~Elliott, ``{Building the quantum network},'' {\em New Journal of Physics}, vol.~4, p.~46, July 2002.
+
+\bibitem{Lord_2023}
+A.~Lord, R.~Woodward, S.~Murai, H.~Sato, J.~Dynes, P.~Wright, C.~White, R.~Davey, M.~Wilkinson, P.~Clinton-Tarestad, I.~Hawkins, K.~Farrington, and A.~Shields, ``{London Quantum-Secured Metro Network},'' 2023.
 
 \bibitem{Kuhn_1973}
 H.~W. Kuhn, ``{A note on Fermat's problem},'' {\em Mathematical Programming}, vol.~4, no.~1, pp.~98--107, 1973.
@@ -147,10 +173,10 @@ D.~Gottesman, H.-K. Lo, N.~L\"{u}tkenhaus, and J.~Preskill, ``{Security of quant
 E.~Y.-Z. Tan, R.~Schwonnek, K.~T. Goh, I.~W. Primaatmaja, and C.~C.-W. Lim, ``{Computing secure key rates for quantum cryptography with untrusted devices},'' {\em npj Quantum Information}, vol.~7, p.~158, 2021.
 
 \bibitem{Briegel_1998}
-H.-J. Briegel, W.~D\"{u}r, J.~I. Cirac, and P.~Zoller, ``Quantum repeaters: The role of imperfect local operations in quantum communication,'' {\em Physical Review Letters}, vol.~81, pp.~5932--5935, Dec. 1998.
+H.-J. Briegel, W.~D\"{u}r, J.~I. Cirac, and P.~Zoller, ``{Quantum Repeaters: The Role of Imperfect Local Operations in Quantum Communication},'' {\em Physical Review Letters}, vol.~81, pp.~5932--5935, Dec. 1998.
 
 \bibitem{Azuma_2015}
-K.~Azuma, K.~Tamaki, and H.-K. Lo, ``All-photonic quantum repeaters,'' {\em Nature Communications}, vol.~6, Apr. 2015.
+K.~Azuma, K.~Tamaki, and H.-K. Lo, ``{All-photonic quantum repeaters},'' {\em Nature Communications}, vol.~6, Apr. 2015.
 
 \bibitem{Kimble_2008}
 H.~J. Kimble, ``{The quantum internet},'' {\em Nature}, vol.~453, p.~1023–1030, June 2008.
