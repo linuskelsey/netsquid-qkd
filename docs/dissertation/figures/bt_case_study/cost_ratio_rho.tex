@@ -14,6 +14,12 @@
 \definecolor{yellowgreen15921756}{RGB}{159,217,56}
 
 \begin{axis}[
+width=448pt,
+height=250pt,
+scale only axis,
+tick label style={font=\fontsize{8}{10}\selectfont},
+label style={font=\fontsize{9}{11}\selectfont},
+title style={font=\fontsize{10}{12}\selectfont},
 legend cell align={left},
 legend columns=2,
 legend style={
@@ -22,11 +28,12 @@ legend style={
   text opacity=1,
   at={(0.03,0.03)},
   anchor=south west,
-  draw=lightgray204
+  draw=lightgray204,
+  font=\fontsize{7}{9}\selectfont
 },
 tick align=outside,
 tick pos=left,
-title={BT Real Topology — Cost Ratio vs User Count, swept over \(\displaystyle \rho\) (\(\displaystyle K{=}3\))},
+title={Cost Ratio vs User Count, swept over \(\displaystyle \rho\) (\(\displaystyle K{=}3\))},
 x grid style={darkgray176},
 xlabel={User count N},
 xmajorgrids,

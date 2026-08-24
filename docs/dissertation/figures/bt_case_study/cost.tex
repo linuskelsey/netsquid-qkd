@@ -1,0 +1,93 @@
+% This file was created with tikzplotlib v0.10.1.
+\begin{tikzpicture}
+
+\definecolor{crimson2282628}{RGB}{228,26,28}
+\definecolor{darkgray176}{RGB}{176,176,176}
+\definecolor{lightgray204}{RGB}{204,204,204}
+\definecolor{mediumseagreen7717574}{RGB}{77,175,74}
+\definecolor{steelblue55126184}{RGB}{55,126,184}
+
+\begin{axis}[
+width=430pt,
+height=190pt,
+scale only axis,
+tick label style={font=\fontsize{8}{10}\selectfont},
+label style={font=\fontsize{9}{11}\selectfont},
+title style={font=\fontsize{10}{12}\selectfont},
+legend cell align={left},
+legend style={
+  fill opacity=0.8,
+  draw opacity=1,
+  text opacity=1,
+  at={(0.03,0.97)},
+  anchor=north west,
+  draw=lightgray204,
+  font=\fontsize{7}{9}\selectfont
+},
+tick align=outside,
+tick pos=left,
+title={Deployment Cost vs User Count},
+x grid style={darkgray176},
+xlabel={User count N},
+xmajorgrids,
+xmin=3.25, xmax=41.75,
+xtick style={color=black},
+xtick={0,5,10,15,20,25,30,35,40,45},
+xticklabels={
+  \(\displaystyle {0}\),
+  \(\displaystyle {5}\),
+  \(\displaystyle {10}\),
+  \(\displaystyle {15}\),
+  \(\displaystyle {20}\),
+  \(\displaystyle {25}\),
+  \(\displaystyle {30}\),
+  \(\displaystyle {35}\),
+  \(\displaystyle {40}\),
+  \(\displaystyle {45}\)
+},
+y grid style={darkgray176},
+ylabel={Deployment cost (£M)},
+ymajorgrids,
+ymin=-6.13430617773724, ymax=189.430611259291,
+ytick style={color=black},
+ytick={-25,0,25,50,75,100,125,150,175,200},
+yticklabels={
+  \(\displaystyle {\ensuremath{-}25}\),
+  \(\displaystyle {0}\),
+  \(\displaystyle {25}\),
+  \(\displaystyle {50}\),
+  \(\displaystyle {75}\),
+  \(\displaystyle {100}\),
+  \(\displaystyle {125}\),
+  \(\displaystyle {150}\),
+  \(\displaystyle {175}\),
+  \(\displaystyle {200}\)
+}
+]
+\addplot [semithick, steelblue55126184, dashed, mark=*, mark size=2, mark options={solid}]
+table {%
+5 3.64235089576896
+10 13.9255405334727
+15 27.5376074140294
+20 47.5700062118005
+25 71.4201305756808
+30 95.975708126225
+35 134.909103245737
+40 180.541296830335
+};
+\addlegendentry{Full mesh}
+\addplot [line width=1pt, crimson2282628, mark=square*, mark size=2, mark options={solid}]
+table {%
+5 2.75500825121859
+10 4.38263684761465
+15 5.79098649716872
+20 7.45148966473081
+25 9.06697450546796
+30 10.7163870713404
+35 12.2735429874279
+40 13.900057006215
+};
+\addlegendentry{Relay architecture}
+\end{axis}
+
+\end{tikzpicture}

@@ -64,3 +64,10 @@
 ## 6. Flagged for your attention
 
 - [x] **Abstract's "up to 10 times" claim** — **done 2026-08-18**: reworded to "a drop in key rate, of 5 to 25 times depending on the dominant hardware impairment," matching §Security–Rate Trade-off's real numbers (5$\times$ channel-limited, 25$\times$ detector-efficiency-limited).
+
+---
+
+## 7. Post-writing / Administrative
+
+- [ ] **[BLOCKING] Write Acknowledgements section.** Not started.
+- [ ] **After submission: make the GitHub repo public.** Requires obscuring/scrubbing the LaTeX source first (as was done before, presumably for the same reason — check prior approach rather than re-deriving it). Explicitly deferred until after submission, not a pre-submission blocker.
