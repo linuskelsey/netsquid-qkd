@@ -6,19 +6,64 @@ results" — this figure set is what upgrades it to an actual case study. Supers
 single-seed `figures/real_topology/bt_{cost,efficiency,marginal}.png` trio (K=3, seed=75907),
 which used too small a sample and should not be reused once these are ready.
 
-Fixed across all figures: real BT-derived node layout (named sites, lat/lon projected to
-km), K=3 relays (matches the real network's actual relay count — not a swept variable
-here), three protocols: BB84 (direct mesh), MDI, TBB84. User count N swept low to the
-network's full node count, growing one user at a time as in the existing user-count sweep
-methodology (`sec:scalability`, organic growth: relay placement fixed once, catchments
-filled incrementally) — reuse that model rather than re-deriving one.
+Also flags a prose fix needed alongside these figures: `sec:simulation_limitations`
+currently states TBB84 in this appendix is "discussed qualitatively rather than
+simulated" — will need updating once this figure set lands.
+
+Fixed across all figures: real BT-derived node layout (`data/real_topologies/bt.json` —
+3 named relay sites: Slough, West End, City of London; no real user-site data exists, so
+users are synthetic, anchored on these 3 real relay positions via the existing `--real`
+flow in `user_sweep.py`), K=3 relays (matches the real network's actual relay count — not
+a swept variable here), three protocols: BB84 (direct mesh), MDI, TBB84. User count N
+swept N=6..42 step 4 (6,10,14,18,22,26,30,34,38,42), growing one user at a time as in the
+existing user-count sweep methodology (`sec:scalability`, organic growth: relay placement
+fixed once, catchments filled incrementally) — reuse that model rather than re-deriving one.
+
+All figures are LaTeX-style output: `apply_thesis_style()` + `save_bundle()`
+(pgfplots/tikzplotlib `.tex` export), matching every other `final-figs` entry's
+convention — not raster-only matplotlib defaults.
+
+**Catchment placement**: `bt.json`'s 3 real sites are highly unevenly spaced (Slough is
+31–34km from the other two; West End↔City of London is only 3.4km apart), so a single
+default catchment radius doesn't suit the geometry. Resolved as: `catchment_radius_km=10`
+(a realistic metro fibre service radius) for the draw itself via `grow_catchments`, then
+cluster membership is re-evaluated by nearest-anchor distance immediately after
+placement via `assign_nearest_catchment(user_pos, anchors, min_covered=n_min)` (the same
+utility `user_sweep.py` already uses for K-comparison relabeling) — not the fixed-at-draw
+membership `grow_catchments` uses on its own elsewhere. This keeps Slough cleanly
+separated while letting West End/City of London's overlapping 10km discs sort out
+sensibly by nearest relay, which is realistic (both are central London).
 
 Unlike the rest of Section 4, this is one fixed real topology, not an average over drawn
 seeds — state that plainly in the caption/text of every figure, consistent with how the
 rest of the dissertation hedges single-instance results (see the topology-sensitivity
 paragraph in `sec:simulation_limitations`). Any Monte Carlo sampling that *does* apply
 (per-pair NetSquid trial count for the key-rate figure) should use a materially larger
-run budget than the superseded trio, which is the whole reason for redoing these.
+run budget than the superseded trio, which is the whole reason for redoing these —
+runtimes=250 per pair, matching the largest existing convention in the repo
+(`relay_sweep_N10`), single fixed topology (`--seeds 1`), no multi-seed averaging.
+
+## Cost model decisions (fixed across figures 3–5)
+
+- **TBB84 cost := MDI cost**, literally — same formula, same component counts
+  (`N c_s + K c_d` under the multi-channel-detector-module simplification already used to
+  derive `eq:nstar_closed`, `+ (N d_u + K(K-1)/2 d_r) c_f`). Not a fresh derivation: TBB84
+  and MDI differ only in trust assumptions per the spec's original framing, and the
+  dissertation already collapses MDI's detector cost to `K c_d` under the multi-channel
+  assumption, so extending that same simplification to TBB84 is consistent.
+- **Illustrative component prices** (stated explicitly as illustrative in every
+  caption/assumptions.md, per the existing symbolic-vs-numeric cost-model hedge):
+  `c_s = £250k` (photon source module), `c_d = £100k` (detector module),
+  `c_f = £10k/km` (new-build dark fibre install cost — installing new fibre, not
+  leasing/reusing existing infrastructure).
+- **Real simulated fibre lengths**, not the closed-form geometric-probability
+  approximation (Eq. `eq:pairwise_constant`/`eq:center_constant`), feed figures 3 and 4,
+  and the empirical curves of figure 5. The closed form appears only as the single
+  `N*(ρ,3)` comparison value/overlay in figure 5 — this is the whole point of a
+  real-topology case study (measuring how well the uniform-scattering approximation
+  survives contact with real, non-uniform geography).
+- Figures 3–5 are deterministic given N, K, ρ, and the fixed real distances — no
+  NetSquid simulation, no MC noise. Only figure 2 (key rate) needs actual NetSquid runs.
 
 ## 1. Topology map
 
@@ -72,9 +117,11 @@ run budget than the superseded trio, which is the whole reason for redoing these
   validates the uniform-scattering approximations (Eqs. 607–628) surviving contact with
   real, non-uniform geography; disagreement is itself worth a sentence, and ties into the
   topology-sensitivity discussion in `sec:simulation_limitations`.
-- 6–8 ρ curves, bracketing `fig:nstar`'s existing range plus one value below and one above
-  it (extend the reader's view of the price-ratio space, don't just re-plot the same
-  numbers on a different axis).
+- ρ = 0.5, 1, 2, 3, 4, 6, 8, 10 (8 curves) — brackets `fig:nstar`'s existing [0,8] range
+  with one value below (0.5) and one above (10) (extend the reader's view of the
+  price-ratio space, don't just re-plot the same numbers on a different axis).
+- Mark the closed-form $N^*(\rho,3)$ on the plot itself for each ρ curve (not just in the
+  caption/prose) — makes the empirical-vs-closed-form agreement visible at a glance.
 - These curves are deterministic given N, K, ρ and the fixed real distances (cost is
   closed-form, not NetSquid-simulated) — no MC noise, no shaded bands needed, and no risk
   of curves crossing each other (Eq.~\ref{eq:delta_cost} is monotonic in ρ at fixed N,K),
@@ -87,3 +134,9 @@ run budget than the superseded trio, which is the whole reason for redoing these
   easy to revisit later without re-simulating anything.
 - Panel should be sized larger than a standard single-column figure to keep 6–8 nested
   curves separable.
+
+## Output layout
+
+Five separate bundles (each its own `plot.png`+`plot.tex`+`assumptions.md`, matching
+every other `final-figs` entry's convention) under `bt_case_study/`:
+`topology_map/`, `key_rate/`, `cost/`, `efficiency/`, `cost_ratio_rho/`.
