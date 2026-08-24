@@ -1,0 +1,221 @@
+% This file was created with tikzplotlib v0.10.1.
+\begin{tikzpicture}
+
+\definecolor{darkcyan31161135}{RGB}{31,161,135}
+\definecolor{darkcyan39126142}{RGB}{39,126,142}
+\definecolor{darkgray176}{RGB}{176,176,176}
+\definecolor{darkslateblue5491140}{RGB}{54,91,140}
+\definecolor{darkslateblue7049126}{RGB}{70,49,126}
+\definecolor{gold25323136}{RGB}{253,231,36}
+\definecolor{gray}{RGB}{128,128,128}
+\definecolor{indigo68184}{RGB}{68,1,84}
+\definecolor{lightgray204}{RGB}{204,204,204}
+\definecolor{mediumseagreen73193109}{RGB}{73,193,109}
+\definecolor{yellowgreen15921756}{RGB}{159,217,56}
+
+\begin{axis}[
+legend cell align={left},
+legend columns=2,
+legend style={
+  fill opacity=0.8,
+  draw opacity=1,
+  text opacity=1,
+  at={(0.03,0.03)},
+  anchor=south west,
+  draw=lightgray204
+},
+tick align=outside,
+tick pos=left,
+title={BT Real Topology — Cost Ratio vs User Count, swept over \(\displaystyle \rho\) (\(\displaystyle K{=}3\))},
+x grid style={darkgray176},
+xlabel={User count N},
+xmajorgrids,
+xmin=1.25944318174083, xmax=41.8447884199171,
+xtick style={color=black},
+xtick={0,5,10,15,20,25,30,35,40,45},
+xticklabels={
+  \(\displaystyle {0}\),
+  \(\displaystyle {5}\),
+  \(\displaystyle {10}\),
+  \(\displaystyle {15}\),
+  \(\displaystyle {20}\),
+  \(\displaystyle {25}\),
+  \(\displaystyle {30}\),
+  \(\displaystyle {35}\),
+  \(\displaystyle {40}\),
+  \(\displaystyle {45}\)
+},
+y grid style={darkgray176},
+ylabel={\(\displaystyle C_\mathrm{relay} / C_\mathrm{BB84}\)},
+ymajorgrids,
+ymin=0.030190873922388, ymax=1.04618138695608,
+ytick style={color=black},
+ytick={0,0.2,0.4,0.6,0.8,1,1.2},
+yticklabels={
+  \(\displaystyle {0.0}\),
+  \(\displaystyle {0.2}\),
+  \(\displaystyle {0.4}\),
+  \(\displaystyle {0.6}\),
+  \(\displaystyle {0.8}\),
+  \(\displaystyle {1.0}\),
+  \(\displaystyle {1.2}\)
+}
+]
+\addplot [line width=0.52pt, indigo68184, mark=*, mark size=1.5, mark options={solid}]
+table {%
+5 0.754944632833702
+10 0.314648255060838
+15 0.210255991992584
+20 0.156623786447635
+25 0.12693623893353
+30 0.111632715490811
+35 0.0909671798608135
+40 0.0769880348981646
+};
+\addlegendentry{$\rho=0.5$}
+\addplot [line width=0.52pt, darkslateblue7049126, mark=*, mark size=1.5, mark options={solid}]
+table {%
+5 0.735298833644272
+10 0.313609917650508
+15 0.209694318296786
+20 0.156340025222941
+25 0.126686941279207
+30 0.111257832514557
+35 0.0908258552719022
+40 0.0769421660910705
+};
+\addlegendentry{$\rho=1.0$}
+\addplot [line width=0.52pt, darkslateblue5491140, mark=*, mark size=1.5, mark options={solid}]
+table {%
+5 0.707929545229377
+10 0.311920022775232
+15 0.208737313078441
+20 0.155839684228661
+25 0.126238501214184
+30 0.110576164663319
+35 0.0905648545266839
+40 0.0768564982199483
+};
+\addlegendentry{$\rho=2.0$}
+\addplot [line width=0.52pt, darkcyan39126142, mark=*, mark size=1.5, mark options={solid}]
+table {%
+5 0.689770149187435
+10 0.310603432433548
+15 0.207952278786833
+20 0.155412538470603
+25 0.125846427720817
+30 0.109972334417539
+35 0.0903292127382273
+40 0.0767780685983863
+};
+\addlegendentry{$\rho=3.0$}
+\addplot [line width=0.52pt, darkcyan31161135, mark=*, mark size=1.5, mark options={solid}]
+table {%
+5 0.676841404799527
+10 0.309548753520792
+15 0.207296682923599
+20 0.155043621035003
+25 0.125500721738859
+30 0.109433729776722
+35 0.0901154053002625
+40 0.0767059970491064
+};
+\addlegendentry{$\rho=4.0$}
+\addplot [line width=0.52pt, mediumseagreen73193109, mark=*, mark size=1.5, mark options={solid}]
+table {%
+5 0.659657574037947
+10 0.307964385529776
+15 0.206263878828594
+20 0.154438558664
+25 0.124918990616069
+30 0.108514044624775
+35 0.0897421839680299
+40 0.0765780674869343
+};
+\addlegendentry{$\rho=6.0$}
+\addplot [line width=0.52pt, yellowgreen15921756, mark=*, mark size=1.5, mark options={solid}]
+table {%
+5 0.648754696211619
+10 0.306830964189848
+15 0.205487197180572
+20 0.153963119586246
+25 0.124448534042189
+30 0.107757749191977
+35 0.0894273137947194
+40 0.0764679859376292
+};
+\addlegendentry{$\rho=8.0$}
+\addplot [line width=0.52pt, gold25323136, mark=*, mark size=1.5, mark options={solid}]
+table {%
+5 0.641221205676758
+10 0.305979950237152
+15 0.204881875294143
+20 0.153579679865649
+25 0.124060211824619
+30 0.107124854363282
+35 0.089158102618754
+40 0.0763722608784648
+};
+\addlegendentry{$\rho=10.0$}
+\addplot [line width=0.32pt, gray, dashed, forget plot]
+table {%
+1.25944318174083 1
+41.8447884199171 1
+};
+\addplot [draw=indigo68184, draw=none, fill=indigo68184, forget plot, mark=|]
+table{%
+x  y
+0 -0.5
+0 0.5
+};
+\addplot [draw=darkslateblue7049126, draw=none, fill=darkslateblue7049126, forget plot, mark=|]
+table{%
+x  y
+0 -0.5
+0 0.5
+};
+\addplot [draw=darkslateblue5491140, draw=none, fill=darkslateblue5491140, forget plot, mark=|]
+table{%
+x  y
+0 -0.5
+0 0.5
+};
+\addplot [draw=darkcyan39126142, draw=none, fill=darkcyan39126142, forget plot, mark=|]
+table{%
+x  y
+0 -0.5
+0 0.5
+};
+\addplot [draw=darkcyan31161135, draw=none, fill=darkcyan31161135, forget plot, mark=|]
+table{%
+x  y
+0 -0.5
+0 0.5
+};
+\addplot [
+  draw=mediumseagreen73193109,
+  draw=none,
+  fill=mediumseagreen73193109,
+  forget plot,
+  mark=|
+]
+table{%
+x  y
+0 -0.5
+0 0.5
+};
+\addplot [draw=none, draw=yellowgreen15921756, fill=yellowgreen15921756, forget plot, mark=|]
+table{%
+x  y
+0 -0.5
+0 0.5
+};
+\addplot [draw=gold25323136, draw=none, fill=gold25323136, forget plot, mark=|]
+table{%
+x  y
+0 -0.5
+0 0.5
+};
+\end{axis}
+
+\end{tikzpicture}
