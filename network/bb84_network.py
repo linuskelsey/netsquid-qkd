@@ -15,6 +15,12 @@ def _sample_link_tortuosity(rng, mean, n):
     return np.maximum(1.0, rng.normal(mean, 0.1, size=n))
 
 
+_BATCH = 100  # matches BB84/BB84_run.py's run_BB84_sims — caps trials any one
+              # worker runs before its pool is torn down and respawned, so a
+              # per-trial NetSquid leak (sim_reset() not fully releasing state)
+              # can't accumulate across an entire N/protocol call unbounded.
+
+
 def _bb84_pair_task(args):
     i, j, fibre_len, runtimes, lenLoss, initLoss, detectorEffZ, darkCount, nodeLossDb, sourceErrRate, dephasingRate = args
     from BB84.BB84_run import _bb84_chunk
@@ -55,24 +61,35 @@ def run_bb84_network(topo, cfg, runtimes=10, workers=None, verbose=False,
     n_workers = max(1, int(os.cpu_count() * 0.8)) if workers is None else workers
     n_workers = min(n_workers, n_pairs) if n_pairs > 0 else 1
 
-    tasks = [
-        (i, j, link_km[k], runtimes,
-         cfg["fibre_loss_db_per_km"], cfg["init_loss"], cfg["detector_efficiency"],
-         cfg["dark_count_rate"], cfg["node_loss_db"], cfg["source_error_rate"], cfg["dephasing_rate"])
-        for k, (i, j) in enumerate(pairs)
-    ]
-
     net_run_id    = new_run_id()
     run_timestamp = datetime.now().isoformat()
 
-    with get_context('spawn').Pool(n_workers) as pool:
-        raw = pool.map(_bb84_pair_task, tasks)
+    # Run in rounds of <=_BATCH trials/pair, fresh pool per round: caps how many
+    # trials any one worker executes before its pool is torn down and respawned,
+    # bounding per-worker accumulation of any per-trial NetSquid leak instead of
+    # letting one worker run the full `runtimes` count for many pairs unbounded.
+    pair_rates = {(i, j): [] for (i, j) in pairs}
+    pair_qbers = {(i, j): [] for (i, j) in pairs}
+    pair_lens  = {(i, j): [] for (i, j) in pairs}
 
-    pair_rates = {}
-    pair_qbers = {}
-    for (i, j), kR, kQ, kL in raw:
-        pair_rates[(i, j)] = kR
-        pair_qbers[(i, j)] = kQ
+    remaining = runtimes
+    while remaining > 0:
+        batch = min(remaining, _BATCH)
+        remaining -= batch
+
+        tasks = [
+            (i, j, link_km[k], batch,
+             cfg["fibre_loss_db_per_km"], cfg["init_loss"], cfg["detector_efficiency"],
+             cfg["dark_count_rate"], cfg["node_loss_db"], cfg["source_error_rate"], cfg["dephasing_rate"])
+            for k, (i, j) in enumerate(pairs)
+        ]
+        with get_context('spawn').Pool(n_workers) as pool:
+            raw = pool.map(_bb84_pair_task, tasks)
+
+        for (i, j), kR, kQ, kL in raw:
+            pair_rates[(i, j)].extend(kR)
+            pair_qbers[(i, j)].extend(kQ)
+            pair_lens[(i, j)].extend(kL)
 
     if verbose:
         for idx, (i, j) in enumerate(pairs):
@@ -92,16 +109,18 @@ def run_bb84_network(topo, cfg, runtimes=10, workers=None, verbose=False,
         conn = init_db(db_path)
 
         if p2p_db_path is not None:
-            for task_args, (_, kR, kQ, kL) in zip(tasks, raw):
-                _, _, fibre_len, _, lenLoss, initLoss, detEff, darkCount, nodeLoss, srcErr, deph = task_args
+            for k, (i, j) in enumerate(pairs):
                 params = {
-                    "protocol": "BB84", "fibre_len": fibre_len, "photon_count": 1024,
+                    "protocol": "BB84", "fibre_len": link_km[k], "photon_count": 1024,
                     "source_freq": 1e7, "q_speed": 0.8, "q_delay": 0,
-                    "len_loss": lenLoss, "init_loss": initLoss, "detector_eff_z": detEff,
-                    "dark_count": darkCount, "node_loss_db": nodeLoss,
-                    "source_err_rate": srcErr, "dephasing_rate": deph, "runtimes": runtimes,
+                    "len_loss": cfg["fibre_loss_db_per_km"], "init_loss": cfg["init_loss"],
+                    "detector_eff_z": cfg["detector_efficiency"],
+                    "dark_count": cfg["dark_count_rate"], "node_loss_db": cfg["node_loss_db"],
+                    "source_err_rate": cfg["source_error_rate"], "dephasing_rate": cfg["dephasing_rate"],
+                    "runtimes": runtimes,
                 }
-                insert_p2p_rows(conn, new_run_id(), run_timestamp, params, kL, kR, kQ,
+                insert_p2p_rows(conn, new_run_id(), run_timestamp, params,
+                                pair_lens[(i, j)], pair_rates[(i, j)], pair_qbers[(i, j)],
                                 net_run_id=net_run_id)
 
         if net_db_path is not None:

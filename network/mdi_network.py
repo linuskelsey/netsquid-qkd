@@ -17,6 +17,9 @@ def _sample_link_tortuosity(rng, mean, n):
     return np.maximum(1.0, rng.normal(mean, 0.1, size=n))
 
 
+_BATCH = 100  # see network/bb84_network.py's _BATCH docstring — same reasoning
+
+
 def _mdi_pair_task(args):
     i, j, total_km, charlie_pos, runtimes, lenLoss, initLoss, detectorEffZ, darkCount, nodeLossDb, sourceErrRate, dephasingRate, bsEff = args
     from MDI.mdiRun import _mdi_chunk
@@ -67,7 +70,7 @@ def run_mdi_network(topo, cfg, runtimes=10, workers=None, switch_loss_db=SWITCH_
         for _k in range(_j + 1, topo.K):
             t_relay[(_j, _k)] = t_bb_arr[_bi]; _bi += 1
 
-    tasks = []
+    base_params         = {}  # (i,j) -> (total_km, charlie_pos, node_loss)
     cross_cluster_flags = []
     pair_distances      = []
     for (i, j) in pairs:
@@ -81,12 +84,7 @@ def run_mdi_network(topo, cfg, runtimes=10, workers=None, switch_loss_db=SWITCH_
         total_km    = alice_km + bob_km
         charlie_pos = alice_km / total_km if total_km > 0 else 0.5
         node_loss   = cfg["node_loss_db"] + (switch_loss_db if cross_cluster else 0.0)
-        tasks.append((
-            i, j, total_km, charlie_pos, runtimes,
-            cfg["fibre_loss_db_per_km"], cfg["init_loss"], cfg["detector_efficiency"],
-            cfg["dark_count_rate"], node_loss, cfg["source_error_rate"],
-            cfg["dephasing_rate"], cfg["bs_eff"],
-        ))
+        base_params[(i, j)] = (total_km, charlie_pos, node_loss)
         cross_cluster_flags.append(cross_cluster)
         pair_distances.append(total_km)
 
@@ -100,14 +98,31 @@ def run_mdi_network(topo, cfg, runtimes=10, workers=None, switch_loss_db=SWITCH_
     net_run_id    = new_run_id()
     run_timestamp = datetime.now().isoformat()
 
-    with get_context('spawn').Pool(n_workers) as pool:
-        raw = pool.map(_mdi_pair_task, tasks)
+    # Run in rounds of <=_BATCH trials/pair, fresh pool per round — see
+    # network/bb84_network.py's run_bb84_network for the full rationale.
+    pair_rates = {(i, j): [] for (i, j) in pairs}
+    pair_qbers = {(i, j): [] for (i, j) in pairs}
+    pair_lens  = {(i, j): [] for (i, j) in pairs}
 
-    pair_rates = {}
-    pair_qbers = {}
-    for (i, j), kR, kQ, kL in raw:
-        pair_rates[(i, j)] = kR
-        pair_qbers[(i, j)] = kQ
+    remaining = runtimes
+    while remaining > 0:
+        batch = min(remaining, _BATCH)
+        remaining -= batch
+
+        tasks = [
+            (i, j, base_params[(i, j)][0], base_params[(i, j)][1], batch,
+             cfg["fibre_loss_db_per_km"], cfg["init_loss"], cfg["detector_efficiency"],
+             cfg["dark_count_rate"], base_params[(i, j)][2], cfg["source_error_rate"],
+             cfg["dephasing_rate"], cfg["bs_eff"])
+            for (i, j) in pairs
+        ]
+        with get_context('spawn').Pool(n_workers) as pool:
+            raw = pool.map(_mdi_pair_task, tasks)
+
+        for (i, j), kR, kQ, kL in raw:
+            pair_rates[(i, j)].extend(kR)
+            pair_qbers[(i, j)].extend(kQ)
+            pair_lens[(i, j)].extend(kL)
 
     if verbose:
         for idx, (i, j) in enumerate(pairs):
@@ -129,17 +144,19 @@ def run_mdi_network(topo, cfg, runtimes=10, workers=None, switch_loss_db=SWITCH_
         conn = init_db(db_path)
 
         if p2p_db_path is not None:
-            for task_args, (_, kR, kQ, kL) in zip(tasks, raw):
-                _, _, total_km, charlie_pos, _, lenLoss, initLoss, detEff, darkCount, nodeLoss, srcErr, deph, bsEff = task_args
+            for (i, j) in pairs:
+                total_km, charlie_pos, node_loss = base_params[(i, j)]
                 params = {
                     "protocol": "MDI", "fibre_len": total_km, "photon_count": 1024,
                     "source_freq": 1e7, "q_speed": 0.8, "q_delay": 0,
-                    "len_loss": lenLoss, "init_loss": initLoss, "detector_eff_z": detEff,
-                    "dark_count": darkCount, "node_loss_db": nodeLoss,
-                    "source_err_rate": srcErr, "dephasing_rate": deph,
-                    "runtimes": runtimes, "bs_eff": bsEff, "charlie_pos": charlie_pos,
+                    "len_loss": cfg["fibre_loss_db_per_km"], "init_loss": cfg["init_loss"],
+                    "detector_eff_z": cfg["detector_efficiency"],
+                    "dark_count": cfg["dark_count_rate"], "node_loss_db": node_loss,
+                    "source_err_rate": cfg["source_error_rate"], "dephasing_rate": cfg["dephasing_rate"],
+                    "runtimes": runtimes, "bs_eff": cfg["bs_eff"], "charlie_pos": charlie_pos,
                 }
-                insert_p2p_rows(conn, new_run_id(), run_timestamp, params, kL, kR, kQ,
+                insert_p2p_rows(conn, new_run_id(), run_timestamp, params,
+                                pair_lens[(i, j)], pair_rates[(i, j)], pair_qbers[(i, j)],
                                 net_run_id=net_run_id)
 
         if net_db_path is not None:

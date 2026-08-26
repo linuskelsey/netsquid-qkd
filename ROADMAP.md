@@ -24,7 +24,7 @@
 | Feature |
 |---------|
 | JSON config presets + CLI overrides |
-| Multiprocessing: P2P scripts split runtimes across cores; network scripts split pairs across cores (one pool per protocol call) |
+| Multiprocessing: P2P scripts split runtimes across cores; network scripts split pairs across cores. Both now batch `runtimes` into rounds of <=100 with a fresh `Pool()` respawned each round (`network/bb84_network.py`, `network/mdi_network.py`, `network/trusted_bb84_network.py`, matching the pattern `BB84/BB84_run.py`/`MDI/mdiRun.py` already used) — a `bt_case_study.py` run at `--runtimes 1000` previously OOM-killed partway through with one long-lived pool per N/protocol call; batching bounds how many trials any one worker executes before its pool is torn down, capping accumulation of whatever `ns.sim_reset()` doesn't fully release per trial. Found + fixed 2026-08-25. |
 | Compare scripts: length, loss, efficiency, dark count, init loss, node loss, source error, dephasing, basis bias, beam splitter efficiency, Charlie placement (`scripts/P2P/compare/`) |
 | Run-all parallel launcher (`scripts/P2P/compare/run_all.py`): all 10 compare scripts in parallel; auto-saves to timestamped `docs/figures/<Month>/<YYYYMMDD> - P2P parameters/all parameters/` |
 | Layer comparison script (`scripts/P2P/layers.py`) |
@@ -124,6 +124,7 @@ Reconstruct any P2P or network figure from `results.db` without re-running simul
 |---------|
 | Interactive TUI launcher (`scripts/tui.py`): arrow-key menus for P2P or network path, full parameter setup, assembles and optionally runs the target script; optionally saves config JSON |
 | DB cost reconstruction: query `network_results` for `total_fibre_km` per (N, protocol, experiment) and evaluate against the dissertation's symbolic cost formulae (Equations cost\_bb84/cost\_mdi) to reconstruct cost/efficiency curves from historical runs, for a chosen $(c_s, c_d, c_f)$; expose via `scripts/analyse/network.py` (e.g. `--cost` flag). *(Note: there is no `network/cost.py` to call into anymore — this would mean porting the dissertation's symbolic formulae into code, not resurrecting the old cost module.)* |
+| ~~Port `_BATCH=100`-with-pool-respawn batching into the network-level runners~~ — **done 2026-08-25** (`network/bb84_network.py`, `network/mdi_network.py`, `network/trusted_bb84_network.py`), moved to Complete below. |
 
 ### Network Scale Modelling
 
