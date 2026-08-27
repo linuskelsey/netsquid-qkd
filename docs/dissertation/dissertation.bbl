@@ -172,6 +172,9 @@ D.~Gottesman, H.-K. Lo, N.~L\"{u}tkenhaus, and J.~Preskill, ``{Security of quant
 \bibitem{Tan_2021}
 E.~Y.-Z. Tan, R.~Schwonnek, K.~T. Goh, I.~W. Primaatmaja, and C.~C.-W. Lim, ``{Computing secure key rates for quantum cryptography with untrusted devices},'' {\em npj Quantum Information}, vol.~7, p.~158, 2021.
 
+\bibitem{Song-2012}
+T.-T. Song, Q.-Y. Wen, F.-Z. Guo, and X.-Q. Tan, ``{Finite-key analysis for measurement-device-independent quantum key distribution},'' {\em Phys. Rev. A}, vol.~86, p.~022332, Aug 2012.
+
 \bibitem{Briegel_1998}
 H.-J. Briegel, W.~D\"{u}r, J.~I. Cirac, and P.~Zoller, ``{Quantum Repeaters: The Role of Imperfect Local Operations in Quantum Communication},'' {\em Physical Review Letters}, vol.~81, pp.~5932--5935, Dec. 1998.
 
@@ -180,9 +183,6 @@ K.~Azuma, K.~Tamaki, and H.-K. Lo, ``{All-photonic quantum repeaters},'' {\em Na
 
 \bibitem{Kimble_2008}
 H.~J. Kimble, ``{The quantum internet},'' {\em Nature}, vol.~453, p.~1023–1030, June 2008.
-
-\bibitem{Song-2012}
-T.-T. Song, Q.-Y. Wen, F.-Z. Guo, and X.-Q. Tan, ``{Finite-key analysis for measurement-device-independent quantum key distribution},'' {\em Phys. Rev. A}, vol.~86, p.~022332, Aug 2012.
 
 \bibitem{Miehle_1958}
 W.~Miehle, ``{Link-Length Minimization in Networks},'' {\em Operations Research}, vol.~6, no.~2, pp.~232--243, 1958.
