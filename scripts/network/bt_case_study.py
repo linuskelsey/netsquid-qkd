@@ -12,7 +12,7 @@ distribution over them.
 Two independent user-count sweeps, since cost is cheap (pure geometry) but key
 rate needs actual NetSquid trials:
     --rate-n-*  (default 5-15 step 1): key_rate/ and efficiency/ (NetSquid-simulated)
-    --cost-n-*  (default 5-100 step 5): cost/ and cost_ratio_rho/ (deterministic,
+    --cost-n-*  (default 5-40 step 5): cost/ and cost_ratio_rho/ (deterministic,
                 no simulation — network/fibre_length.py replicates the exact
                 tortuosity-weighted fibre length the NetSquid runners compute
                 internally, without paying for their Monte Carlo trials)
@@ -33,6 +33,7 @@ Usage:
 """
 import argparse
 import os
+import sqlite3
 import sys
 import time
 import numpy as np
@@ -47,6 +48,7 @@ sys.path.insert(0, _network)
 from lib.plotting import apply_thesis_style, save_bundle
 from lib.functions import load_config
 from lib.progress import Progress
+from lib.db import DEFAULT_DB_PATH
 from topology import grow_catchments, assign_nearest_catchment, Topology
 from bb84_network import run_bb84_network
 from mdi_network import run_mdi_network
@@ -61,11 +63,6 @@ apply_thesis_style()
 PROTO_COLORS     = {"BB84": "#377eb8", "MDI": "#e41a1c", "TBB84": "#4daf4a"}
 PROTO_MARKERS    = {"BB84": "o", "MDI": "s", "TBB84": "^"}
 PROTO_LINESTYLES = {"BB84": "--", "MDI": "-", "TBB84": ":"}
-
-
-def _pair_avg_bps(pair_rates):
-    valid = [r[0] for r in pair_rates.values() if r[0] != "nan"]
-    return sum(valid) / len(valid) if valid else 0.0
 
 
 def build_placement(args, rt_topo, meta):
@@ -240,6 +237,30 @@ def fig_cost_ratio_rho(cost_N_values, fibre_cost, prices, K, rhos, output_dir, a
     )
 
 
+_DB_PROTOCOL_NAME = {"BB84": "BB84", "MDI": "MDI", "TBB84": "trusted_BB84"}
+
+
+def _db_lookup(protocol, N, args):
+    """Look for a completed network_results row matching this exact run
+    (experiment/protocol/N/seed/runtimes) so a crashed-and-restarted sweep
+    can resume without re-simulating N values it already finished. Returns
+    (avg_key_rate, success_rate) or None if no match."""
+    if args.no_db:
+        return None
+    try:
+        conn = sqlite3.connect(f"file:{DEFAULT_DB_PATH}?mode=ro", uri=True)
+        row = conn.execute(
+            """SELECT avg_key_rate, success_rate FROM network_results
+               WHERE experiment=? AND protocol=? AND n_users=? AND seed=? AND runtimes=?
+               ORDER BY run_timestamp DESC LIMIT 1""",
+            ("bt_case_study", _DB_PROTOCOL_NAME[protocol], N, args.seed, args.runtimes),
+        ).fetchone()
+        conn.close()
+    except sqlite3.OperationalError:
+        return None
+    return row  # (avg_key_rate, success_rate) or None
+
+
 def run_rate_sweep(rate_N_values, user_pos_full, labels_full, anchors, cfg, args):
     results = {"BB84": {}, "MDI": {}, "TBB84": {}}
     ok_rate = {"BB84": {}, "MDI": {}, "TBB84": {}}
@@ -247,28 +268,27 @@ def run_rate_sweep(rate_N_values, user_pos_full, labels_full, anchors, cfg, args
     prog = Progress(len(rate_N_values))
     total_start = time.time()
     for step, N in enumerate(rate_N_values):
-        prog.update(step, f"N={N}/{rate_N_values[-1]}  running...")
         user_pos = user_pos_full[:N]
         labels   = labels_full[:N]
         topo_bb84 = Topology(user_pos)
         topo_mdi  = Topology(user_pos, anchors, user_relay=labels)
+        p2p_db_path = None if args.no_db else DEFAULT_DB_PATH
+        net_db_path = None if args.no_db else DEFAULT_DB_PATH
 
-        bb84_res  = run_bb84_network(topo_bb84, cfg, runtimes=args.runtimes, workers=args.workers,
-                                      p2p_db_path=None, net_db_path=None,
-                                      experiment="bt_case_study", seed=args.seed, area_km=None)
-        mdi_res   = run_mdi_network(topo_mdi, cfg, runtimes=args.runtimes, workers=args.workers,
-                                     p2p_db_path=None, net_db_path=None,
-                                     experiment="bt_case_study", seed=args.seed, area_km=None)
-        tbb84_res = run_trusted_bb84_network(topo_mdi, cfg, runtimes=args.runtimes, workers=args.workers,
-                                              p2p_db_path=None, net_db_path=None,
-                                              experiment="bt_case_study", seed=args.seed, area_km=None)
-
-        results["BB84"][N]  = _pair_avg_bps(bb84_res["pair_rates"])
-        results["MDI"][N]   = _pair_avg_bps(mdi_res["pair_rates"])
-        results["TBB84"][N] = _pair_avg_bps(tbb84_res["pair_rates"])
-        ok_rate["BB84"][N]  = bb84_res["success_rate"] * 100
-        ok_rate["MDI"][N]   = mdi_res["success_rate"] * 100
-        ok_rate["TBB84"][N] = tbb84_res["success_rate"] * 100
+        for proto, run_fn, topo in (("BB84", run_bb84_network, topo_bb84),
+                                     ("MDI", run_mdi_network, topo_mdi),
+                                     ("TBB84", run_trusted_bb84_network, topo_mdi)):
+            cached = _db_lookup(proto, N, args)
+            if cached is not None:
+                prog.update(step, f"N={N}/{rate_N_values[-1]}  {proto} resumed from DB...")
+                results[proto][N], ok_rate[proto][N] = cached[0], cached[1] * 100
+                continue
+            prog.update(step, f"N={N}/{rate_N_values[-1]}  {proto} running...")
+            res = run_fn(topo, cfg, runtimes=args.runtimes, workers=args.workers,
+                         p2p_db_path=p2p_db_path, net_db_path=net_db_path,
+                         experiment="bt_case_study", seed=args.seed, area_km=None)
+            results[proto][N] = res["avg_key_rate"]
+            ok_rate[proto][N] = res["success_rate"] * 100
 
         prog.update(step + 1,
                     f"N={N}/{rate_N_values[-1]}  BB84={results['BB84'][N]/1000:.2f}  "
@@ -369,10 +389,12 @@ def main():
     parser.add_argument("--margin-km",  type=float, default=15.0,
                         help="Placement-area clearance (km) on all 4 sides of the relay bounding box")
     parser.add_argument("--seed",       type=int,   default=42, help="Single fixed seed (one topology, not averaged)")
-    parser.add_argument("--runtimes",   type=int,   default=250, help="Monte Carlo runs per pair")
+    parser.add_argument("--runtimes",   type=int,   default=1000, help="Monte Carlo runs per pair")
     parser.add_argument("--tortuosity", type=float, default=1.2)
     parser.add_argument("--config",     type=str,   default=None)
     parser.add_argument("--workers",    type=int,   default=None)
+    parser.add_argument("--no-db",      action="store_true",
+                        help="Skip DB logging (p2p_db_path/net_db_path=None); DB logging is on by default")
     parser.add_argument("--c-s",        type=float, default=250_000, help="Photon source module price (£)")
     parser.add_argument("--c-d",        type=float, default=100_000, help="Detector module price (£)")
     parser.add_argument("--c-f",        type=float, default=10_000,  help="New-build dark fibre install price (£/km)")

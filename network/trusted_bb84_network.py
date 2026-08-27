@@ -21,6 +21,9 @@ def _sample_link_tortuosity(rng, mean, n):
     return np.maximum(1.0, rng.normal(mean, 0.1, size=n))
 
 
+_BATCH = 100  # see network/bb84_network.py's _BATCH docstring — same reasoning
+
+
 def _link_task(args):
     """
     Run runtimes BB84 simulations for one link (user→relay or relay→relay).
@@ -73,33 +76,49 @@ def run_trusted_bb84_network(topo, cfg, runtimes=10, workers=None, verbose=False
         cfg["dark_count_rate"], cfg.get("node_loss_db_tbb84", cfg["node_loss_db"]), cfg["source_error_rate"], cfg["dephasing_rate"],
     )
 
-    # Build tasks: user-relay links first, then backbone links
-    tasks = []
+    # Build link ids + distances: user-relay links first, then backbone links
+    link_dist = {}
     for i in range(N):
-        ri   = int(topo.user_relay[i])
-        dist = _dist(topo.user_pos[i], topo.relay_pos[ri]) * t_user[i]
-        tasks.append((("u", i), dist, runtimes) + link_params)
+        ri = int(topo.user_relay[i])
+        link_dist[("u", i)] = _dist(topo.user_pos[i], topo.relay_pos[ri]) * t_user[i]
     for j in range(K):
         for k in range(j + 1, K):
-            dist = _dist(topo.relay_pos[j], topo.relay_pos[k]) * t_relay[(j, k)]
-            tasks.append((("b", j, k), dist, runtimes) + link_params)
+            link_dist[("b", j, k)] = _dist(topo.relay_pos[j], topo.relay_pos[k]) * t_relay[(j, k)]
 
-    n_links   = len(tasks)
+    n_links   = len(link_dist)
     n_workers = max(1, int(os.cpu_count() * 0.8)) if workers is None else workers
     n_workers = min(n_workers, n_links) if n_links > 0 else 1
 
     net_run_id    = new_run_id()
     run_timestamp = datetime.now().isoformat()
 
-    with get_context('spawn').Pool(n_workers) as pool:
-        raw = pool.map(_link_task, tasks)
+    # Run in rounds of <=_BATCH trials/link, fresh pool per round — see
+    # network/bb84_network.py's run_bb84_network for the full rationale.
+    link_kR = {link_id: [] for link_id in link_dist}
+    link_kQ = {link_id: [] for link_id in link_dist}
+    link_kL = {link_id: [] for link_id in link_dist}
+
+    remaining = runtimes
+    while remaining > 0:
+        batch = min(remaining, _BATCH)
+        remaining -= batch
+
+        tasks = [(link_id, dist, batch) + link_params for link_id, dist in link_dist.items()]
+        with get_context('spawn').Pool(n_workers) as pool:
+            raw = pool.map(_link_task, tasks)
+
+        for link_id, kR, kQ, kL in raw:
+            link_kR[link_id].extend(kR)
+            link_kQ[link_id].extend(kQ)
+            link_kL[link_id].extend(kL)
 
     # Parse link results
     user_rates = {}  # i → mean rate (bps)
     user_raw   = {}  # i → (kR, kQ, kL) for DB
     bb_rates   = {}  # (j,k) → mean rate (bps)
 
-    for link_id, kR, kQ, kL in raw:
+    for link_id in link_dist:
+        kR, kQ, kL = link_kR[link_id], link_kQ[link_id], link_kL[link_id]
         valid = [r for r in kR if r != "nan"]
         mean  = sum(valid) / len(valid) if valid else 0.0
         if link_id[0] == "u":
