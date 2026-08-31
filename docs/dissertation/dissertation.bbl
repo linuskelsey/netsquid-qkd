@@ -1,5 +1,8 @@
 \begin{thebibliography}{10}
 
+\bibitem{Coopmans_2021}
+T.~Coopmans {\em et~al.}, ``{NetSquid, a NETwork Simulator for QUantum Information using Discrete events},'' {\em Communications Physics}, vol.~4, no.~1, 2021.
+
 \bibitem{Holz_2011}
 R.~Holz {\em et~al.}, ``{The SSL landscape: a thorough analysis of the x.509 PKI using active and passive measurements},'' in {\em Proceedings of the 2011 ACM SIGCOMM Conference on Internet Measurement Conference}, pp.~427--444, 2011.
 
@@ -75,8 +78,11 @@ R.~Yehia, S.~Neves, E.~Diamanti, and I.~Kerenidis, ``{Quantum {C}ity: simulation
 \bibitem{DBLP:conf/ondm/KaraviasHBLP25}
 V.~Karavias, E.~Hugues{-}Salas, A.~Beghelli, A.~Lord, and M.~C. Payne, ``{Comparative Cost Analysis of Prepare and Measure and Entanglement-Based {QKD} Networks},'' in {\em International Conference on Optical Network Design and Modeling, {ONDM}, 2025}, 2025.
 
-\bibitem{Coopmans_2021}
-T.~Coopmans {\em et~al.}, ``{NetSquid, a NETwork Simulator for QUantum Information using Discrete events},'' {\em Communications Physics}, vol.~4, no.~1, 2021.
+\bibitem{jia2023costopt}
+J.~Jia, B.~Dong, L.~Kang, H.~Xie, and B.~Guo, ``{Cost-Optimization-Based Quantum Key Distribution over Quantum Key Pool Optical Networks},'' {\em Entropy}, vol.~25, no.~4, p.~661, 2023.
+
+\bibitem{cao2021hybrid}
+Y.~Cao, Y.~Zhao, J.~Li, R.~Lin, J.~Zhang, and J.~Chen, ``{Hybrid Trusted/Untrusted Relay-Based Quantum Key Distribution Over Optical Backbone Networks},'' {\em IEEE Journal on Selected Areas in Communications}, vol.~39, no.~9, pp.~2701--2718, 2021.
 
 \bibitem{henderson2008network}
 T.~R. Henderson, M.~Lacage, G.~F. Riley, C.~Dowell, and J.~Kopena, ``{Network simulations with the ns-3 simulator},'' in {\em SIGCOMM demonstration}, vol.~14, p.~527, 2008.
@@ -132,6 +138,9 @@ G.~P. Agrawal, {\em {Fiber-Optic Communication Systems}}.
 
 \bibitem{Waks_2002}
 E.~Waks, C.~Santori, and Y.~Yamamoto, ``{Security aspects of quantum key distribution with a photon number resolving detector},'' {\em Physical Review A}, vol.~66, no.~4, p.~042315, 2002.
+
+\bibitem{Gisin_2002}
+N.~Gisin, G.~Ribordy, W.~Tittel, and H.~Zbinden, ``{Quantum cryptography},'' {\em Rev. Mod. Phys.}, vol.~74, pp.~145--195, Mar 2002.
 
 \bibitem{qbird_falqon}
 {Q*Bird}, ``{Falqon{\textregistered} Series},'' 2026.

@@ -24,8 +24,8 @@
 
 - [x] **Timing scripts**: `time_vs_area.py`, `time_vs_users.py`, `adaptive_mc.py`, `surrogate.py`, `trend_analysis.py` — **done**. Written up in Appendix~\ref{sec:appendix_netsquid}: Table~\ref{tab:timing} wall-clock costs, adaptive MC (30% BB84 speedup, negligible for MDI) and GP surrogate modelling (<100ms for $10^4$ points) both reported as mitigations attempted.
 - [x] **Literature validation on `layers.py`** — **resolved 2026-08-18**: superseded by the PLOB theoretical bound already overlaid on Figures~\ref{fig:p2p_length} and \ref{fig:p2p_node_loss} (published scatter points not needed, per user decision).
-- [ ] **MC run count audit**: for rates of order 10⁻ˣ target 10^(x+1) samples per point; audit all scripts and increase where under-sampled. *(Run counts are stated throughout the dissertation — e.g. 1000 runs/point for P2P sweeps, 250 runtimes/pair for the relay sweep — but nobody has audited whether those counts are actually adequate at the lowest observed rates.)* Still open.
-- [ ] **MDI network-scale key rate gap — targeted ablation**: the mechanism is now explained analytically (BSM $\eta_\text{arm}^2$ scaling, §Security–Rate Trade-off) and the relay-routing-detour contribution is now quantified empirically (Table~\ref{tab:relay_sweep_n15_seeds}: only 9.4→11.3% of the BB84 rate recovered by increasing $K$). Not yet done: a dedicated ablation run isolating the BSM $\eta^2$ dependency and switch insertion loss individually (disable each in turn) to fully decompose the gap, as originally scoped. Still open.
+- [x] **MC run count audit** — **confirmed done, per user (2026-08-27)**.
+- [x] **MDI network-scale key rate gap — targeted ablation** — **dropped 2026-08-27, per user**: satisfied with the existing analytical explanation (BSM $\eta_\text{arm}^2$ scaling, §Security–Rate Trade-off) plus the empirically quantified relay-routing-detour contribution (Table~\ref{tab:relay_sweep_n15_seeds}: only 9.4→11.3% of the BB84 rate recovered by increasing $K$); the dedicated ablation run isolating BSM $\eta^2$ vs switch insertion loss individually is not needed.
 
 ---
 
@@ -39,25 +39,26 @@
 
 - [x] Citation for EOM insertion loss range — **moot**: the model no longer uses a separate EOM parameter; Layer~5 lumps EOM/PBS/HOM node loss into one $L_n = 2.0$~dB figure cited to Duplinskiy \textit{et al.} (line 233). The protocol-specific component breakdown this item wanted is explicitly flagged as a limitation instead (§Simulation Model Limitations, "Receiver node loss" paragraph).
 - [x] `\cite{PNS_desc}` — **done 2026-08-18**: swapped to `\cite{Brassard_2000}` ("Limitations on Practical Quantum Cryptography", Brassard/Lütkenhaus/Mor/Sanders, PRL 2000) — the actual paper establishing the PNS vulnerability from Poisson-distributed WCP sources, matching the claim it supports (line 113). Chen2022 was considered but rejected: it's about detecting PNS in decoy-state MDI, not the general definition being cited. Dead `PNS_desc` `@misc` entry removed from `bibliography.bib`.
-- [ ] Check all `author = {... and others}` entries (32 found in `bibliography.bib`) — some journals require full author lists; verify if UCL submission requires it. Still open.
+- [x] Check all `author = {... and others}` entries (32 found in `bibliography.bib`) — **confirmed fine, per user (2026-08-27)**.
 
 ---
 
 ## 4. Assumptions & Justifications Required
 
 - [x] **Multi-seeding (seed count justification)** — **done 2026-08-18**: prior wording overclaimed a formal convergence check that was never actually done. Corrected to state the real reasoning: fixed sampling budget (≥1000 MC samples per data point overall, ≥200 per seed).
-- [ ] **TBB84 backbone: 1 source per relay (not K−1)** / **unidirectional backbone links** (cost_analysis.tex §9.6 / Inconsistency VII) — **likely moot for the main dissertation**: TBB84 is no longer part of the core symbolic cost model (Section~\ref{sec:results_cost}); it only appears in the appendix BT London case study, which uses the older standalone `network/cost.py` numeric model, not the backbone-source-counting logic these items refer to. Worth a quick check that `cost.py`'s TBB84 backbone assumption doesn't need the same caveat added to the case-study appendix text, but not a dissertation-body blocker.
+- [x] **TBB84 backbone: 1 source per relay** (cost_analysis.tex §9.6) — **resolved 2026-08-27, per user**: not an approximation error. Each relay routes its single source to every neighbour via a switch, so 1 source/relay ($n_\text{sources} = N+K$ in `network/trusted_bb84_network.py:220`) is a legitimate architecture choice, not an undercount of the $K(K-1)$ figure cost_analysis.tex assumed was required. No caveat needed.
 
 ---
 
 ## 5. Miscellaneous
 
 - [x] **Word/page count vs UCL limit** — confirmed fine, per user (2026-08-18).
-- [ ] **Figure captions**: all figures need captions that are self-contained (readable without surrounding text). Not audited yet.
-- [ ] **Figure references**: every figure must be referenced in the text with `Figure~\ref{fig:...}`; check none are orphaned. Not audited yet.
+- [x] **Figure captions** — **confirmed done, per user (2026-08-27)**.
+- [x] **Figure references** — **fixed 2026-08-27**: added `Figure~\ref{fig:topology_bb84}` to the "BB84 mesh" paragraph (§network_analysis), mirroring the existing `fig:topology_mdi` cite in the "MDI network" paragraph right after it. Re-audited: no orphans left except the parent `fig:topology_example` composite label, which is fine unreferenced now that both its subfigures are individually cited — same pattern already accepted for `fig:isolate`/`fig:layers` and their subfigures. No broken `\ref`s anywhere.
 - [x] **Spell check** — **done 2026-08-18**: ran hunspell (en_US, manually filtered for British spellings/technical terms/proper nouns) across the full detex'd document. No genuine typos found.
 - [x] **Compile clean** — confirmed by user (2026-08-18), post abstract/citation edits.
 - [x] **Case study**: **resolved** — no separate `case-study.tex` exists; the case study is `\section{Real-Topology Case Study: The BT London Network}` (`\label{sec:appendix_bt}`) directly inside `dissertation.tex`, so it's automatically in scope for every other check on this list.
+- [ ] **Review Appendices B-E**: B = Relay Placement Optimisation, C = Real-World Deployment Considerations (BT case study), D = NetSquid: Limitations and Speedup Strategies, E = Code and Reproducibility. (Appendix A, Additional Point-to-Point Parameter Sweeps, already gone over line-by-line this session.) Not yet done.
 
 ---
 
@@ -69,5 +70,6 @@
 
 ## 7. Post-writing / Administrative
 
-- [ ] **[BLOCKING] Write Acknowledgements section.** Not started.
+- [x] **[BLOCKING] Write Acknowledgements section.** — **done 2026-08-27**: added `\section*{Acknowledgements and Statement of Contribution}` after `\maketitle`, before the abstract. Covers: personal contribution (sim architecture, cost model, MC sweeps, BT case study — all own work), Liao Chin Te's BB84 code as an early springboard since diverged from, NetSquid as the external DES engine used, supervisors (Dr Alejandra Beghelli, Dr Emilio Hugues Salas) and Qasim Bedford (discussions on QKD network/hardware modelling) thanked, sole-deliverable statement, code/data availability.
+- [ ] **Final full review of dissertation** — read the whole document end to end once all other items above are closed out. Not yet done.
 - [ ] **After submission: make the GitHub repo public.** Requires obscuring/scrubbing the LaTeX source first (as was done before, presumably for the same reason — check prior approach rather than re-deriving it). Explicitly deferred until after submission, not a pre-submission blocker.
