@@ -4,16 +4,26 @@
 # pycache
 *.pyc
 /__pycache__/*
+**/__pycache__/
 
 # netsquid documentation
 docs/netsquid
 
-# latex
-# *.tex
-# docs/latex_slides
-# docs/case-study-tex
-# docs/dissertation
-# docs/lit-rev
+# raw latex source (kept private; compiled PDFs and docs/figures/ figure-tex stay public)
+docs/dissertation/dissertation.tex
+docs/dissertation/figures/**/*.tex
+docs/case-study-tex/case-study.tex
+docs/case-study-tex/slides/case_study_slides.tex
+docs/lit-rev/lit-rev.tex
+docs/latex_slides/**/*.tex
+/cost rethink/cost_analysis.tex
+
+# downloaded paper PDFs in literature-review notes (redistribution/copyright)
+docs/case-study-tex/artefacts/pdfs/
+docs/dissertation/artefacts/pdfs/
+
+# local claude session settings under doc subdirs
+docs/*/.claude/
 
 # latex build artifacts (keep .pdf and .bbl tracked)
 *.aux
